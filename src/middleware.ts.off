@@ -1,0 +1,55 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
+
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+
+  const path = req.nextUrl.pathname;
+
+  // 공개 페이지는 통과
+  const publicPaths = ["/", "/login", "/auth/callback", "/booth", "/live", "/onboarding"];
+  const isPublic =
+    publicPaths.some((p) => path === p || path.startsWith(p + "/")) ||
+    path.startsWith("/_next") ||
+    path.startsWith("/favicon") ||
+    path.startsWith("/public");
+
+  if (isPublic) return res;
+
+  // 보호구간: /vendor, /dashboard 등
+  const protectedPaths = ["/vendor", "/dashboard"];
+  const isProtected = protectedPaths.some((p) => path === p || path.startsWith(p + "/"));
+
+  if (!isProtected) return res;
+
+  // 로그인 안 됐으면 로그인
+  if (!user) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("force", "1");
+    return NextResponse.redirect(url);
+  }
+
+  // profiles 체크: 없으면 온보딩
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!profile && path !== "/onboarding") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/onboarding";
+    return NextResponse.redirect(url);
+  }
+
+  return res;
+}
+
+export const config = {
+  matcher: ["/vendor/:path*", "/dashboard/:path*"],
+};
