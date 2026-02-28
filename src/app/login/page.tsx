@@ -1,47 +1,55 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
-export default function LoginPage() {
+export const dynamic = "force-dynamic";
+
+function LoginInner() {
   const router = useRouter();
+  const sp = useSearchParams();
   const supabase = useMemo(() => supabaseBrowser(), []);
 
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // ✅ force=1 이면 세션이 있어도 자동 이동 막고 로그인 화면 유지
-  const force =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("force") === "1"
-      : false;
+  const force = sp.get("force") === "1";
+  const next = sp.get("next") || "/vendor";
 
   useEffect(() => {
     if (force) return;
 
     (async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session) router.replace("/vendor");
+      if (data.session) router.replace(next);
     })();
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!force && session) router.replace("/vendor");
-    });
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        if (!force && session) router.replace(next);
+      }
+    );
 
-    return () => sub.subscription.unsubscribe();
-  }, [router, supabase, force]);
+    return () => {
+      sub.subscription.unsubscribe();
+    };
+  }, [router, supabase, force, next]);
 
   async function sendMagicLink() {
     setBusy(true);
     setMsg(null);
 
     const origin =
-      typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:3000";
 
-    // ✅ 메일 링크 클릭 → /auth/callback에서 세션 확정 → /vendor 이동
-    const emailRedirectTo = `${origin}/auth/callback?next=/vendor`;
+    const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(
+      next
+    )}`;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -57,63 +65,47 @@ export default function LoginPage() {
   async function logout() {
     setMsg(null);
     await supabase.auth.signOut();
-    router.replace("/login?force=1");
+    router.replace(`/login?force=1&next=${encodeURIComponent(next)}`);
   }
 
   return (
     <main style={{ padding: 40, maxWidth: 520, margin: "0 auto" }}>
       <h1 style={{ marginBottom: 10 }}>업체 로그인</h1>
-      <p style={{ marginTop: 0, color: "#444" }}>
-        이메일로 매직링크를 보내드립니다. 링크 클릭하면 자동 로그인됩니다.
-      </p>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-        <button
-          onClick={logout}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
-        >
+        <button onClick={logout} style={ghostBtn}>
           로그아웃
         </button>
 
         <button
-          onClick={() => router.replace("/login?force=1")}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
+          onClick={() =>
+            router.replace(`/login?force=1&next=${encodeURIComponent(next)}`)
+          }
+          style={ghostBtn}
         >
           강제로 로그인 화면
         </button>
 
-        <button
-          onClick={() => router.replace("/vendor")}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "1px solid #ddd",
-            background: "#fff",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
-        >
-          업체 대시보드
+        <button onClick={() => router.replace(next)} style={ghostBtn}>
+          next로 이동
         </button>
       </div>
 
-      <label style={{ display: "block", marginTop: 18, marginBottom: 8, fontWeight: 700 }}>
+      <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+        next: <b>{next}</b>
+      </div>
+
+      <label
+        style={{
+          display: "block",
+          marginTop: 18,
+          marginBottom: 8,
+          fontWeight: 700,
+        }}
+      >
         이메일
       </label>
+
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -141,6 +133,7 @@ export default function LoginPage() {
           fontSize: 16,
           fontWeight: 800,
           cursor: busy ? "not-allowed" : "pointer",
+          opacity: busy || !email.includes("@") ? 0.6 : 1,
         }}
       >
         {busy ? "보내는 중..." : "매직링크 보내기"}
@@ -154,8 +147,6 @@ export default function LoginPage() {
             borderRadius: 12,
             border: "1px solid #eee",
             background: "#fafafa",
-            color: "#222",
-            lineHeight: 1.6,
           }}
         >
           {msg}
@@ -164,3 +155,20 @@ export default function LoginPage() {
     </main>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40 }}>로딩 중...</div>}>
+      <LoginInner />
+    </Suspense>
+  );
+}
+
+const ghostBtn: React.CSSProperties = {
+  padding: "10px 12px",
+  borderRadius: 10,
+  border: "1px solid #ddd",
+  background: "#fff",
+  cursor: "pointer",
+  fontWeight: 700,
+};

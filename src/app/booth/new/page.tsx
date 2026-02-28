@@ -7,23 +7,18 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 type Booth = {
   booth_id: string;
   owner_user_id: string | null;
-
-  // ✅ 앞으로는 vendor_id(=vendors.id)만 신뢰
-  vendor_id: string | null;
-
-  // (구 컬럼) 남아 있어도 화면/로직에서는 안 씀
-  vendor_user_id: string | null;
-
+  vendor_id: string | null;      // ✅ vendors.id
+  vendor_user_id: string | null; // (구 컬럼) 남아있어도 이제는 안 씀
   name: string | null;
   region: string | null;
-  status: string | null; // draft | pending | active | rejected 등
+  status: string | null;
   created_at: string;
 };
 
 type VendorMe = {
-  id: string; // vendors.id
-  user_id: string; // auth uid
-  status: string | null; // active/pending/suspended 등
+  id: string;             // vendors.id
+  user_id: string;        // auth uid
+  status: string | null;  // active/pending/suspended 등
   email: string | null;
   company_name: string | null;
 };
@@ -39,14 +34,13 @@ export default function BoothsListClient() {
   const [meEmail, setMeEmail] = useState<string | null>(null);
 
   const [vendor, setVendor] = useState<VendorMe | null>(null);
-  const vendorStatus = vendor?.status ?? null;
-  const isVendorActive = !!vendor && (vendorStatus ?? "active") === "active";
+  const isVendorActive = !!vendor?.id && (vendor.status ?? "active") === "active";
 
   const [publicBooths, setPublicBooths] = useState<Booth[]>([]);
   const [myBooths, setMyBooths] = useState<Booth[]>([]);
+
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
-  // 1) 내 로그인
   async function loadMe() {
     const { data } = await supabase.auth.getUser();
     const u = data.user ?? null;
@@ -55,7 +49,6 @@ export default function BoothsListClient() {
     return u;
   }
 
-  // 2) 내 vendor row (vendors.user_id = auth.uid)
   async function loadVendorMe(userId: string) {
     const { data, error } = await supabase
       .from("vendors")
@@ -64,16 +57,13 @@ export default function BoothsListClient() {
       .maybeSingle();
 
     if (error) {
-      // RLS가 막으면 여기서 실패할 수 있는데, 그땐 createBooth 버튼만 막고 목록은 보여줌
       console.warn("[vendor me] blocked:", error.message);
       setVendor(null);
       return;
     }
-
     setVendor((data as VendorMe) ?? null);
   }
 
-  // 3) 공개 부스: status='active'
   async function loadPublicBooths() {
     const { data, error } = await supabase
       .from("booths")
@@ -85,7 +75,6 @@ export default function BoothsListClient() {
     setPublicBooths((data ?? []) as Booth[]);
   }
 
-  // 4) 내 부스: owner_user_id = me
   async function loadMyBooths(userId: string) {
     const { data, error } = await supabase
       .from("booths")
@@ -124,56 +113,17 @@ export default function BoothsListClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ 부스 만들기: vendor_id = vendors.id로 연결
-  async function createBooth() {
+  function goCreateBooth() {
     if (!meId) {
       alert("로그인이 필요합니다.");
-      router.push(`/login?next=/dashboard`);
+      router.push(`/login?next=/booth/new`);
       return;
     }
-
-    if (!vendor?.id) {
-      alert("업체 등록/승인이 필요합니다. (vendors row가 없습니다)");
-      // 원하면 여기서 /vendor 로 보내도 됨
-      // router.push("/vendor");
-      return;
-    }
-
     if (!isVendorActive) {
-      alert(`업체 상태가 active가 아닙니다. (status=${vendor.status ?? "null"})`);
+      alert("업체 승인(active) 후 생성 가능합니다.");
       return;
     }
-
-    const name = prompt("부스명을 입력해 주세요 (예: 한국농수산TV)")?.trim();
-    if (!name) return;
-
-    setLoading(true);
-    setErrMsg(null);
-
-    try {
-      const { data, error } = await supabase
-        .from("booths")
-        .insert({
-          owner_user_id: meId,
-          vendor_id: vendor.id, // ✅ 핵심
-          name,
-          status: "draft",
-        })
-        .select("booth_id")
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data?.booth_id) throw new Error("부스 생성 결과(booth_id)가 없습니다.");
-
-      alert("부스가 생성되었습니다. (draft)");
-      router.push(`/booth/${data.booth_id}`);
-    } catch (e: any) {
-      console.error(e);
-      alert(`부스 생성 실패: ${e?.message ?? String(e)}`);
-    } finally {
-      setLoading(false);
-      await refreshAll();
-    }
+    router.push("/booth/new");
   }
 
   const list = tab === "public" ? publicBooths : myBooths;
@@ -201,7 +151,7 @@ export default function BoothsListClient() {
           </button>
 
           <button
-            onClick={createBooth}
+            onClick={goCreateBooth}
             disabled={loading || !meId || !isVendorActive}
             title={!meId ? "로그인이 필요합니다" : !isVendorActive ? "업체 승인(active) 후 생성 가능합니다" : ""}
             style={{
