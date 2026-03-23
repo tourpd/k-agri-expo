@@ -1,426 +1,368 @@
-// src/app/expo/booths/page.tsx
+// src/app/expo/page.tsx
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getPublicBooths } from "@/lib/expoPublic";
+import { getPublicDeals, getPublicBooths } from "@/lib/expoPublic";
 
 export const dynamic = "force-dynamic";
 
-type SP = {
-  q?: string | string[];
-  region?: string | string[];
-  category?: string | string[];
-  tab?: string | string[];
-};
-
-function pick1(v: string | string[] | undefined) {
-  if (!v) return "";
-  return Array.isArray(v) ? (v[0] ?? "") : v;
+function fmtDate(iso?: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${mm}.${dd}`;
 }
 
-function uniq(arr: string[]) {
-  return Array.from(new Set(arr)).sort((a, b) => a.localeCompare(b));
+function safeText(v: any, fallback: string) {
+  const s = typeof v === "string" ? v : "";
+  return s.trim() ? s : fallback;
 }
 
-function buildUrl(params: { tab?: string; q?: string; region?: string; category?: string }) {
-  const sp = new URLSearchParams();
-  if (params.tab && params.tab !== "all") sp.set("tab", params.tab);
-  if (params.q) sp.set("q", params.q);
-  if (params.region) sp.set("region", params.region);
-  if (params.category) sp.set("category", params.category);
-  const qs = sp.toString();
-  return `/expo/booths${qs ? `?${qs}` : ""}`;
-}
+export default async function ExpoIndexPage() {
+  // ✅ entry 쿠키 없으면 entry로
+  const store = await cookies();
+  const has = !!store.get("kagri_expo_entry")?.value;
+  if (!has) redirect("/expo/entry");
 
-export default async function ExpoBoothsPage({
-  searchParams,
-}: {
-  // ✅ Next.js 16: searchParams가 Promise로 들어올 수 있음
-  searchParams?: Promise<SP>;
-}) {
-  const sp = (await searchParams) ?? {};
+  // ✅ 메인 데이터(공개용)
+  let booths: any[] = [];
+  try {
+    booths = await getPublicBooths({ limit: 60 });
+  } catch {
+    booths = [];
+  }
 
-  const q = pick1(sp.q).trim();
-  const region = pick1(sp.region).trim();
-  const category = pick1(sp.category).trim();
-  const tab = (pick1(sp.tab) || "all").trim();
+  let deals: any[] = [];
+  try {
+    deals = await getPublicDeals(24);
+  } catch {
+    deals = [];
+  }
 
-  const booths = await getPublicBooths({ q, category, region, limit: 60 });
+  const featured = booths.filter((b) => Boolean((b as any)?.is_featured)).slice(0, 8);
+  const latest = booths.slice(0, 12);
 
-  const regions = uniq(booths.map((b) => (b.region ?? "").trim()).filter(Boolean));
-  const categories = uniq(booths.map((b) => (b.category_primary ?? "").trim()).filter(Boolean));
+  const halls = [
+    { id: "agri-inputs", label: "농자재관" },
+    { id: "machines", label: "농기계관" },
+    { id: "seeds", label: "종자관" },
+    { id: "smartfarm", label: "스마트팜" },
+  ];
 
   return (
-    <main style={pageWrap}>
-      {/* 상단 배너 */}
-      <section style={banner}>
-        <div style={{ flex: 1, minWidth: 260 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#111", opacity: 0.7 }}>K-Agri Expo</div>
+    <main style={S.page}>
+      {/* 헤더 */}
+      <header style={S.header}>
+        <div>
+          <div style={S.kicker}>K-Agri Expo</div>
+          <h1 style={S.title}>온라인 박람회</h1>
+          <div style={S.sub}>전시장(홀) · 부스 · 특가 · 상담/구매까지 한 번에 연결됩니다.</div>
+        </div>
 
-          <h1 style={{ fontSize: 28, fontWeight: 950, margin: "8px 0 0", color: "#111" }}>
-            온라인 부스 엑스포
-          </h1>
+        <div style={S.headerRight}>
+          <Link href="/expo/hall/agri-inputs" style={S.btnPrimary}>
+            전시장 입장 →
+          </Link>
+          <Link href="/expo/deals" style={S.btnGhost}>
+            🔥 EXPO 특가
+          </Link>
+          <Link href="/expo/booths" style={S.btnGhost}>
+            부스 목록
+          </Link>
+        </div>
+      </header>
 
-          <p style={{ margin: "10px 0 0", color: "#333", lineHeight: 1.7 }}>
-            농민은 <b>부스</b>를 둘러보고 <b>전화·카톡</b>으로 바로 문의합니다.
-            <br />
-            업체는 <b>부스 소개</b>와 <b>제품</b>을 등록해 “입점 쇼룸”을 만듭니다.
-          </p>
+      {/* 홀(관) 바로가기 */}
+      <section style={S.hallStrip}>
+        {halls.map((h) => (
+          <Link key={h.id} href={`/expo/hall/${h.id}`} style={S.hallBtn}>
+            {h.label}
+          </Link>
+        ))}
+      </section>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-            <Link href="/booth/new" style={btnPrimary}>
-              + 부스 만들기(업체)
-            </Link>
-            <Link href="/login?next=/vendor" style={btnGhost}>
-              업체 로그인
-            </Link>
+      {/* 히어로 */}
+      <section style={S.heroGrid}>
+        <div style={S.heroCard}>
+          <div style={S.heroBadge}>🔥 24시간 한정 딜</div>
+          <div style={S.heroHeadline}>EXPO 특가가 들어가면 참여율이 폭발합니다</div>
+          <div style={S.heroDesc}>
+            딜을 올리면 메인 노출 → 회사들이 “홍보/판매”하려고 스스로 들어오는 구조입니다.
           </div>
-
-          <div style={{ marginTop: 10, fontSize: 12, color: "#555" }}>
-            ※ v1: “둘러보기 + 즉시 문의”까지. (v1.5: 문의폼/리드관리/찜)
+          <div style={S.heroActions}>
+            <Link href="/expo/deals" style={S.btnPrimary}>
+              특가 전체보기
+            </Link>
+            <Link href="/expo/admin" style={S.btnGhost}>
+              (관리자) 딜 등록
+            </Link>
           </div>
         </div>
 
-        <div style={bannerRight}>
-          <div style={{ fontWeight: 900, marginBottom: 8, color: "#111" }}>농민이 보는 흐름</div>
-          <ul style={{ margin: 0, paddingLeft: 18, color: "#333", lineHeight: 1.7 }}>
-            <li>부스 카드에서 “한 줄 소개”로 3초 판단</li>
-            <li>부스 상세에서 제품 리스트 확인</li>
-            <li>전화 / 카톡 / 이메일로 즉시 문의</li>
-          </ul>
-
-          <div style={{ marginTop: 10, fontSize: 12, color: "#666", lineHeight: 1.6 }}>
-            업체는 “한 줄 소개 + 상세 설명 + 대표 제품 3개”만 넣어도
-            <br />
-            엑스포 느낌이 바로 살아납니다.
+        <div style={S.heroCard2}>
+          <div style={S.heroBadge2}>🏢 부스 쇼룸</div>
+          <div style={S.heroHeadline}>부스 클릭 → 제품/특가/상담으로 연결</div>
+          <div style={S.heroDesc}>부스 상세에서 제품/특가/상담이 한 화면에 보이도록 설계합니다.</div>
+          <div style={S.heroActions}>
+            <Link href="/expo/hall/agri-inputs" style={S.btnPrimary}>
+              전시장 입장
+            </Link>
+            <Link href="/expo/booths" style={S.btnGhost}>
+              부스 탐색
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* 필터 바 */}
-      <section style={{ marginTop: 16, ...filterBar }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={pillLabel}>탭</span>
-          <Link href={buildUrl({ tab: "all", q, region, category })} style={tab === "all" ? pillOn : pillOff}>
-            공개 부스
-          </Link>
-          <Link
-            href={buildUrl({ tab: "my", q, region, category })}
-            style={tab === "my" ? pillOn : pillOff}
-            title="(v1은 all 중심. v1.5에서 내 부스 권한 연동)"
-          >
-            내 부스(예고)
+      {/* 특가 */}
+      <section style={{ marginTop: 24 }}>
+        <div style={S.sectionHead}>
+          <h2 style={S.sectionTitle}>🔥 지금 EXPO 특가</h2>
+          <Link href="/expo/deals" style={S.moreLink}>
+            더 보기 →
           </Link>
         </div>
 
-        <form style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }} action="/expo/booths">
-          <input type="hidden" name="tab" value={tab} />
-
-          <input name="q" defaultValue={q} placeholder="검색: 업체명/소개/지역/카테고리" style={input} />
-
-          <select name="region" defaultValue={region} style={select}>
-            <option value="">지역 전체</option>
-            {regions.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-
-          <select name="category" defaultValue={category} style={select}>
-            <option value="">카테고리 전체</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-
-          <button type="submit" style={btnGhost}>
-            필터 적용
-          </button>
-
-          <Link href="/expo/booths" style={{ ...btnGhost, textAlign: "center" }}>
-            초기화
-          </Link>
-        </form>
-      </section>
-
-      {/* 결과 요약 */}
-      <div style={{ marginTop: 12, color: "#666", fontSize: 13 }}>
-        총 <b style={{ color: "#111" }}>{booths.length}</b>개 부스
-        {q ? (
-          <>
-            {" "}
-            · 검색: <b style={{ color: "#111" }}>{q}</b>
-          </>
-        ) : null}
-        {region ? (
-          <>
-            {" "}
-            · 지역: <b style={{ color: "#111" }}>{region}</b>
-          </>
-        ) : null}
-        {category ? (
-          <>
-            {" "}
-            · 카테고리: <b style={{ color: "#111" }}>{category}</b>
-          </>
-        ) : null}
-      </div>
-
-      {/* 카드 목록 */}
-      <section style={{ marginTop: 14 }}>
-        {booths.length === 0 ? (
-          <div style={emptyBox}>
-            <div style={{ fontWeight: 900, fontSize: 16, color: "#111" }}>조건에 맞는 부스가 없습니다.</div>
-            <div style={{ marginTop: 6, color: "#666", lineHeight: 1.7 }}>
-              검색어를 줄이거나 지역/카테고리를 “전체”로 바꿔보세요.
-            </div>
+        {deals.length === 0 ? (
+          <div style={S.empty}>
+            아직 등록된 EXPO 특가가 없습니다. <br />
+            딜 1개만 올려도 메인 분위기가 확 살아납니다.
           </div>
         ) : (
-          <div style={grid}>
-            {booths.map((b) => {
-              const title = b.name ?? "부스";
-              const regionText = b.region ?? "지역 미입력";
-              const catText = b.category_primary ?? "카테고리 미입력";
-              const intro = b.intro ?? "한 줄 소개가 아직 없습니다.";
-
-              // ✅ DB 컬럼명 그대로: phone/email/kakao_url
-              const telHref = b.phone ? `tel:${b.phone.replace(/\s+/g, "")}` : null;
-              const mailHref = b.email ? `mailto:${b.email}` : null;
-              const kakaoHref = b.kakao_url ?? null;
+          <div style={S.gridCards}>
+            {deals.slice(0, 12).map((d: any) => {
+              const dealId = String(d?.deal_id ?? "");
+              const title = safeText(d?.title, "EXPO 특가");
+              const desc = safeText(d?.description, "행사 특가 상품");
+              const regular = safeText(d?.regular_price_text, "정가 문의");
+              const expo = safeText(d?.expo_price_text, "EXPO 특가 문의");
+              const stock = safeText(d?.stock_text, "수량 한정");
+              const deadlineAt = d?.deadline_at ? String(d.deadline_at) : null;
 
               return (
-                <div key={b.booth_id} style={card}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 12, color: "#666", fontWeight: 800 }}>
-                        {regionText} · {catText}
-                      </div>
-                      <div style={{ marginTop: 6, fontSize: 18, fontWeight: 950, color: "#111" }}>{title}</div>
-                    </div>
-
-                    {/* ✅ 상세 라우트: /expo/booths/[id] 에 booth_id 전달 */}
-                    <Link href={`/expo/booths/${b.booth_id}`} style={btnMini}>
-                      부스 보기
-                    </Link>
+                <Link key={dealId} href={`/expo/deals/${dealId}`} style={S.dealCard}>
+                  <div style={S.dealTop}>
+                    <div style={S.dealBadge}>EXPO DEAL</div>
+                    {deadlineAt ? <div style={S.dealEnds}>~ {fmtDate(deadlineAt)}</div> : null}
                   </div>
 
-                  <div style={{ marginTop: 10, color: "#333", lineHeight: 1.6, fontSize: 14 }}>{intro}</div>
+                  <div style={S.dealTitle}>{title}</div>
+                  <div style={S.dealDesc}>{desc}</div>
 
-                  <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {telHref ? (
-                      <a href={telHref} style={btnPrimarySm}>
-                        📞 전화
-                      </a>
-                    ) : (
-                      <span style={btnDisabledSm}>📞 없음</span>
-                    )}
-
-                    {kakaoHref ? (
-                      <a href={kakaoHref} target="_blank" rel="noreferrer" style={btnGhostSm}>
-                        💬 카톡
-                      </a>
-                    ) : (
-                      <span style={btnDisabledSm}>💬 없음</span>
-                    )}
-
-                    {mailHref ? (
-                      <a href={mailHref} style={btnGhostSm}>
-                        ✉️ 이메일
-                      </a>
-                    ) : null}
-
-                    <Link href={`/expo/booths/${b.booth_id}`} style={btnGhostSm}>
-                      제품 보기
-                    </Link>
+                  <div style={S.dealPriceLine}>
+                    <div style={S.priceOld}>{regular}</div>
+                    <div style={S.priceNew}>{expo}</div>
                   </div>
 
-                  <div style={{ marginTop: 10, fontSize: 12, color: "#888" }}>
-                    booth_id:{" "}
-                    <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{b.booth_id}</span>
-                  </div>
-                </div>
+                  <div style={S.dealStock}>{stock}</div>
+                  <div style={S.dealCTA}>상세 보기 →</div>
+                </Link>
               );
             })}
           </div>
         )}
       </section>
 
-      <footer style={{ marginTop: 24, paddingTop: 14, borderTop: "1px solid #eee", color: "#666", fontSize: 12 }}>
-        운영 메모: v1은 “보이는 쇼룸 + 즉시 문의”에 집중합니다. (농민: 목록 → 부스 → 제품 → 문의)
-      </footer>
+      {/* 추천 부스 */}
+      <section style={{ marginTop: 28 }}>
+        <div style={S.sectionHead}>
+          <h2 style={S.sectionTitle}>🏆 추천 부스</h2>
+          <Link href="/expo/booths" style={S.moreLink}>
+            더 보기 →
+          </Link>
+        </div>
+
+        {(featured.length ? featured : latest.slice(0, 8)).length === 0 ? (
+          <div style={S.empty}>아직 부스가 없습니다. booths 테이블에 부스 1개만 있어도 메인이 완성됩니다.</div>
+        ) : (
+          <div style={S.gridBooths}>
+            {(featured.length ? featured : latest.slice(0, 8)).map((b: any) => {
+              const boothId = String(b.booth_id);
+              const name = safeText(b?.name, "부스");
+              const region = safeText(b?.region, "지역 미입력");
+              const cat = safeText(b?.category_primary, "카테고리 미입력");
+              const intro = safeText(b?.intro, "소개가 아직 없습니다.");
+
+              return (
+                <Link key={boothId} href={`/expo/booths/${boothId}`} style={S.boothCard}>
+                  <div style={S.boothHead}>
+                    <div style={S.boothName}>{name}</div>
+                    {b?.is_verified ? <div style={S.verified}>검증</div> : null}
+                  </div>
+                  <div style={S.boothMeta}>
+                    {region} · {cat}
+                  </div>
+                  <div style={S.boothIntro}>{intro}</div>
+                  <div style={S.boothCTA}>부스 보기 →</div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* 최신 부스 */}
+      <section style={{ marginTop: 28, paddingBottom: 60 }}>
+        <div style={S.sectionHead}>
+          <h2 style={S.sectionTitle}>🆕 새로 들어온 부스</h2>
+          <Link href="/expo/booths" style={S.moreLink}>
+            전체 보기 →
+          </Link>
+        </div>
+
+        {latest.length === 0 ? (
+          <div style={S.empty}>아직 부스가 없습니다.</div>
+        ) : (
+          <div style={S.gridBoothsSmall}>
+            {latest.slice(0, 12).map((b: any) => {
+              const boothId = String(b.booth_id);
+              const name = safeText(b?.name, "부스");
+              const cat = safeText(b?.category_primary, "카테고리 미입력");
+              return (
+                <Link key={boothId} href={`/expo/booths/${boothId}`} style={S.boothMini}>
+                  <div style={{ fontWeight: 950 }}>{name}</div>
+                  <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>{cat}</div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
 
-/** Styles */
-const pageWrap: React.CSSProperties = {
-  maxWidth: 1100,
-  margin: "0 auto",
-  padding: "26px 16px",
-  background: "#fff",
-  color: "#111",
-  minHeight: "100vh",
-};
+/* ================== styles ================== */
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#fff", color: "#111", padding: "22px 16px" },
 
-const banner: React.CSSProperties = {
-  border: "1px solid #eee",
-  borderRadius: 18,
-  padding: 18,
-  background: "linear-gradient(180deg, #ffffff 0%, #fafafa 100%)",
-  display: "flex",
-  gap: 14,
-  flexWrap: "wrap",
-  alignItems: "stretch",
-};
+  header: {
+    maxWidth: 1200,
+    margin: "0 auto",
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 14,
+    alignItems: "flex-end",
+    flexWrap: "wrap",
+  },
+  kicker: { fontSize: 12, fontWeight: 900, color: "#666" },
+  title: { margin: "6px 0 0", fontSize: 30, fontWeight: 950, letterSpacing: -0.2 },
+  sub: { marginTop: 8, color: "#666", fontSize: 13, lineHeight: 1.7, maxWidth: 620 },
 
-const bannerRight: React.CSSProperties = {
-  width: 360,
-  maxWidth: "100%",
-  border: "1px solid #eee",
-  borderRadius: 16,
-  padding: 14,
-  background: "#fff",
-};
+  headerRight: { display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" },
 
-const filterBar: React.CSSProperties = {
-  border: "1px solid #eee",
-  borderRadius: 16,
-  padding: 12,
-  background: "#fff",
-  display: "flex",
-  justifyContent: "space-between",
-  gap: 10,
-  flexWrap: "wrap",
-  alignItems: "center",
-};
+  btnPrimary: {
+    border: "1px solid #111",
+    background: "#111",
+    color: "#fff",
+    borderRadius: 12,
+    padding: "10px 12px",
+    fontWeight: 950,
+    textDecoration: "none",
+    display: "inline-block",
+  },
+  btnGhost: {
+    border: "1px solid #eee",
+    background: "#f9fafb",
+    color: "#111",
+    borderRadius: 12,
+    padding: "10px 12px",
+    fontWeight: 950,
+    textDecoration: "none",
+    display: "inline-block",
+  },
 
-const grid: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-  gap: 12,
-};
+  hallStrip: { maxWidth: 1200, margin: "14px auto 0", display: "flex", gap: 10, flexWrap: "wrap" },
+  hallBtn: {
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    color: "#111",
+    borderRadius: 999,
+    padding: "10px 14px",
+    fontWeight: 900,
+    textDecoration: "none",
+    display: "inline-block",
+  },
 
-const card: React.CSSProperties = {
-  border: "1px solid #eee",
-  borderRadius: 16,
-  padding: 14,
-  background: "#fff",
-};
+  heroGrid: { maxWidth: 1200, margin: "14px auto 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 },
+  heroCard: { border: "1px solid #eee", borderRadius: 18, padding: 16, background: "#fff7ed" },
+  heroCard2: { border: "1px solid #eee", borderRadius: 18, padding: 16, background: "#eff6ff" },
+  heroBadge: { fontSize: 12, fontWeight: 950, color: "#c2410c" },
+  heroBadge2: { fontSize: 12, fontWeight: 950, color: "#1d4ed8" },
+  heroHeadline: { marginTop: 10, fontSize: 20, fontWeight: 950, letterSpacing: -0.2 },
+  heroDesc: { marginTop: 8, fontSize: 13, color: "#444", lineHeight: 1.7 },
+  heroActions: { marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" },
 
-const emptyBox: React.CSSProperties = {
-  border: "1px dashed #ddd",
-  borderRadius: 16,
-  padding: 18,
-  background: "#fafafa",
-};
+  sectionHead: {
+    maxWidth: 1200,
+    margin: "0 auto",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    gap: 10,
+  },
+  sectionTitle: { fontSize: 20, fontWeight: 950, margin: 0 },
+  moreLink: { fontSize: 13, color: "#111", fontWeight: 900, textDecoration: "none" },
 
-const input: React.CSSProperties = {
-  width: 260,
-  maxWidth: "100%",
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #ddd",
-  fontSize: 14,
-};
+  empty: {
+    maxWidth: 1200,
+    margin: "10px auto 0",
+    border: "1px dashed #e5e7eb",
+    borderRadius: 16,
+    padding: 16,
+    color: "#666",
+    lineHeight: 1.7,
+    background: "#fafafa",
+  },
 
-const select: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #ddd",
-  fontSize: 14,
-  background: "#fff",
-};
+  gridCards: { maxWidth: 1200, margin: "10px auto 0", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 },
+  dealCard: {
+    border: "1px solid #eee",
+    borderRadius: 16,
+    padding: 14,
+    textDecoration: "none",
+    color: "#111",
+    background: "#fff",
+    display: "block",
+  },
+  dealTop: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 },
+  dealBadge: { fontSize: 11, fontWeight: 950, padding: "4px 8px", borderRadius: 999, background: "#111", color: "#fff" },
+  dealEnds: { fontSize: 11, color: "#666", fontWeight: 900 },
+  dealTitle: { marginTop: 10, fontWeight: 950, fontSize: 15, lineHeight: 1.2 },
+  dealDesc: { marginTop: 8, fontSize: 13, color: "#444", lineHeight: 1.6 },
+  dealPriceLine: { marginTop: 10 },
+  priceOld: { fontSize: 12, color: "#777", textDecoration: "line-through" },
+  priceNew: { marginTop: 6, fontWeight: 950, color: "#dc2626" },
+  dealStock: { marginTop: 8, fontSize: 12, color: "#666" },
+  dealCTA: { marginTop: 10, fontWeight: 950, fontSize: 13 },
 
-const pillLabel: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: 900,
-  color: "#666",
-  padding: "6px 10px",
-};
+  gridBooths: { maxWidth: 1200, margin: "10px auto 0", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 },
+  boothCard: {
+    border: "1px solid #eee",
+    borderRadius: 16,
+    padding: 14,
+    textDecoration: "none",
+    color: "#111",
+    background: "#fff",
+    display: "block",
+  },
+  boothHead: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 },
+  boothName: { fontWeight: 950, fontSize: 15 },
+  verified: {
+    fontSize: 11,
+    fontWeight: 950,
+    padding: "4px 8px",
+    borderRadius: 999,
+    background: "#ecfeff",
+    color: "#155e75",
+    border: "1px solid #cffafe",
+  },
+  boothMeta: { marginTop: 6, fontSize: 12, color: "#666", fontWeight: 800 },
+  boothIntro: { marginTop: 10, fontSize: 13, color: "#444", lineHeight: 1.6 },
+  boothCTA: { marginTop: 10, fontWeight: 950, fontSize: 13 },
 
-const pillOn: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 999,
-  border: "1px solid #111",
-  background: "#111",
-  color: "#fff",
-  fontWeight: 900,
-  textDecoration: "none",
-  fontSize: 13,
-};
-
-const pillOff: React.CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 999,
-  border: "1px solid #ddd",
-  background: "#fff",
-  color: "#111",
-  fontWeight: 900,
-  textDecoration: "none",
-  fontSize: 13,
-};
-
-const btnPrimary: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "1px solid #111",
-  background: "#111",
-  color: "#fff",
-  fontWeight: 950,
-  textDecoration: "none",
-};
-
-const btnGhost: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "1px solid #ddd",
-  background: "#fff",
-  color: "#111",
-  fontWeight: 950,
-  textDecoration: "none",
-};
-
-const btnMini: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #ddd",
-  background: "#fff",
-  color: "#111",
-  fontWeight: 950,
-  textDecoration: "none",
-  whiteSpace: "nowrap",
-  alignSelf: "flex-start",
-};
-
-const btnPrimarySm: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #111",
-  background: "#111",
-  color: "#fff",
-  fontWeight: 950,
-  textDecoration: "none",
-  fontSize: 13,
-};
-
-const btnGhostSm: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #ddd",
-  background: "#fff",
-  color: "#111",
-  fontWeight: 950,
-  textDecoration: "none",
-  fontSize: 13,
-};
-
-const btnDisabledSm: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #eee",
-  background: "#f3f4f6",
-  color: "#9ca3af",
-  fontWeight: 950,
-  fontSize: 13,
+  gridBoothsSmall: { maxWidth: 1200, margin: "10px auto 0", display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10 },
+  boothMini: { border: "1px solid #eee", borderRadius: 14, padding: 12, textDecoration: "none", color: "#111", background: "#fff", display: "block" },
 };

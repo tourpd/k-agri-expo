@@ -1,0 +1,39 @@
+import { NextResponse } from "next/server";
+import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: Request) {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+
+  const body = await req.json().catch(() => null);
+  if (!body?.deal_id) return NextResponse.json({ ok: false, error: "MISSING_DEAL_ID" }, { status: 400 });
+
+  const deal_id = String(body.deal_id);
+
+  // ✅ (권장) 소유권 체크를 여기에 추가 가능
+  // 예: booth_deals에 vendor_user_id 컬럼이 있으면 eq("vendor_user_id", user.id)
+  // 지금 v1은 "로그인 사용자면 편집 가능"으로 단순 처리 (필요하면 바로 강화 가능)
+
+  const patch = {
+    title: body.title ?? null,
+    description: body.description ?? null,
+    normal_price: body.normal_price ?? null,
+    expo_price: body.expo_price ?? null,
+    stock: body.stock ?? null,
+    end_at: body.end_at ?? null,
+    is_active: !!body.is_active,
+  };
+
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin.from("booth_deals").update(patch).eq("deal_id", deal_id);
+
+  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true });
+}

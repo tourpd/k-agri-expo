@@ -1,113 +1,202 @@
 // src/app/expo/booths/[id]/page.tsx
+import React from "react";
 import Link from "next/link";
-import { getPublicBoothDetail } from "@/lib/expoPublic";
+import { getPublicBoothDetail, getPublicDealsByBooth } from "@/lib/expoPublic";
+import BoothVisitTracker from "@/components/expo/BoothVisitTracker";
+import InquiryForm from "@/components/expo/InquiryForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function ExpoBoothDetailPage({ params }: { params: { id: string } }) {
-  // ✅ params.id = booth_id
-  const boothId = params.id;
-  const { booth, products } = await getPublicBoothDetail(boothId);
+function isUuid(v: string) {
+  return /^[0-9a-f-]{36}$/i.test(v);
+}
 
-  if (!booth) {
+function safe(v: any, fallback: string) {
+  const s = typeof v === "string" ? v : "";
+  return s.trim() ? s : fallback;
+}
+
+function fmtDeadline(v?: string | null) {
+  if (!v) return null;
+
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}.${String(d.getDate()).padStart(2, "0")} 마감`;
+}
+
+export default async function ExpoBoothDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const boothId = decodeURIComponent(id ?? "").trim();
+
+  if (!isUuid(boothId)) {
     return (
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 16px" }}>
-        <h1 style={{ fontSize: 22, fontWeight: 900 }}>부스를 찾을 수 없습니다.</h1>
-        <Link href="/expo/booths" style={{ textDecoration: "underline" }}>
-          부스 목록으로
+      <main style={pageWrap}>
+        <h1 style={titleStyle}>잘못된 부스 주소입니다.</h1>
+
+        <Link href="/expo/booths" style={btnGhost}>
+          부스 목록
         </Link>
       </main>
     );
   }
 
-  const title = booth.name ?? "부스";
-  const region = booth.region ?? "지역 미입력";
-  const cat = booth.category_primary ?? "카테고리 미입력";
+  const { booth, products } = await getPublicBoothDetail(boothId);
 
-  // ✅ DB 컬럼명 그대로: phone/email/kakao_url
-  const telHref = booth.phone ? `tel:${booth.phone.replace(/\s+/g, "")}` : null;
-  const mailHref = booth.email ? `mailto:${booth.email}` : null;
-  const kakaoHref = booth.kakao_url ?? null;
+  let deals: any[] = [];
+
+  try {
+    deals = await getPublicDealsByBooth(boothId, 10);
+  } catch {
+    deals = [];
+  }
+
+  if (!booth) {
+    return (
+      <main style={pageWrap}>
+        <h1 style={titleStyle}>부스를 찾을 수 없습니다.</h1>
+
+        <Link href="/expo/booths" style={btnGhost}>
+          부스 목록
+        </Link>
+      </main>
+    );
+  }
+
+  const boothAny = booth as any;
+
+  const phone = boothAny.phone;
+  const email = boothAny.email;
+  const description = boothAny.description;
+
+  const hallId = boothAny.hall_id ? String(boothAny.hall_id) : null;
+
+  const telHref = phone ? `tel:${String(phone).replace(/\s+/g, "")}` : null;
+  const mailHref = email ? `mailto:${email}` : null;
 
   return (
-    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 16px", background: "#fff", color: "#111" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+    <main style={pageWrap}>
+      {/* 방문 기록 */}
+      <BoothVisitTracker boothId={boothAny.booth_id} />
+
+      <header style={header}>
         <div>
-          <div style={{ fontSize: 12, color: "#666", fontWeight: 800 }}>부스</div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, margin: "6px 0 0" }}>{title}</h1>
-          <div style={{ marginTop: 8, color: "#666", fontSize: 13 }}>
-            {region} · {cat}
+          <div style={boothBadge}>EXPO BOOTH</div>
+
+          <h1 style={titleStyle}>{boothAny.name ?? "부스"}</h1>
+
+          <div style={meta}>
+            {boothAny.region ?? "지역"} ·{" "}
+            {boothAny.category_primary ?? "카테고리"}
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={headerActions}>
+          {hallId ? (
+            <Link href={`/expo/hall/${hallId}`} style={btnGhost}>
+              전시장으로
+            </Link>
+          ) : null}
+
           <Link href="/expo/booths" style={btnGhost}>
             부스 목록
           </Link>
         </div>
       </header>
 
-      {/* 상단 쇼룸(3초 설득) */}
-      <section style={{ marginTop: 14, ...hero }}>
+      <section style={hero}>
         <div style={{ flex: 1, minWidth: 280 }}>
-          <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 6 }}>한 줄 소개</div>
-          <div style={{ fontSize: 15, lineHeight: 1.7, color: "#222" }}>
-            {booth.intro ?? "아직 한 줄 소개가 없습니다. (업체가 입력하면 ‘엑스포 느낌’이 여기서 살아납니다.)"}
+          <div style={sectionTitle}>한 줄 소개</div>
+
+          <div style={introText}>
+            {boothAny.intro ?? "업체 소개가 없습니다."}
           </div>
 
-          <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {telHref ? <a href={telHref} style={btnPrimary}>📞 전화 문의</a> : <span style={btnDisabled}>📞 전화 없음</span>}
-            {kakaoHref ? (
-              <a href={kakaoHref} target="_blank" rel="noreferrer" style={btnGhost}>
-                💬 카톡 문의
+          <div style={contactWrap}>
+            {telHref ? (
+              <a href={telHref} style={btnPrimary}>
+                전화 상담
               </a>
             ) : (
-              <span style={btnDisabled}>💬 카톡 없음</span>
+              <span style={btnDisabled}>전화 없음</span>
             )}
+
             {mailHref ? (
               <a href={mailHref} style={btnGhost}>
-                ✉️ 이메일
+                이메일 문의
               </a>
-            ) : null}
-          </div>
-
-          <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
-            ※ v1은 “바로 연락”까지. (v1.5에서 문의폼/리드관리 붙입니다)
-          </div>
-
-          <div style={{ marginTop: 10, fontSize: 12, color: "#888" }}>
-            booth_id:{" "}
-            <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>{booth.booth_id}</span>
+            ) : (
+              <span style={btnDisabled}>이메일 없음</span>
+            )}
           </div>
         </div>
 
-        <div style={{ width: 360, maxWidth: "100%" }}>
-          <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 6 }}>부스 소개</div>
-          <div style={{ border: "1px solid #eee", borderRadius: 14, padding: 12, background: "#fff", color: "#333", lineHeight: 1.7, minHeight: 120 }}>
-            {booth.description ?? "상세 설명이 아직 없습니다. (주력 제품/사용법/연락 방법을 적으면 완성됩니다.)"}
+        <div style={descWrap}>
+          <div style={sectionTitle}>부스 소개</div>
+
+          <div style={descBox}>
+            {description ?? "업체 설명이 없습니다."}
           </div>
         </div>
       </section>
 
-      {/* 제품 */}
-      <section style={{ marginTop: 18 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 900, marginBottom: 10 }}>제품</h2>
-        {products.length === 0 ? (
-          <div style={{ color: "#666" }}>등록된 제품이 없습니다.</div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-            {products.map((p) => (
-              <Link key={p.id} href={`/expo/product/${p.id}`} style={{ ...card, textDecoration: "none", color: "#111" }}>
-                <div style={{ fontSize: 16, fontWeight: 900 }}>{p.name ?? "제품명 없음"}</div>
-                <div style={{ marginTop: 6, fontSize: 13, color: "#333", lineHeight: 1.6 }}>
-                  {p.summary ?? "요약이 없습니다."}
+      {deals.length > 0 && (
+        <section style={{ marginTop: 30 }}>
+          <h2 style={productTitle}>🔥 EXPO 특가</h2>
+
+          <div style={productGrid}>
+            {deals.map((d: any) => (
+              <Link
+                key={d.deal_id}
+                href={`/expo/deals/${d.deal_id}`}
+                style={productCard}
+              >
+                <div style={{ fontWeight: 900 }}>
+                  {safe(d.title, "EXPO 특가")}
                 </div>
-                {p.price_text ? (
-                  <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
-                    가격: <b style={{ color: "#111" }}>{p.price_text}</b>
-                  </div>
-                ) : null}
-                <div style={{ marginTop: 12, fontSize: 12, color: "#666" }}>👉 제품 상세</div>
+
+                <div style={{ marginTop: 6, fontSize: 13, color: "#444" }}>
+                  {safe(d.description, "행사 특가 상품")}
+                </div>
+
+                <div style={price}>{safe(d.expo_price_text, "특가")}</div>
+
+                <div style={dealMeta}>
+                  {safe(d.stock_text, "수량 한정")}
+                  {fmtDeadline(d.deadline_at) ? ` · ${fmtDeadline(d.deadline_at)}` : ""}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 상담 요청 */}
+      <InquiryForm boothId={boothAny.booth_id} />
+
+      <section style={{ marginTop: 30 }}>
+        <h2 style={productTitle}>제품</h2>
+
+        {!products || products.length === 0 ? (
+          <div style={emptyBox}>등록된 제품이 없습니다.</div>
+        ) : (
+          <div style={productGrid}>
+            {products.map((p: any) => (
+              <Link
+                key={p.product_id}
+                href={`/expo/product/${p.product_id}`}
+                style={productCard}
+              >
+                <div style={productName}>{safe(p.name, "제품명 없음")}</div>
+
+                <div style={productDesc}>{safe(p.description, "설명 없음")}</div>
               </Link>
             ))}
           </div>
@@ -117,48 +206,167 @@ export default async function ExpoBoothDetailPage({ params }: { params: { id: st
   );
 }
 
-const hero: React.CSSProperties = {
-  border: "1px solid #eee",
-  borderRadius: 18,
-  padding: 16,
-  background: "#fafafa",
+/* 스타일 */
+
+const pageWrap: React.CSSProperties = {
+  maxWidth: 1100,
+  margin: "0 auto",
+  padding: 30,
+  background: "#fff",
+  minHeight: "100vh",
+};
+
+const header: React.CSSProperties = {
   display: "flex",
-  gap: 14,
+  justifyContent: "space-between",
+  alignItems: "flex-end",
+  gap: 12,
+  marginBottom: 20,
   flexWrap: "wrap",
 };
 
-const card: React.CSSProperties = {
+const headerActions: React.CSSProperties = {
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
+const boothBadge: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 800,
+  color: "#ef4444",
+};
+
+const titleStyle: React.CSSProperties = {
+  fontSize: 28,
+  fontWeight: 900,
+  margin: "4px 0",
+  color: "#111",
+};
+
+const meta: React.CSSProperties = {
+  fontSize: 13,
+  color: "#666",
+};
+
+const hero: React.CSSProperties = {
   border: "1px solid #eee",
-  borderRadius: 16,
-  padding: 14,
+  padding: 20,
+  borderRadius: 12,
+  display: "flex",
+  gap: 20,
+  flexWrap: "wrap",
+  background: "#fafafa",
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontWeight: 800,
+  marginBottom: 8,
+};
+
+const introText: React.CSSProperties = {
+  lineHeight: 1.8,
+  color: "#111",
+};
+
+const descWrap: React.CSSProperties = {
+  width: 350,
+  maxWidth: "100%",
+};
+
+const descBox: React.CSSProperties = {
+  border: "1px solid #eee",
+  padding: 12,
+  borderRadius: 8,
   background: "#fff",
+  lineHeight: 1.8,
+  color: "#111",
+};
+
+const contactWrap: React.CSSProperties = {
+  marginTop: 14,
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
 };
 
 const btnPrimary: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "1px solid #111",
+  padding: "10px 14px",
   background: "#111",
   color: "#fff",
-  fontWeight: 900,
+  borderRadius: 8,
   textDecoration: "none",
+  fontWeight: 900,
 };
 
 const btnGhost: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: 12,
+  padding: "10px 14px",
   border: "1px solid #ddd",
-  background: "#fff",
-  color: "#111",
-  fontWeight: 900,
+  borderRadius: 8,
   textDecoration: "none",
+  color: "#111",
+  background: "#fff",
+  fontWeight: 900,
 };
 
 const btnDisabled: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "1px solid #eee",
-  background: "#f3f4f6",
-  color: "#9ca3af",
+  padding: "10px 14px",
+  background: "#eee",
+  borderRadius: 8,
+  color: "#999",
+};
+
+const productTitle: React.CSSProperties = {
+  fontSize: 20,
   fontWeight: 900,
+  color: "#111",
+};
+
+const productGrid: React.CSSProperties = {
+  marginTop: 12,
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill,minmax(250px,1fr))",
+  gap: 14,
+};
+
+const productCard: React.CSSProperties = {
+  border: "1px solid #eee",
+  padding: 16,
+  borderRadius: 12,
+  textDecoration: "none",
+  color: "#111",
+  background: "#fff",
+  display: "block",
+};
+
+const productName: React.CSSProperties = {
+  fontWeight: 900,
+};
+
+const productDesc: React.CSSProperties = {
+  marginTop: 6,
+  fontSize: 13,
+  color: "#444",
+  lineHeight: 1.7,
+};
+
+const price: React.CSSProperties = {
+  marginTop: 10,
+  fontWeight: 900,
+  color: "#dc2626",
+};
+
+const dealMeta: React.CSSProperties = {
+  marginTop: 8,
+  fontSize: 12,
+  color: "#666",
+};
+
+const emptyBox: React.CSSProperties = {
+  marginTop: 12,
+  padding: 16,
+  borderRadius: 12,
+  background: "#f8fafc",
+  color: "#64748b",
+  border: "1px solid #e5e7eb",
 };

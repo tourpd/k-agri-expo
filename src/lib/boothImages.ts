@@ -65,7 +65,10 @@ export async function insertBoothImageRow(
     .maybeSingle();
 
   if (error) throw error;
-  if (!data?.id) throw new Error("insertBoothImageRow: inserted row not returned");
+  if (!data?.id) {
+    throw new Error("insertBoothImageRow: inserted row not returned");
+  }
+
   return data as BoothImageRow;
 }
 
