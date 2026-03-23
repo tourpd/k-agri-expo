@@ -1,4 +1,3 @@
-// src/app/expo/booths/[id]/page.tsx
 import React from "react";
 import Link from "next/link";
 import { getPublicBoothDetail, getPublicDealsByBooth } from "@/lib/expoPublic";
@@ -11,7 +10,7 @@ function isUuid(v: string) {
   return /^[0-9a-f-]{36}$/i.test(v);
 }
 
-function safe(v: any, fallback: string) {
+function safe(v: unknown, fallback: string) {
   const s = typeof v === "string" ? v : "";
   return s.trim() ? s : fallback;
 }
@@ -75,7 +74,6 @@ export default async function ExpoBoothDetailPage({
   const phone = boothAny.phone;
   const email = boothAny.email;
   const description = boothAny.description;
-
   const hallId = boothAny.hall_id ? String(boothAny.hall_id) : null;
 
   const telHref = phone ? `tel:${String(phone).replace(/\s+/g, "")}` : null;
@@ -83,7 +81,6 @@ export default async function ExpoBoothDetailPage({
 
   return (
     <main style={pageWrap}>
-      {/* 방문 기록 */}
       <BoothVisitTracker boothId={boothAny.booth_id} />
 
       <header style={header}>
@@ -93,8 +90,7 @@ export default async function ExpoBoothDetailPage({
           <h1 style={titleStyle}>{boothAny.name ?? "부스"}</h1>
 
           <div style={meta}>
-            {boothAny.region ?? "지역"} ·{" "}
-            {boothAny.category_primary ?? "카테고리"}
+            {boothAny.region ?? "지역"} · {boothAny.category_primary ?? "카테고리"}
           </div>
         </div>
 
@@ -147,7 +143,7 @@ export default async function ExpoBoothDetailPage({
         </div>
       </section>
 
-      {deals.length > 0 && (
+      {deals.length > 0 ? (
         <section style={{ marginTop: 30 }}>
           <h2 style={productTitle}>🔥 EXPO 특가</h2>
 
@@ -170,16 +166,22 @@ export default async function ExpoBoothDetailPage({
 
                 <div style={dealMeta}>
                   {safe(d.stock_text, "수량 한정")}
-                  {fmtDeadline(d.deadline_at) ? ` · ${fmtDeadline(d.deadline_at)}` : ""}
+                  {fmtDeadline(d.deadline_at)
+                    ? ` · ${fmtDeadline(d.deadline_at)}`
+                    : ""}
                 </div>
               </Link>
             ))}
           </div>
         </section>
-      )}
+      ) : null}
 
-      {/* 상담 요청 */}
-      <InquiryForm boothId={boothAny.booth_id} />
+      <section style={{ marginTop: 30 }}>
+        <InquiryForm
+          booth_id={String(boothAny.booth_id)}
+          booth_name={boothAny.name ?? null}
+        />
+      </section>
 
       <section style={{ marginTop: 30 }}>
         <h2 style={productTitle}>제품</h2>
@@ -196,7 +198,9 @@ export default async function ExpoBoothDetailPage({
               >
                 <div style={productName}>{safe(p.name, "제품명 없음")}</div>
 
-                <div style={productDesc}>{safe(p.description, "설명 없음")}</div>
+                <div style={productDesc}>
+                  {safe(p.description, "설명 없음")}
+                </div>
               </Link>
             ))}
           </div>
@@ -206,12 +210,10 @@ export default async function ExpoBoothDetailPage({
   );
 }
 
-/* 스타일 */
-
 const pageWrap: React.CSSProperties = {
   maxWidth: 1100,
   margin: "0 auto",
-  padding: 30,
+  padding: "24px 16px 40px",
   background: "#fff",
   minHeight: "100vh",
 };
@@ -242,6 +244,7 @@ const titleStyle: React.CSSProperties = {
   fontWeight: 900,
   margin: "4px 0",
   color: "#111",
+  lineHeight: 1.2,
 };
 
 const meta: React.CSSProperties = {
@@ -252,7 +255,7 @@ const meta: React.CSSProperties = {
 const hero: React.CSSProperties = {
   border: "1px solid #eee",
   padding: 20,
-  borderRadius: 12,
+  borderRadius: 16,
   display: "flex",
   gap: 20,
   flexWrap: "wrap",
@@ -262,6 +265,7 @@ const hero: React.CSSProperties = {
 const sectionTitle: React.CSSProperties = {
   fontWeight: 800,
   marginBottom: 8,
+  color: "#111",
 };
 
 const introText: React.CSSProperties = {
@@ -277,10 +281,11 @@ const descWrap: React.CSSProperties = {
 const descBox: React.CSSProperties = {
   border: "1px solid #eee",
   padding: 12,
-  borderRadius: 8,
+  borderRadius: 12,
   background: "#fff",
   lineHeight: 1.8,
   color: "#111",
+  whiteSpace: "pre-wrap",
 };
 
 const contactWrap: React.CSSProperties = {
@@ -294,7 +299,7 @@ const btnPrimary: React.CSSProperties = {
   padding: "10px 14px",
   background: "#111",
   color: "#fff",
-  borderRadius: 8,
+  borderRadius: 10,
   textDecoration: "none",
   fontWeight: 900,
 };
@@ -302,7 +307,7 @@ const btnPrimary: React.CSSProperties = {
 const btnGhost: React.CSSProperties = {
   padding: "10px 14px",
   border: "1px solid #ddd",
-  borderRadius: 8,
+  borderRadius: 10,
   textDecoration: "none",
   color: "#111",
   background: "#fff",
@@ -312,7 +317,7 @@ const btnGhost: React.CSSProperties = {
 const btnDisabled: React.CSSProperties = {
   padding: "10px 14px",
   background: "#eee",
-  borderRadius: 8,
+  borderRadius: 10,
   color: "#999",
 };
 

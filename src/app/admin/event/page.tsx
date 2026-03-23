@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type EventRow = {
   id: number;
@@ -22,6 +22,14 @@ type WinnerRow = {
 
 const COUNTDOWN_SECONDS = 120;
 
+async function safeJson(res: Response) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminEventPage() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<number | "">("");
@@ -40,50 +48,68 @@ export default function AdminEventPage() {
     [events, selectedEventId]
   );
 
-  const loadEvents = async () => {
-    const res = await fetch("/api/admin/events", { cache: "no-store" });
-    const data = await res.json();
-
-    if (data.success) {
-      const nextEvents = data.events || [];
-      setEvents(nextEvents);
-
-      if (nextEvents.length > 0) {
-        const defaultEventId =
-          selectedEventId === "" ? nextEvents[0].id : Number(selectedEventId);
-
-        setSelectedEventId(defaultEventId);
-
-        const current =
-          nextEvents.find((e: EventRow) => e.id === defaultEventId) || nextEvents[0];
-
-        setSelectedEventStatus(current.status || "open");
-      }
-    }
-  };
-
-  const loadHistory = async (eventId: number) => {
+  const loadHistory = useCallback(async (eventId: number) => {
     const res = await fetch(`/api/admin/winners?event_id=${eventId}`, {
       cache: "no-store",
     });
-    const data = await res.json();
+    const data = await safeJson(res);
 
-    if (data.success) {
+    if (data?.success) {
       setHistory(data.winners || []);
+    } else {
+      setHistory([]);
     }
-  };
-
-  useEffect(() => {
-    loadEvents();
   }, []);
 
-  useEffect(() => {
-    if (selectedEventId) {
-      const current = events.find((e) => e.id === Number(selectedEventId));
-      setSelectedEventStatus(current?.status || "open");
-      loadHistory(Number(selectedEventId));
+  const loadEvents = useCallback(async () => {
+    const res = await fetch("/api/admin/events", { cache: "no-store" });
+    const data = await safeJson(res);
+
+    if (!data?.success) {
+      setEvents([]);
+      setSelectedEventId("");
+      setSelectedEventStatus("open");
+      return;
     }
-  }, [selectedEventId, events]);
+
+    const nextEvents: EventRow[] = data.events || [];
+    setEvents(nextEvents);
+
+    if (nextEvents.length === 0) {
+      setSelectedEventId("");
+      setSelectedEventStatus("open");
+      setHistory([]);
+      return;
+    }
+
+    const nextSelectedId =
+      selectedEventId === "" ||
+      !nextEvents.some((e) => e.id === Number(selectedEventId))
+        ? nextEvents[0].id
+        : Number(selectedEventId);
+
+    setSelectedEventId(nextSelectedId);
+
+    const current =
+      nextEvents.find((e) => e.id === nextSelectedId) || nextEvents[0];
+
+    setSelectedEventStatus(current.status || "open");
+  }, [selectedEventId]);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
+
+  useEffect(() => {
+    if (!selectedEventId) {
+      setHistory([]);
+      return;
+    }
+
+    const current = events.find((e) => e.id === Number(selectedEventId));
+    setSelectedEventStatus(current?.status || "open");
+    void loadHistory(Number(selectedEventId));
+  }, [selectedEventId, events, loadHistory]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -121,15 +147,16 @@ export default function AdminEventPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await safeJson(res);
 
-      if (!data.success) {
-        setErrorText(data.error || "이벤트 상태 변경 중 오류가 발생했습니다.");
+      if (!data?.success) {
+        setErrorText(data?.error || "이벤트 상태 변경 중 오류가 발생했습니다.");
         return;
       }
 
       setSelectedEventStatus(status);
       await loadEvents();
+      await loadHistory(Number(selectedEventId));
     } catch {
       setErrorText("네트워크 오류가 발생했습니다.");
     } finally {
@@ -166,14 +193,14 @@ export default function AdminEventPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await safeJson(res);
 
-      if (!data.success) {
-        setErrorText(data.error || "추첨 중 오류가 발생했습니다.");
+      if (!data?.success) {
+        setErrorText(data?.error || "추첨 중 오류가 발생했습니다.");
         return;
       }
 
-      setWinner(data.winner);
+      setWinner(data.winner || null);
       setSecondsLeft(COUNTDOWN_SECONDS);
       setTimerRunning(true);
       await loadHistory(Number(selectedEventId));
@@ -213,16 +240,17 @@ export default function AdminEventPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await safeJson(res);
 
-      if (!data.success) {
-        setErrorText(data.error || "당첨 확정 중 오류가 발생했습니다.");
+      if (!data?.success) {
+        setErrorText(data?.error || "당첨 확정 중 오류가 발생했습니다.");
         return;
       }
 
       setWinner((prev) => (prev ? { ...prev, confirmed: true } : prev));
       setTimerRunning(false);
       await loadHistory(Number(selectedEventId));
+      await loadEvents();
     } catch {
       setErrorText("네트워크 오류가 발생했습니다.");
     } finally {
@@ -236,22 +264,37 @@ export default function AdminEventPage() {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
+  const drawDisabled =
+    loading || !selectedEventId || selectedEventStatus === "open";
+
   return (
-    <main className="min-h-screen bg-slate-100 p-6 text-slate-900">
+    <main className="min-h-screen bg-slate-100 p-4 text-slate-900 sm:p-6">
       <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-3xl bg-white p-6 shadow-lg">
+        <section className="rounded-3xl bg-white p-5 shadow-lg sm:p-6">
           <h1 className="text-3xl font-black">라이브 이벤트 추첨 관리자</h1>
           <p className="mt-2 text-slate-600">
-            응모를 마감한 뒤 등수별 추첨을 진행하고, 2분 안에 전화 연결이 되면 당첨 확정합니다.
+            응모를 마감한 뒤 등수별 추첨을 진행하고, 2분 안에 전화 연결이 되면
+            당첨 확정합니다.
           </p>
 
           <div className="mt-6">
             <label className="mb-2 block text-sm font-bold">이벤트 선택</label>
             <select
               value={selectedEventId}
-              onChange={(e) => setSelectedEventId(Number(e.target.value))}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedEventId(value ? Number(value) : "");
+                setWinner(null);
+                setTimerRunning(false);
+                setSecondsLeft(COUNTDOWN_SECONDS);
+                setErrorText("");
+              }}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
             >
+              {events.length === 0 ? (
+                <option value="">이벤트가 없습니다</option>
+              ) : null}
+
               {events.map((event) => (
                 <option key={event.id} value={event.id}>
                   [{event.id}] {event.title}
@@ -264,6 +307,12 @@ export default function AdminEventPage() {
             <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold">
               현재 상태: {selectedEventStatus || "open"}
             </div>
+
+            {selectedEvent ? (
+              <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                선택 이벤트: {selectedEvent.title}
+              </div>
+            ) : null}
 
             <button
               type="button"
@@ -282,13 +331,22 @@ export default function AdminEventPage() {
             >
               응모 재개
             </button>
+
+            <button
+              type="button"
+              onClick={() => changeEventStatus("done")}
+              disabled={loading || !selectedEventId}
+              className="rounded-2xl bg-slate-800 px-4 py-3 font-black text-white disabled:opacity-60"
+            >
+              이벤트 종료
+            </button>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
               onClick={() => drawWinner(1)}
-              disabled={loading}
+              disabled={drawDisabled}
               className="rounded-2xl bg-yellow-400 px-5 py-3 font-black text-slate-900 disabled:opacity-60"
             >
               {loading ? "처리 중..." : "1등 추첨"}
@@ -297,7 +355,7 @@ export default function AdminEventPage() {
             <button
               type="button"
               onClick={() => drawWinner(2)}
-              disabled={loading}
+              disabled={drawDisabled}
               className="rounded-2xl bg-slate-800 px-5 py-3 font-black text-white disabled:opacity-60"
             >
               {loading ? "처리 중..." : "2등 추첨"}
@@ -306,12 +364,18 @@ export default function AdminEventPage() {
             <button
               type="button"
               onClick={() => drawWinner(3)}
-              disabled={loading}
+              disabled={drawDisabled}
               className="rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white disabled:opacity-60"
             >
               {loading ? "처리 중..." : "3등 추첨"}
             </button>
           </div>
+
+          {selectedEventStatus === "open" ? (
+            <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700">
+              추첨 전에 먼저 <b>응모 마감</b>을 눌러 주세요.
+            </div>
+          ) : null}
 
           {errorText ? (
             <div className="mt-4 rounded-xl bg-red-100 px-4 py-3 font-bold text-red-700">
@@ -321,13 +385,15 @@ export default function AdminEventPage() {
         </section>
 
         {winner ? (
-          <section className="rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
+          <section className="rounded-3xl bg-slate-950 p-6 text-white shadow-2xl sm:p-8">
             <div className="text-sm font-bold text-emerald-300">현재 당첨 후보</div>
-            <div className="mt-3 text-5xl font-black">{winner.prize_rank}등</div>
+            <div className="mt-3 text-4xl font-black sm:text-5xl">
+              {winner.prize_rank}등
+            </div>
 
-            <div className="mt-6 rounded-2xl bg-white/10 p-6">
+            <div className="mt-6 rounded-2xl bg-white/10 p-5 sm:p-6">
               <div className="text-sm text-slate-300">참가번호</div>
-              <div className="mt-2 text-5xl font-black tracking-wide text-yellow-300">
+              <div className="mt-2 break-all text-4xl font-black tracking-wide text-yellow-300 sm:text-5xl">
                 {winner.entry_code}
               </div>
 
@@ -343,8 +409,10 @@ export default function AdminEventPage() {
               </div>
 
               <div className="mt-6 rounded-2xl bg-black/20 p-5 text-center">
-                <div className="text-sm font-bold text-slate-300">전화 대기 시간</div>
-                <div className="mt-2 text-6xl font-black text-orange-300">
+                <div className="text-sm font-bold text-slate-300">
+                  전화 대기 시간
+                </div>
+                <div className="mt-2 text-5xl font-black text-orange-300 sm:text-6xl">
                   {formatTime(secondsLeft)}
                 </div>
                 <div className="mt-2 text-sm text-slate-300">
@@ -375,7 +443,7 @@ export default function AdminEventPage() {
           </section>
         ) : null}
 
-        <section className="rounded-3xl bg-white p-6 shadow-lg">
+        <section className="rounded-3xl bg-white p-5 shadow-lg sm:p-6">
           <h2 className="text-2xl font-black">추첨 기록</h2>
 
           <div className="mt-4 overflow-x-auto">

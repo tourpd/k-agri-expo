@@ -4,17 +4,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 type Body = {
-  inquiry_id?: string;
-  status?:
-    | "new"
-    | "notified"
-    | "contacted"
-    | "consulting"
-    | "quoted"
-    | "ordered"
-    | "closed"
-    | "spam";
-  vendor_memo?: string | null;
+  lead_id?: string;
+  lead_status?: "new" | "warm" | "hot" | "customer" | "dormant";
+  memo?: string | null;
 };
 
 function clean(v: unknown) {
@@ -37,25 +29,25 @@ export async function POST(req: Request) {
     }
 
     const body = (await req.json()) as Body;
-    const inquiry_id = clean(body.inquiry_id);
-    const status = clean(body.status) as Body["status"];
-    const vendor_memo = clean(body.vendor_memo) || null;
 
-    if (!inquiry_id) {
+    const lead_id = clean(body.lead_id);
+    const lead_status = clean(body.lead_status) as Body["lead_status"];
+    const memo = clean(body.memo) || null;
+
+    if (!lead_id) {
       return NextResponse.json(
-        { ok: false, error: "inquiry_id is required." },
+        { ok: false, error: "lead_id is required." },
         { status: 400 }
       );
     }
 
-    if (!status) {
+    if (!lead_status) {
       return NextResponse.json(
-        { ok: false, error: "status is required." },
+        { ok: false, error: "lead_status is required." },
         { status: 400 }
       );
     }
 
-    // 현재 로그인 사용자의 vendor 찾기
     const { data: vendor, error: vendorError } = await supabase
       .from("vendors")
       .select("id, user_id")
@@ -76,7 +68,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 이 vendor가 가진 booth들 찾기
     const { data: booths, error: boothError } = await supabase
       .from("booths")
       .select("booth_id")
@@ -98,45 +89,35 @@ export async function POST(req: Request) {
       );
     }
 
-    // 문의가 내 booth 것인지 확인
-    const { data: inquiry, error: inquiryError } = await supabase
-      .from("expo_inquiries")
+    const { data: lead, error: leadError } = await supabase
+      .from("expo_leads")
       .select("*")
-      .eq("id", inquiry_id)
+      .eq("id", lead_id)
       .in("booth_id", boothIds)
       .maybeSingle();
 
-    if (inquiryError) {
+    if (leadError) {
       return NextResponse.json(
-        { ok: false, error: inquiryError.message },
+        { ok: false, error: leadError.message },
         { status: 500 }
       );
     }
 
-    if (!inquiry) {
+    if (!lead) {
       return NextResponse.json(
-        { ok: false, error: "Inquiry not found or access denied." },
+        { ok: false, error: "Lead not found or access denied." },
         { status: 404 }
       );
     }
 
-    const patch: Record<string, unknown> = {
-      status,
-      vendor_memo,
-    };
-
-    if (status === "contacted") {
-      patch.contacted_at = new Date().toISOString();
-    }
-
-    if (status === "closed" || status === "spam") {
-      patch.closed_at = new Date().toISOString();
-    }
-
     const { data: updated, error: updateError } = await supabase
-      .from("expo_inquiries")
-      .update(patch)
-      .eq("id", inquiry_id)
+      .from("expo_leads")
+      .update({
+        lead_status,
+        memo,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", lead_id)
       .select("*")
       .single();
 
@@ -147,29 +128,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // 주문 상태로 바뀌면 lead_status도 customer로 승격
-    if (status === "ordered") {
-      const phone = typeof inquiry.phone === "string" ? inquiry.phone.trim() : "";
-      if (phone) {
-        await supabase
-          .from("expo_leads")
-          .update({
-            lead_status: "customer",
-            order_count: 1,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("booth_id", inquiry.booth_id)
-          .eq("phone", phone);
-      }
-    }
-
     return NextResponse.json({
       ok: true,
-      inquiry: updated,
+      lead: updated,
     });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || "failed to update inquiry" },
+      { ok: false, error: e?.message || "failed to update lead" },
       { status: 500 }
     );
   }

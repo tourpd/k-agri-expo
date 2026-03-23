@@ -68,6 +68,7 @@ export default function AdminLoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="예: admin"
+              autoComplete="username"
             />
           </div>
 
@@ -79,6 +80,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="비밀번호 입력"
+              autoComplete="current-password"
             />
           </div>
 
@@ -149,6 +151,8 @@ const S: Record<string, React.CSSProperties> = {
     border: "1px solid #dbe2ea",
     boxSizing: "border-box",
     fontSize: 18,
+    outline: "none",
+    background: "#fff",
   },
   submitBtn: {
     marginTop: 8,

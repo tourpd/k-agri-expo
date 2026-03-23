@@ -1,123 +1,186 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { formatEntryCode } from "@/lib/entryCode";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = "force-dynamic";
 
-function padNumber(num: number) {
-  return String(num).padStart(5, "0");
+type Body = {
+  name?: string | null;
+  phone?: string;
+};
+
+function clean(v: unknown) {
+  return typeof v === "string" ? v.trim() : "";
 }
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as Body;
 
-    const {
-      event_id,
-      name,
-      phone,
-      region,
-      crop,
-    }: {
-      event_id?: number;
-      name?: string;
-      phone?: string;
-      region?: string;
-      crop?: string;
-    } = body;
+    const name = clean(body.name) || null;
+    const phone = clean(body.phone);
 
-    if (!event_id || !name?.trim() || !phone?.trim()) {
+    if (!phone) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "event_id, 이름, 전화번호는 필수입니다.",
-        },
+        { ok: false, error: "phone is required." },
         { status: 400 }
       );
     }
 
-    const cleanPhone = phone.replace(/[^0-9]/g, "");
+    const supabase = createSupabaseAdminClient();
 
-    // 이미 응모했는지 확인
-    const { data: existing } = await supabase
+    // 1) 이미 참여한 번호 조회
+    const { data: existing, error: existingError } = await supabase
       .from("event_entries")
-      .select("entry_code")
-      .eq("event_id", event_id)
-      .eq("phone", cleanPhone)
+      .select("id, name, phone, entry_no, entry_code, created_at")
+      .eq("phone", phone)
       .maybeSingle();
 
-    if (existing) {
+    if (existingError) {
+      return NextResponse.json(
+        { ok: false, error: existingError.message },
+        { status: 500 }
+      );
+    }
+
+    // 2) 이미 참가번호까지 있으면 그대로 반환
+    if (existing?.entry_code) {
       return NextResponse.json({
-        success: true,
-        entry_code: existing.entry_code,
-        message: "이미 응모된 전화번호입니다.",
+        ok: true,
+        duplicated: true,
+        entry: existing,
       });
     }
 
-    // 현재 응모자 수 조회
-    const { count, error: countError } = await supabase
-      .from("event_entries")
-      .select("*", { count: "exact", head: true })
-      .eq("event_id", event_id);
+    // 3) 기존 row는 있는데 entry_code만 없다면 복구 생성
+    if (existing && existing.entry_no) {
+      const recoveredEntryCode = formatEntryCode(existing.entry_no);
 
-    if (countError) {
-      return NextResponse.json(
-        { success: false, error: countError.message },
-        { status: 500 }
-      );
+      const { data: recovered, error: recoverError } = await supabase
+        .from("event_entries")
+        .update({
+          entry_code: recoveredEntryCode,
+          name: name ?? existing.name ?? null,
+        })
+        .eq("id", existing.id)
+        .select("id, name, phone, entry_no, entry_code, created_at")
+        .single();
+
+      if (recoverError) {
+        return NextResponse.json(
+          { ok: false, error: recoverError.message },
+          { status: 500 }
+        );
+      }
+
+      try {
+        const origin = new URL(req.url).origin;
+
+        await fetch(`${origin}/api/notifications/kakao`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            template_code: "event_entry_user",
+            to: phone,
+            variables: {
+              name: name ?? existing.name ?? "참가자",
+              entry_code: recoveredEntryCode,
+            },
+          }),
+        });
+      } catch (notifyError) {
+        console.error("Dummy kakao notify failed:", notifyError);
+      }
+
+      return NextResponse.json({
+        ok: true,
+        duplicated: true,
+        entry: recovered,
+      });
     }
 
-    const nextNumber = (count || 0) + 1;
-
-    if (nextNumber > 99999) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "응모 인원이 최대치를 초과했습니다.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const entryCode = padNumber(nextNumber);
-
-    const { data, error } = await supabase
+    // 4) 신규 row 생성 -> identity(entry_no) 받기
+    const { data: inserted, error: insertError } = await supabase
       .from("event_entries")
       .insert({
-        event_id,
-        name: name.trim(),
-        phone: cleanPhone,
-        entry_code: entryCode,
-        region: region?.trim() || null,
-        crop: crop?.trim() || null,
+        name,
+        phone,
       })
-      .select()
+      .select("id, name, phone, entry_no, entry_code, created_at")
       .single();
 
-    if (error) {
+    if (insertError) {
       return NextResponse.json(
-        {
-          success: false,
-          error: error.message,
-        },
+        { ok: false, error: insertError.message },
         { status: 500 }
       );
+    }
+
+    if (!inserted?.id) {
+      return NextResponse.json(
+        { ok: false, error: "inserted row id was not returned." },
+        { status: 500 }
+      );
+    }
+
+    const entryNo = inserted.entry_no;
+    if (!entryNo) {
+      return NextResponse.json(
+        { ok: false, error: "entry_no was not generated." },
+        { status: 500 }
+      );
+    }
+
+    const entryCode = formatEntryCode(entryNo);
+
+    const { data: updated, error: updateError } = await supabase
+      .from("event_entries")
+      .update({
+        entry_code: entryCode,
+      })
+      .eq("id", inserted.id)
+      .select("id, name, phone, entry_no, entry_code, created_at")
+      .single();
+
+    if (updateError) {
+      return NextResponse.json(
+        { ok: false, error: updateError.message },
+        { status: 500 }
+      );
+    }
+
+    // 5) 더미 카카오 알림 호출
+    try {
+      const origin = new URL(req.url).origin;
+
+      await fetch(`${origin}/api/notifications/kakao`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          template_code: "event_entry_user",
+          to: phone,
+          variables: {
+            name: name ?? "참가자",
+            entry_code: entryCode,
+          },
+        }),
+      });
+    } catch (notifyError) {
+      console.error("Dummy kakao notify failed:", notifyError);
     }
 
     return NextResponse.json({
-      success: true,
-      entry_code: data.entry_code,
-      message: "이벤트 참여 완료",
-      entry: data,
+      ok: true,
+      duplicated: false,
+      entry: updated,
     });
-  } catch (error) {
+  } catch (e: any) {
     return NextResponse.json(
-      {
-        success: false,
-        error: "응모 처리 중 오류가 발생했습니다.",
-      },
+      { ok: false, error: e?.message || "event entry failed" },
       { status: 500 }
     );
   }

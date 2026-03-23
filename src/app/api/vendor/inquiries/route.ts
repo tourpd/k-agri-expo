@@ -1,4 +1,7 @@
+import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -9,32 +12,47 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return Response.json(
-        { ok: false, error: "로그인이 필요합니다." },
-        { status: 401 }
-      );
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data: vendor } = await supabase
+      .from("vendors")
+      .select("id, user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!vendor) {
+      return NextResponse.json({ ok: false, error: "Vendor not found" }, { status: 404 });
+    }
+
+    const { data: booths } = await supabase
+      .from("booths")
+      .select("booth_id")
+      .eq("vendor_id", vendor.id);
+
+    const boothIds = (booths ?? []).map((b: any) => String(b.booth_id));
+
+    if (boothIds.length === 0) {
+      return NextResponse.json({ ok: true, inquiries: [] });
+    }
+
+    const { data: inquiries, error } = await supabase
       .from("expo_inquiries")
       .select("*")
-      .eq("vendor_user_id", user.id)
+      .in("booth_id", boothIds)
       .order("created_at", { ascending: false });
 
     if (error) {
-      return Response.json(
-        { ok: false, error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
-    return Response.json({
+    return NextResponse.json({
       ok: true,
-      items: data ?? [],
+      inquiries: inquiries ?? [],
     });
   } catch (e: any) {
-    return Response.json(
-      { ok: false, error: e?.message || "문의 목록 조회 오류" },
+    return NextResponse.json(
+      { ok: false, error: e?.message || "failed to load inquiries" },
       { status: 500 }
     );
   }
