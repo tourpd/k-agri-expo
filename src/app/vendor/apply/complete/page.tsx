@@ -1,7 +1,16 @@
-"use client";
-
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+
+type CompletePageProps = {
+  searchParams: Promise<{
+    application_code?: string;
+    application_id?: string;
+    company_name?: string;
+    booth_type?: string;
+    duration_key?: string;
+    amount_krw?: string;
+    phone?: string;
+  }>;
+};
 
 const OPERATIONS = {
   bankName: "기업은행",
@@ -46,18 +55,20 @@ function getProductLabel(boothType: string, durationKey: string) {
   return `${booth} · ${duration}`;
 }
 
-export default function VendorApplyCompletePage() {
-  const params = useSearchParams();
+export default async function VendorApplyCompletePage({
+  searchParams,
+}: CompletePageProps) {
+  const params = await searchParams;
 
-  const applicationCode = params.get("application_code") || "";
-  const applicationId = params.get("application_id") || "";
+  const applicationCode = params.application_code ?? "";
+  const applicationId = params.application_id ?? "";
   const displayApplicationNo = applicationCode || applicationId || "-";
 
-  const companyName = params.get("company_name") || "-";
-  const boothType = params.get("booth_type") || "";
-  const durationKey = params.get("duration_key") || "";
-  const amountKrw = Number(params.get("amount_krw") || "0");
-  const phone = params.get("phone") || "";
+  const companyName = params.company_name ?? "-";
+  const boothType = params.booth_type ?? "";
+  const durationKey = params.duration_key ?? "";
+  const amountKrw = Number(params.amount_krw ?? "0");
+  const phone = params.phone ?? "";
 
   const boothLabel = getBoothLabel(boothType);
   const durationLabel = getDurationLabel(durationKey);
@@ -80,7 +91,8 @@ export default function VendorApplyCompletePage() {
       search.set("phone", phone);
     }
 
-    return `/vendor/order-status?${search.toString()}`;
+    const qs = search.toString();
+    return qs ? `/vendor/order-status?${qs}` : "/vendor/order-status";
   })();
 
   return (
@@ -173,20 +185,9 @@ export default function VendorApplyCompletePage() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(copyApplicationText);
-                  alert("신청 정보가 복사되었습니다.");
-                } catch {
-                  alert("복사에 실패했습니다.");
-                }
-              }}
-              className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900"
-            >
-              신청정보 복사
-            </button>
+            <div className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900">
+              신청정보 복사: 신청번호와 회사명 저장
+            </div>
 
             <Link
               href={statusHref}
@@ -268,21 +269,10 @@ export default function VendorApplyCompletePage() {
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(copyAccountText);
-                    alert("계좌 정보가 복사되었습니다.");
-                  } catch {
-                    alert("복사에 실패했습니다.");
-                  }
-                }}
-                className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white"
-              >
-                계좌정보 복사
-              </button>
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-8 text-slate-700">
+              <div>
+                <b>계좌 정보:</b> {copyAccountText}
+              </div>
             </div>
           </section>
         )}
