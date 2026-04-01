@@ -242,8 +242,8 @@ export default async function ExpoIndexPage() {
       <ExpoFarmerConsultSection questions={monthlyQuestionItems as any} />
 
       <ExpoProblemSection
-        contents={problemContents}
-        quickLinks={problemSectionData.quickLinks}
+        contents={problemContents as any}
+        quickLinks={problemSectionData.quickLinks as any}
       />
 
       <ExpoNewProductsSection items={newProducts} />
