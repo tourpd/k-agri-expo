@@ -239,7 +239,7 @@ export default async function ExpoIndexPage() {
 
       <ExpoDealsSection items={homeDeals} />
 
-      <ExpoFarmerConsultSection questions={monthlyQuestionItems} />
+      <ExpoFarmerConsultSection questions={monthlyQuestionItems as any} />
 
       <ExpoProblemSection
         contents={problemContents}
