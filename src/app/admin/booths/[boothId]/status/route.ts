@@ -1,6 +1,6 @@
 // src/app/admin/booths/[boothId]/status/route.ts
 import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export async function PATCH(req: Request, { params }: Params) {
       );
     }
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
       .from("booths")
