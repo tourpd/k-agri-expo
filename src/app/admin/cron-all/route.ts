@@ -1,7 +1,5 @@
 export async function GET() {
-  await runBankMatch();
-  await expireOrders();
-  await autoCloseEvents();
+  console.log("cron-all running");
 
   return Response.json({ success: true });
 }
