@@ -1,0 +1,38 @@
+// src/app/expo/expoMapConfig.ts
+import type { HallHotspot } from "./ExpoMapClient";
+
+/**
+ * ✅ 전시장 전시관 정의
+ * - hallId: 라우팅 키 (/expo/hall/[hallId])
+ * - box: 지도 위 핫스팟 위치(%) — 추후 실제 지도 이미지에 맞춰 조정
+ */
+export const halls: HallHotspot[] = [
+  {
+    hallId: "agri-materials",
+    title: "농자재관",
+    subtitle: "비료·영양제·유기자재",
+    color: "#16a34a",
+    box: { left: 8, top: 18, width: 38, height: 18 },
+  },
+  {
+    hallId: "machinery",
+    title: "농기계관",
+    subtitle: "돌분쇄기·정식기·파종기",
+    color: "#2563eb",
+    box: { left: 54, top: 16, width: 38, height: 18 },
+  },
+  {
+    hallId: "seeds",
+    title: "종자·육묘관",
+    subtitle: "품종·육묘·육묘자재",
+    color: "#f59e0b",
+    box: { left: 8, top: 64, width: 38, height: 18 },
+  },
+  {
+    hallId: "smartfarm",
+    title: "스마트농업관",
+    subtitle: "센서·관수·자동화",
+    color: "#7c3aed",
+    box: { left: 54, top: 64, width: 38, height: 18 },
+  },
+];

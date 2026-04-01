@@ -1,0 +1,305 @@
+// src/app/expo/ExpoMapClient.tsx
+"use client";
+
+import React from "react";
+
+export type HallHotspot = {
+  hallId: string;
+  title: string;
+  subtitle: string;
+  color: string;
+
+  // ✅ 핫스팟 위치(%) — 지도 이미지 위에 올릴 버튼 박스
+  // left/top/width/height 는 0~100 (퍼센트)
+  box: { left: number; top: number; width: number; height: number };
+};
+
+export default function ExpoMapClient({ halls }: { halls: HallHotspot[] }) {
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = React.useState(1);
+  const [pos, setPos] = React.useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = React.useState(false);
+  const startRef = React.useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+
+  function clamp(n: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function onWheel(e: React.WheelEvent) {
+    // ✅ 트랙패드/휠 확대
+    if (!e.ctrlKey && Math.abs(e.deltaY) < 2) return; // 너무 미세한 움직임 방지
+    e.preventDefault();
+    const next = clamp(scale + (e.deltaY > 0 ? -0.08 : 0.08), 1, 2.4);
+    setScale(next);
+  }
+
+  function onPointerDown(e: React.PointerEvent) {
+    // ✅ 드래그 이동
+    setDragging(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    startRef.current = { x: e.clientX, y: e.clientY, px: pos.x, py: pos.y };
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (!dragging || !startRef.current) return;
+    const dx = e.clientX - startRef.current.x;
+    const dy = e.clientY - startRef.current.y;
+    setPos({ x: startRef.current.px + dx, y: startRef.current.py + dy });
+  }
+
+  function onPointerUp() {
+    setDragging(false);
+    startRef.current = null;
+  }
+
+  function zoomIn() {
+    setScale((s) => clamp(s + 0.15, 1, 2.4));
+  }
+  function zoomOut() {
+    setScale((s) => clamp(s - 0.15, 1, 2.4));
+  }
+  function reset() {
+    setScale(1);
+    setPos({ x: 0, y: 0 });
+  }
+
+  return (
+    <div>
+      {/* ✅ 툴바(모바일 큰 버튼) */}
+      <div style={toolbar}>
+        <div style={{ fontWeight: 950, fontSize: 16 }}>전시장 지도</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button type="button" onClick={zoomOut} style={toolBtn} aria-label="축소">
+            −
+          </button>
+          <button type="button" onClick={zoomIn} style={toolBtn} aria-label="확대">
+            +
+          </button>
+          <button type="button" onClick={reset} style={toolBtnWide} aria-label="초기화">
+            초기화
+          </button>
+        </div>
+      </div>
+
+      {/* ✅ 지도 영역 */}
+      <div
+        ref={containerRef}
+        style={stage}
+        onWheel={onWheel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+      >
+        {/* ✅ “지도” 배경(우선은 가상 지도 느낌 / 나중에 실제 박람회 지도 이미지로 교체) */}
+        <div
+          style={{
+            ...map,
+            transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`,
+            cursor: dragging ? "grabbing" : "grab",
+          }}
+        >
+          {/* 배경(가상 박람회장) */}
+          <div style={mapBg}>
+            <div style={mapTitle}>K-Agri Expo 전시장</div>
+            <div style={mapHint}>전시관을 터치해서 입장하십시오</div>
+
+            {/* “도로/구역” 같은 시각 요소(가볍게) */}
+            <div style={roadH} />
+            <div style={roadV} />
+            <div style={plaza}>중앙 광장</div>
+          </div>
+
+          {/* ✅ 핫스팟 버튼들 */}
+          {halls.map((h) => (
+            <a
+              key={h.hallId}
+              href={`/expo/hall/${h.hallId}`}
+              style={{
+                ...hotspot,
+                left: `${h.box.left}%`,
+                top: `${h.box.top}%`,
+                width: `${h.box.width}%`,
+                height: `${h.box.height}%`,
+                borderColor: h.color,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ ...hotDot, background: h.color }} />
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <div style={hotTitle}>{h.title}</div>
+                  <div style={hotSub}>{h.subtitle}</div>
+                </div>
+              </div>
+              <div style={enterPill}>입장</div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div style={tip}>
+        ✅ 지도를 <b>드래그</b>로 이동 / <b>+ −</b>로 확대·축소 가능합니다.
+      </div>
+    </div>
+  );
+}
+
+const toolbar: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 12,
+  padding: "14px 14px",
+  borderBottom: "1px solid #eee",
+  background: "#fff",
+};
+
+const toolBtn: React.CSSProperties = {
+  minWidth: 56,
+  height: 56, // ✅ 터치영역 56px 이상
+  borderRadius: 16,
+  border: "1px solid #111",
+  background: "#111",
+  color: "#fff",
+  fontSize: 24,
+  fontWeight: 950,
+};
+
+const toolBtnWide: React.CSSProperties = {
+  minWidth: 92,
+  height: 56,
+  borderRadius: 16,
+  border: "1px solid #111",
+  background: "#fff",
+  color: "#111",
+  fontSize: 16,
+  fontWeight: 950,
+};
+
+const stage: React.CSSProperties = {
+  position: "relative",
+  height: 420,
+  background: "#f3f4f6",
+  overflow: "hidden",
+  touchAction: "none",
+};
+
+const map: React.CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  transformOrigin: "center",
+};
+
+const mapBg: React.CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  borderRadius: 0,
+  background:
+    "linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.65))",
+};
+
+const mapTitle: React.CSSProperties = {
+  position: "absolute",
+  left: 16,
+  top: 14,
+  fontSize: 20,
+  fontWeight: 950,
+  color: "#111",
+};
+
+const mapHint: React.CSSProperties = {
+  position: "absolute",
+  left: 16,
+  top: 42,
+  fontSize: 16,
+  fontWeight: 900,
+  color: "#444",
+};
+
+const roadH: React.CSSProperties = {
+  position: "absolute",
+  left: "6%",
+  right: "6%",
+  top: "52%",
+  height: 14,
+  borderRadius: 999,
+  background: "rgba(17,17,17,0.10)",
+};
+
+const roadV: React.CSSProperties = {
+  position: "absolute",
+  top: "12%",
+  bottom: "10%",
+  left: "50%",
+  width: 14,
+  transform: "translateX(-7px)",
+  borderRadius: 999,
+  background: "rgba(17,17,17,0.08)",
+};
+
+const plaza: React.CSSProperties = {
+  position: "absolute",
+  left: "50%",
+  top: "52%",
+  transform: "translate(-50%, -50%)",
+  padding: "10px 14px",
+  borderRadius: 16,
+  background: "#fff",
+  border: "1px solid rgba(0,0,0,0.08)",
+  fontSize: 16,
+  fontWeight: 950,
+};
+
+const hotspot: React.CSSProperties = {
+  position: "absolute",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 10,
+  padding: "12px 12px",
+  borderRadius: 18,
+  border: "2px solid #111",
+  background: "rgba(255,255,255,0.92)",
+  textDecoration: "none",
+  color: "#111",
+  minHeight: 64, // ✅ 터치영역 크게
+};
+
+const hotDot: React.CSSProperties = {
+  width: 14,
+  height: 14,
+  borderRadius: 999,
+  flex: "0 0 auto",
+};
+
+const hotTitle: React.CSSProperties = {
+  fontSize: 18, // ✅ 고령층 가독성
+  fontWeight: 950,
+  lineHeight: 1.2,
+};
+
+const hotSub: React.CSSProperties = {
+  marginTop: 3,
+  fontSize: 15,
+  fontWeight: 900,
+  opacity: 0.75,
+};
+
+const enterPill: React.CSSProperties = {
+  padding: "10px 14px",
+  borderRadius: 999,
+  background: "#111",
+  color: "#fff",
+  fontWeight: 950,
+  fontSize: 16,
+  minHeight: 44,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const tip: React.CSSProperties = {
+  padding: "12px 14px 14px",
+  fontSize: 15,
+  color: "#555",
+  lineHeight: 1.5,
+};
