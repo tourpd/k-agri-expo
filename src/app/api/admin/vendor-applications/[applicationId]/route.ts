@@ -57,7 +57,11 @@ export async function PATCH(
         .single();
 
       if (error) return jsonError(error.message, 500);
-      return Response.json({ success: true, item: data });
+
+      return Response.json({
+        success: true,
+        item: data,
+      });
     }
 
     if (action === "confirm_payment") {
@@ -74,7 +78,11 @@ export async function PATCH(
         .single();
 
       if (error) return jsonError(error.message, 500);
-      return Response.json({ success: true, item: data });
+
+      return Response.json({
+        success: true,
+        item: data,
+      });
     }
 
     if (action === "unconfirm_payment") {
@@ -91,7 +99,11 @@ export async function PATCH(
         .single();
 
       if (error) return jsonError(error.message, 500);
-      return Response.json({ success: true, item: data });
+
+      return Response.json({
+        success: true,
+        item: data,
+      });
     }
 
     if (action === "reject") {
@@ -109,7 +121,11 @@ export async function PATCH(
         .single();
 
       if (error) return jsonError(error.message, 500);
-      return Response.json({ success: true, item: data });
+
+      return Response.json({
+        success: true,
+        item: data,
+      });
     }
 
     if (action === "approve") {
@@ -142,7 +158,7 @@ export async function PATCH(
         await supabase
           .from("vendor_applications_v2")
           .update({
-            provision_status: "done",
+            provision_status: "completed",
             provision_result: JSON.stringify(provision),
             updated_at: new Date().toISOString(),
           })
