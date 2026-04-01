@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createSupabaseServerClient();
-    const admin = createSupabaseAdminClient();
+    const admin = getSupabaseAdmin();
 
     const {
       data: { user },

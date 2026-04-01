@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
-import * as vendorProvisioning from "@/lib/vendor-provisioning";
+import { provisionVendorAndBooth } from "@/lib/vendor-provisioning";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,49 +14,6 @@ type PatchBody = {
   admin_note?: string;
   rejection_reason?: string;
 };
-
-type ProvisionResult = {
-  ok: boolean;
-  reason?: string;
-  [key: string]: unknown;
-};
-
-async function runProvision(applicationId: string): Promise<ProvisionResult> {
-  const mod = vendorProvisioning as Record<string, unknown>;
-
-  const candidate =
-    mod.provisionApprovedVendorApplication ||
-    mod.provisionVendorAndBooth ||
-    mod.provisionVendor ||
-    mod.provisionApprovedApplication;
-
-  if (typeof candidate !== "function") {
-    return {
-      ok: false,
-      reason:
-        "vendor-provisioning.ts에 사용할 수 있는 provisioning 함수가 없습니다. " +
-        "provisionApprovedVendorApplication / provisionVendorAndBooth / provisionVendor / provisionApprovedApplication 중 하나를 export 해주세요.",
-    };
-  }
-
-  try {
-    const result = await (candidate as (applicationId: string) => Promise<ProvisionResult>)(applicationId);
-
-    if (!result || typeof result !== "object") {
-      return {
-        ok: false,
-        reason: "provision 함수가 올바른 결과 객체를 반환하지 않았습니다.",
-      };
-    }
-
-    return result;
-  } catch (error) {
-    return {
-      ok: false,
-      reason: error instanceof Error ? error.message : "provision 실행 중 오류",
-    };
-  }
-}
 
 export async function PATCH(
   req: Request,
@@ -160,14 +117,16 @@ export async function PATCH(
         return jsonError("유료 신청은 입금확인 후 승인할 수 있습니다.", 400);
       }
 
+      const nowIso = new Date().toISOString();
+
       const { data: approved, error: approveError } = await supabase
         .from("vendor_applications_v2")
         .update({
           status: "approved",
-          approved_at: new Date().toISOString(),
+          approved_at: nowIso,
           approved_by_email: adminEmail,
           provision_status: "processing",
-          updated_at: new Date().toISOString(),
+          updated_at: nowIso,
         })
         .eq("application_id", applicationId)
         .select("*")
@@ -177,44 +136,50 @@ export async function PATCH(
         return jsonError(approveError?.message || "승인 처리 실패", 500);
       }
 
-      const provision = await runProvision(applicationId);
+      try {
+        const provision = await provisionVendorAndBooth(applicationId);
 
-      if (!provision.ok) {
         await supabase
           .from("vendor_applications_v2")
           .update({
-            provision_status: "failed",
-            provision_result: provision,
+            provision_status: "done",
+            provision_result: JSON.stringify(provision),
             updated_at: new Date().toISOString(),
           })
           .eq("application_id", applicationId);
 
-        return jsonError(provision.reason || "Provision 실패", 500);
+        const { data: finalRow, error: finalError } = await supabase
+          .from("vendor_applications_v2")
+          .select("*")
+          .eq("application_id", applicationId)
+          .single();
+
+        if (finalError || !finalRow) {
+          return jsonError(finalError?.message || "최종 결과 조회 실패", 500);
+        }
+
+        return Response.json({
+          success: true,
+          item: finalRow,
+          provision,
+        });
+      } catch (provisionError) {
+        const reason =
+          provisionError instanceof Error
+            ? provisionError.message
+            : "부스/벤더 생성 중 오류가 발생했습니다.";
+
+        await supabase
+          .from("vendor_applications_v2")
+          .update({
+            provision_status: "failed",
+            provision_result: reason,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("application_id", applicationId);
+
+        return jsonError(reason, 500);
       }
-
-      await supabase
-        .from("vendor_applications_v2")
-        .update({
-          provision_status: "done",
-          provision_result: provision,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("application_id", applicationId);
-
-      const { data: finalRow, error: finalError } = await supabase
-        .from("vendor_applications_v2")
-        .select("*")
-        .eq("application_id", applicationId)
-        .single();
-
-      if (finalError || !finalRow) {
-        return jsonError(finalError?.message || "최종 결과 조회 실패", 500);
-      }
-
-      return Response.json({
-        success: true,
-        item: finalRow,
-      });
     }
 
     return jsonError("지원하지 않는 action입니다.", 400);
