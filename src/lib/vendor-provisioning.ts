@@ -32,6 +32,14 @@ type ExistingBoothRow = {
   slot_code: string | null;
 };
 
+type ProvisionResult = {
+  vendorId: string;
+  boothId: string;
+  reused: boolean;
+  hallId: string | null;
+  slotCode: string | null;
+};
+
 function normalize(value: string | null | undefined) {
   return (value || "").trim();
 }
@@ -139,7 +147,9 @@ async function findExistingBooth(params: {
   return data || null;
 }
 
-export async function provisionVendorAndBooth(applicationId: string) {
+export async function provisionVendorAndBooth(
+  applicationId: string
+): Promise<ProvisionResult> {
   const supabase = getSupabaseAdmin();
 
   const { data: app, error: appError } = await supabase
@@ -176,6 +186,8 @@ export async function provisionVendorAndBooth(applicationId: string) {
       vendorId: app.provisioned_vendor_id,
       boothId: app.provisioned_booth_id,
       reused: true,
+      hallId: null,
+      slotCode: null,
     };
   }
 
@@ -190,12 +202,15 @@ export async function provisionVendorAndBooth(applicationId: string) {
   const businessAddress = normalize(app.business_address);
   const websiteUrl = normalize(app.website_url);
   const youtubeUrl = normalize(app.youtube_url);
-  const boothType = normalize(app.booth_type);
+  const boothType = normalize(app.booth_type) || "basic";
   const slotBoothType = normalizeBoothTypeForSlot(boothType);
   const boothName = companyName || app.application_code || "새 벤더 부스";
 
   let vendorId = app.provisioned_vendor_id || null;
   let boothId = app.provisioned_booth_id || null;
+
+  const vendorWasReused = !!vendorId;
+  const boothWasReused = !!boothId;
 
   let finalHallId: string | null = null;
   let finalSlotCode: string | null = null;
@@ -255,6 +270,10 @@ export async function provisionVendorAndBooth(applicationId: string) {
 
       vendorId = insertedVendor.id;
     }
+  }
+
+  if (!vendorId) {
+    throw new Error("vendorId 생성에 실패했습니다.");
   }
 
   // 2) booth 생성 또는 재사용
@@ -382,7 +401,10 @@ export async function provisionVendorAndBooth(applicationId: string) {
       throw new Error("연결된 booth를 찾지 못했습니다.");
     }
 
-    if (!existingProvisionedBooth.hall_id || !existingProvisionedBooth.slot_code) {
+    if (
+      !existingProvisionedBooth.hall_id ||
+      !existingProvisionedBooth.slot_code
+    ) {
       const allocatedSlot = await allocateBoothSlot(slotBoothType);
       finalHallId = allocatedSlot.hallId;
       finalSlotCode = allocatedSlot.slotCode;
@@ -433,6 +455,10 @@ export async function provisionVendorAndBooth(applicationId: string) {
     }
   }
 
+  if (!boothId) {
+    throw new Error("boothId 생성에 실패했습니다.");
+  }
+
   const resultMessage =
     finalHallId && finalSlotCode
       ? `vendor/booth 자동 생성 완료 (${finalHallId} / ${finalSlotCode})`
@@ -458,7 +484,7 @@ export async function provisionVendorAndBooth(applicationId: string) {
   return {
     vendorId,
     boothId,
-    reused: false,
+    reused: vendorWasReused && boothWasReused,
     hallId: finalHallId,
     slotCode: finalSlotCode,
   };
