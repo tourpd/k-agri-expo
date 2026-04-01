@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
-import { provisionApprovedVendorApplication } from "@/lib/vendor-provisioning";
+import * as vendorProvisioning from "@/lib/vendor-provisioning";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +14,49 @@ type PatchBody = {
   admin_note?: string;
   rejection_reason?: string;
 };
+
+type ProvisionResult = {
+  ok: boolean;
+  reason?: string;
+  [key: string]: unknown;
+};
+
+async function runProvision(applicationId: string): Promise<ProvisionResult> {
+  const mod = vendorProvisioning as Record<string, unknown>;
+
+  const candidate =
+    mod.provisionApprovedVendorApplication ||
+    mod.provisionVendorAndBooth ||
+    mod.provisionVendor ||
+    mod.provisionApprovedApplication;
+
+  if (typeof candidate !== "function") {
+    return {
+      ok: false,
+      reason:
+        "vendor-provisioning.ts에 사용할 수 있는 provisioning 함수가 없습니다. " +
+        "provisionApprovedVendorApplication / provisionVendorAndBooth / provisionVendor / provisionApprovedApplication 중 하나를 export 해주세요.",
+    };
+  }
+
+  try {
+    const result = await (candidate as (applicationId: string) => Promise<ProvisionResult>)(applicationId);
+
+    if (!result || typeof result !== "object") {
+      return {
+        ok: false,
+        reason: "provision 함수가 올바른 결과 객체를 반환하지 않았습니다.",
+      };
+    }
+
+    return result;
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error instanceof Error ? error.message : "provision 실행 중 오류",
+    };
+  }
+}
 
 export async function PATCH(
   req: Request,
@@ -134,7 +177,7 @@ export async function PATCH(
         return jsonError(approveError?.message || "승인 처리 실패", 500);
       }
 
-      const provision = await provisionApprovedVendorApplication(applicationId);
+      const provision = await runProvision(applicationId);
 
       if (!provision.ok) {
         await supabase
@@ -146,8 +189,17 @@ export async function PATCH(
           })
           .eq("application_id", applicationId);
 
-        return jsonError(provision.reason, 500);
+        return jsonError(provision.reason || "Provision 실패", 500);
       }
+
+      await supabase
+        .from("vendor_applications_v2")
+        .update({
+          provision_status: "done",
+          provision_result: provision,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("application_id", applicationId);
 
       const { data: finalRow, error: finalError } = await supabase
         .from("vendor_applications_v2")
