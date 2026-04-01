@@ -2,15 +2,15 @@
   "crons": [
     {
       "path": "/api/admin/bank/match",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/admin/event-orders/expire-unpaid",
       "schedule": "0 * * * *"
     },
     {
+      "path": "/api/admin/event-orders/expire-unpaid",
+      "schedule": "0 */2 * * *"
+    },
+    {
       "path": "/api/admin/events/auto-close",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 */1 * * *"
     }
   ]
 }
