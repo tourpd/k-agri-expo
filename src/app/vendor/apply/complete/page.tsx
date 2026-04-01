@@ -1,15 +1,20 @@
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type CompleteSearchParams = {
+  application_code?: string;
+  application_id?: string;
+  company_name?: string;
+  booth_type?: string;
+  duration_key?: string;
+  amount_krw?: string;
+  phone?: string;
+};
+
 type CompletePageProps = {
-  searchParams: Promise<{
-    application_code?: string;
-    application_id?: string;
-    company_name?: string;
-    booth_type?: string;
-    duration_key?: string;
-    amount_krw?: string;
-    phone?: string;
-  }>;
+  searchParams?: CompleteSearchParams | Promise<CompleteSearchParams>;
 };
 
 const OPERATIONS = {
@@ -58,17 +63,17 @@ function getProductLabel(boothType: string, durationKey: string) {
 export default async function VendorApplyCompletePage({
   searchParams,
 }: CompletePageProps) {
-  const params = await searchParams;
+  const params = await Promise.resolve(searchParams ?? {});
 
-  const applicationCode = params.application_code ?? "";
-  const applicationId = params.application_id ?? "";
+  const applicationCode = params.application_code?.trim() || "";
+  const applicationId = params.application_id?.trim() || "";
   const displayApplicationNo = applicationCode || applicationId || "-";
 
-  const companyName = params.company_name ?? "-";
-  const boothType = params.booth_type ?? "";
-  const durationKey = params.duration_key ?? "";
+  const companyName = params.company_name?.trim() || "-";
+  const boothType = params.booth_type?.trim() || "";
+  const durationKey = params.duration_key?.trim() || "";
   const amountKrw = Number(params.amount_krw ?? "0");
-  const phone = params.phone ?? "";
+  const phone = params.phone?.trim() || "";
 
   const boothLabel = getBoothLabel(boothType);
   const durationLabel = getDurationLabel(durationKey);
@@ -87,7 +92,7 @@ export default async function VendorApplyCompletePage({
       search.set("application_id", applicationId);
     }
 
-    if (phone.trim().length > 0) {
+    if (phone.length > 0) {
       search.set("phone", phone);
     }
 
@@ -186,7 +191,7 @@ export default async function VendorApplyCompletePage({
 
           <div className="mt-5 flex flex-wrap gap-3">
             <div className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900">
-              신청정보 복사: 신청번호와 회사명 저장
+              신청정보 저장: {displayApplicationNo} / {companyName}
             </div>
 
             <Link
