@@ -1,4 +1,3 @@
-// src/lib/expoPublic.ts
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -7,6 +6,23 @@ const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabasePublic = createClient(url, anon, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+function logPublicError(scope: string, error: any) {
+  console.error(`[expoPublic:${scope}]`, {
+    message: error?.message ?? null,
+    details: error?.details ?? null,
+    hint: error?.hint ?? null,
+    code: error?.code ?? null,
+  });
+}
+
+function isMissingRelationError(error: any) {
+  return (
+    error?.code === "42P01" ||
+    String(error?.message ?? "").toLowerCase().includes("relation") ||
+    String(error?.message ?? "").toLowerCase().includes("does not exist")
+  );
+}
 
 /* =========================
    TYPES
@@ -31,11 +47,9 @@ export type BoothPublic = {
   status: string | null;
   created_at: string | null;
 
-  // 일반 표시용
   is_featured?: boolean | null;
   is_verified?: boolean | null;
 
-  // 프리미엄 스폰서 슬롯용
   is_main_sponsor?: boolean | null;
   is_inputs_sponsor?: boolean | null;
   is_machine_sponsor?: boolean | null;
@@ -43,9 +57,14 @@ export type BoothPublic = {
   is_smartfarm_sponsor?: boolean | null;
   sponsor_sort_order?: number | null;
 
-  // 이미지/로고용
   logo_url?: string | null;
   cover_image_url?: string | null;
+
+  youtube_url?: string | null;
+  video_url?: string | null;
+  youtube_link?: string | null;
+  thumbnail_url?: string | null;
+  catalog_url?: string | null;
 };
 
 export type ProductPublic = {
@@ -84,7 +103,6 @@ export type ExpoDealPublic = {
   sort_order: number | null;
   created_at: string | null;
 
-  // 목록용 join 표시 필드
   booth_name?: string | null;
   booth_region?: string | null;
   booth_category_primary?: string | null;
@@ -93,6 +111,37 @@ export type ExpoDealPublic = {
 /* =========================
    BOOTHS
 ========================= */
+
+const BOOTH_SELECT = [
+  "booth_id",
+  "owner_user_id",
+  "hall_id",
+  "name",
+  "category_primary",
+  "region",
+  "contact_name",
+  "phone",
+  "email",
+  "intro",
+  "description",
+  "status",
+  "created_at",
+  "is_featured",
+  "is_verified",
+  "is_main_sponsor",
+  "is_inputs_sponsor",
+  "is_machine_sponsor",
+  "is_seed_sponsor",
+  "is_smartfarm_sponsor",
+  "sponsor_sort_order",
+  "logo_url",
+  "cover_image_url",
+  "youtube_url",
+  "video_url",
+  "youtube_link",
+  "thumbnail_url",
+  "catalog_url",
+].join(",");
 
 export async function getPublicBooths(params: {
   q?: string;
@@ -104,33 +153,7 @@ export async function getPublicBooths(params: {
 
   let query = supabasePublic
     .from("booths")
-    .select(
-      [
-        "booth_id",
-        "owner_user_id",
-        "hall_id",
-        "name",
-        "category_primary",
-        "region",
-        "contact_name",
-        "phone",
-        "email",
-        "intro",
-        "description",
-        "status",
-        "created_at",
-        "is_featured",
-        "is_verified",
-        "is_main_sponsor",
-        "is_inputs_sponsor",
-        "is_machine_sponsor",
-        "is_seed_sponsor",
-        "is_smartfarm_sponsor",
-        "sponsor_sort_order",
-        "logo_url",
-        "cover_image_url",
-      ].join(",")
-    )
+    .select(BOOTH_SELECT)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -145,68 +168,84 @@ export async function getPublicBooths(params: {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) {
+    logPublicError("getPublicBooths", error);
+    throw error;
+  }
 
   return (data ?? []) as unknown as BoothPublic[];
 }
 
 export async function getPublicBoothDetail(boothId: string) {
+  // 1) booth 본체는 반드시 먼저 조회
   const { data: booth, error: e1 } = await supabasePublic
     .from("booths")
-    .select(
-      [
-        "booth_id",
-        "owner_user_id",
-        "hall_id",
-        "name",
-        "category_primary",
-        "region",
-        "contact_name",
-        "phone",
-        "email",
-        "intro",
-        "description",
-        "status",
-        "created_at",
-        "is_featured",
-        "is_verified",
-        "is_main_sponsor",
-        "is_inputs_sponsor",
-        "is_machine_sponsor",
-        "is_seed_sponsor",
-        "is_smartfarm_sponsor",
-        "sponsor_sort_order",
-        "logo_url",
-        "cover_image_url",
-      ].join(",")
-    )
+    .select(BOOTH_SELECT)
     .eq("booth_id", boothId)
     .maybeSingle();
 
-  if (e1) throw e1;
+  if (e1) {
+    logPublicError("getPublicBoothDetail.booth", e1);
+    throw e1;
+  }
 
-  const { data: images, error: e2 } = await supabasePublic
-    .from("booth_images")
-    .select("id,booth_id,file_path,is_primary,created_at")
-    .eq("booth_id", boothId)
-    .order("is_primary", { ascending: false })
-    .order("created_at", { ascending: false });
+  // booth 자체가 없으면 보조 데이터는 조회할 필요 없음
+  if (!booth) {
+    return {
+      booth: null as BoothPublic | null,
+      images: [] as BoothImagePublic[],
+      products: [] as ProductPublic[],
+    };
+  }
 
-  if (e2) throw e2;
+  // 2) booth_images는 실패해도 빈 배열 반환
+  let images: BoothImagePublic[] = [];
+  try {
+    const { data, error } = await supabasePublic
+      .from("booth_images")
+      .select("id,booth_id,file_path,is_primary,created_at")
+      .eq("booth_id", boothId)
+      .order("is_primary", { ascending: false })
+      .order("created_at", { ascending: false });
 
-  const { data: products, error: e3 } = await supabasePublic
-    .from("products")
-    .select("product_id,booth_id,name,description,price_text,created_at")
-    .eq("booth_id", boothId)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    if (error) {
+      logPublicError("getPublicBoothDetail.images", error);
+      if (!isMissingRelationError(error)) {
+        images = [];
+      }
+    } else {
+      images = (data ?? []) as unknown as BoothImagePublic[];
+    }
+  } catch (e: any) {
+    logPublicError("getPublicBoothDetail.images.catch", e);
+    images = [];
+  }
 
-  if (e3) throw e3;
+  // 3) products도 실패해도 빈 배열 반환
+  let products: ProductPublic[] = [];
+  try {
+    const { data, error } = await supabasePublic
+      .from("products")
+      .select("product_id,booth_id,name,description,price_text,created_at")
+      .eq("booth_id", boothId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) {
+      logPublicError("getPublicBoothDetail.products", error);
+      products = [];
+    } else {
+      products = (data ?? []) as unknown as ProductPublic[];
+    }
+  } catch (e: any) {
+    logPublicError("getPublicBoothDetail.products.catch", e);
+    products = [];
+  }
 
   return {
     booth: (booth as unknown as BoothPublic | null) ?? null,
-    images: (images ?? []) as unknown as BoothImagePublic[],
-    products: (products ?? []) as unknown as ProductPublic[],
+    images,
+    products,
   };
 }
 
@@ -217,7 +256,11 @@ export async function getPublicProduct(productId: string) {
     .eq("product_id", productId)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    logPublicError("getPublicProduct", error);
+    throw error;
+  }
+
   return (data as unknown as ProductPublic | null) ?? null;
 }
 
@@ -255,7 +298,10 @@ export async function getPublicDeals(limit = 30) {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (error) throw error;
+  if (error) {
+    logPublicError("getPublicDeals", error);
+    throw error;
+  }
 
   return ((data ?? []).map((row: any) => ({
     deal_id: row.deal_id,
@@ -283,34 +329,42 @@ export async function getPublicDeals(limit = 30) {
 }
 
 export async function getPublicDealsByBooth(boothId: string, limit = 10) {
-  const { data, error } = await supabasePublic
-    .from("expo_deals")
-    .select(
-      `
-      deal_id,
-      booth_id,
-      product_id,
-      title,
-      description,
-      regular_price_text,
-      expo_price_text,
-      stock_text,
-      deadline_at,
-      buy_url,
-      is_active,
-      sort_order,
-      created_at
-      `
-    )
-    .eq("booth_id", boothId)
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  try {
+    const { data, error } = await supabasePublic
+      .from("expo_deals")
+      .select(
+        `
+        deal_id,
+        booth_id,
+        product_id,
+        title,
+        description,
+        regular_price_text,
+        expo_price_text,
+        stock_text,
+        deadline_at,
+        buy_url,
+        is_active,
+        sort_order,
+        created_at
+        `
+      )
+      .eq("booth_id", boothId)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-  if (error) throw error;
+    if (error) {
+      logPublicError("getPublicDealsByBooth", error);
+      return [] as ExpoDealPublic[];
+    }
 
-  return (data ?? []) as unknown as ExpoDealPublic[];
+    return (data ?? []) as unknown as ExpoDealPublic[];
+  } catch (e: any) {
+    logPublicError("getPublicDealsByBooth.catch", e);
+    return [] as ExpoDealPublic[];
+  }
 }
 
 export async function getPublicDeal(dealId: string) {
@@ -336,7 +390,10 @@ export async function getPublicDeal(dealId: string) {
     .eq("deal_id", dealId)
     .maybeSingle();
 
-  if (e1) throw e1;
+  if (e1) {
+    logPublicError("getPublicDeal.deal", e1);
+    throw e1;
+  }
 
   if (!deal) {
     return {
@@ -350,40 +407,22 @@ export async function getPublicDeal(dealId: string) {
   let booth: BoothPublic | null = null;
 
   if (boothId) {
-    const { data: b, error: e2 } = await supabasePublic
-      .from("booths")
-      .select(
-        [
-          "booth_id",
-          "owner_user_id",
-          "hall_id",
-          "name",
-          "category_primary",
-          "region",
-          "contact_name",
-          "phone",
-          "email",
-          "intro",
-          "description",
-          "status",
-          "created_at",
-          "is_featured",
-          "is_verified",
-          "is_main_sponsor",
-          "is_inputs_sponsor",
-          "is_machine_sponsor",
-          "is_seed_sponsor",
-          "is_smartfarm_sponsor",
-          "sponsor_sort_order",
-          "logo_url",
-          "cover_image_url",
-        ].join(",")
-      )
-      .eq("booth_id", boothId)
-      .maybeSingle();
+    try {
+      const { data: b, error: e2 } = await supabasePublic
+        .from("booths")
+        .select(BOOTH_SELECT)
+        .eq("booth_id", boothId)
+        .maybeSingle();
 
-    if (e2) throw e2;
-    booth = (b as unknown as BoothPublic | null) ?? null;
+      if (e2) {
+        logPublicError("getPublicDeal.booth", e2);
+      } else {
+        booth = (b as unknown as BoothPublic | null) ?? null;
+      }
+    } catch (e: any) {
+      logPublicError("getPublicDeal.booth.catch", e);
+      booth = null;
+    }
   }
 
   return {

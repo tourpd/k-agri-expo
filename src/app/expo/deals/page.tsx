@@ -18,7 +18,44 @@ function safe(v: any, fallback: string) {
   return s.trim() ? s : fallback;
 }
 
-export default async function ExpoDealsPage() {
+function cleanParam(v: string | string[] | undefined) {
+  if (Array.isArray(v)) return v[0] ?? "";
+  return v ?? "";
+}
+
+function withTrackingParams(
+  href: string,
+  tracking: { src?: string; campaign?: string; video?: string }
+) {
+  const params = new URLSearchParams();
+
+  if (tracking.src) params.set("src", tracking.src);
+  if (tracking.campaign) params.set("campaign", tracking.campaign);
+  if (tracking.video) params.set("video", tracking.video);
+
+  const qs = params.toString();
+  if (!qs) return href;
+
+  return href.includes("?") ? `${href}&${qs}` : `${href}?${qs}`;
+}
+
+export default async function ExpoDealsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    src?: string | string[];
+    campaign?: string | string[];
+    video?: string | string[];
+  }>;
+}) {
+  const resolved = await searchParams;
+
+  const tracking = {
+    src: cleanParam(resolved?.src),
+    campaign: cleanParam(resolved?.campaign),
+    video: cleanParam(resolved?.video),
+  };
+
   const deals = await getPublicDeals(50);
 
   return (
@@ -32,10 +69,13 @@ export default async function ExpoDealsPage() {
           </div>
 
           <div style={S.topActions}>
-            <Link href="/expo" style={S.btnGhost}>
+            <Link href={withTrackingParams("/expo", tracking)} style={S.btnGhost}>
               엑스포 홈
             </Link>
-            <Link href="/expo/hall/agri-inputs" style={S.btnGhost}>
+            <Link
+              href={withTrackingParams("/expo/hall/agri-inputs", tracking)}
+              style={S.btnGhost}
+            >
               농자재관
             </Link>
           </div>
@@ -58,6 +98,12 @@ export default async function ExpoDealsPage() {
 
               const buyUrl = deal.buy_url ? String(deal.buy_url) : null;
 
+              const dealDetailHref = withTrackingParams(`/expo/deals/${dealId}`, tracking);
+              const boothHref = withTrackingParams(`/expo/booths/${boothId}`, tracking);
+              const productHref = deal.product_id
+                ? withTrackingParams(`/expo/product/${deal.product_id}`, tracking)
+                : null;
+
               const MainLink = buyUrl ? (
                 <a
                   href={buyUrl}
@@ -68,7 +114,7 @@ export default async function ExpoDealsPage() {
                   구매하기 →
                 </a>
               ) : (
-                <Link href={`/expo/deals/${dealId}`} style={S.btnPrimary}>
+                <Link href={dealDetailHref} style={S.btnPrimary}>
                   상세 보기 →
                 </Link>
               );
@@ -97,12 +143,12 @@ export default async function ExpoDealsPage() {
                   <div style={S.actions}>
                     {MainLink}
 
-                    <Link href={`/expo/booths/${boothId}`} style={S.btnGhost}>
+                    <Link href={boothHref} style={S.btnGhost}>
                       부스 보러가기
                     </Link>
 
-                    {deal.product_id ? (
-                      <Link href={`/expo/product/${deal.product_id}`} style={S.btnGhost}>
+                    {productHref ? (
+                      <Link href={productHref} style={S.btnGhost}>
                         제품 보기
                       </Link>
                     ) : (

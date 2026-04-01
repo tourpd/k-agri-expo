@@ -1,14 +1,10 @@
+// src/app/expo/event/page.tsx
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import EventEntryForm from "./EventEntryForm";
 import EventCounter from "@/components/EventCounter";
 
 export const dynamic = "force-dynamic";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 function toEmbedUrl(url: string | null | undefined) {
   if (!url) return "";
@@ -28,20 +24,68 @@ function toEmbedUrl(url: string | null | undefined) {
   return "";
 }
 
+function safe(v: unknown, fallback = "") {
+  return typeof v === "string" && v.trim() ? v.trim() : fallback;
+}
+
 export default async function ExpoEventPage() {
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", 1)
-    .limit(1);
+  const supabase = createSupabaseAdminClient();
 
-  const event = data?.[0] || null;
+  const [{ data: expoEvent }, { data: eventRow }] = await Promise.all([
+    supabase
+      .from("expo_events")
+      .select("*")
+      .eq("is_active", true)
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
 
-  const embedUrl = toEmbedUrl(event?.video_url);
+    supabase
+      .from("events")
+      .select("*")
+      .eq("id", 1)
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const eventId = Number(eventRow?.id || 1);
+
+  const title =
+    safe(expoEvent?.title) ||
+    safe(eventRow?.title) ||
+    "이벤트 준비중";
+
+  const prizeText =
+    safe(expoEvent?.prize_text) ||
+    safe(eventRow?.price_text) ||
+    "";
+
+  const description =
+    safe(expoEvent?.description) ||
+    safe(eventRow?.description) ||
+    "이벤트 설명이 아직 등록되지 않았습니다.";
+
+  const heroImageUrl = safe(expoEvent?.hero_image_url) || "";
+  const heroVideoUrl =
+    safe(expoEvent?.hero_video_url) ||
+    safe(eventRow?.video_url) ||
+    "";
+
+  const primaryButtonText =
+    safe(expoEvent?.primary_button_text) || "EXPO 메인으로";
+  const primaryButtonLink =
+    safe(expoEvent?.primary_button_link) || "/expo";
+
+  const secondaryButtonText =
+    safe(expoEvent?.secondary_button_text) || "라이브 일정 보기";
+  const secondaryButtonLink =
+    safe(expoEvent?.secondary_button_link) || "/expo/live";
+
+  const embedUrl = toEmbedUrl(heroVideoUrl);
 
   const noticeLines =
-    event?.notice_lines
-      ?.split("\n")
+    safe(eventRow?.notice_lines)
+      .split("\n")
       .map((line: string) => line.trim())
       .filter(Boolean) || [];
 
@@ -52,44 +96,45 @@ export default async function ExpoEventPage() {
           <div style={S.heroText}>
             <div style={S.badge}>🎁 K-Agri Expo 이달의 경품 이벤트</div>
 
-            <h1 style={S.title}>
-              {event?.title || "이벤트 준비중"}
-            </h1>
+            <h1 style={S.title}>{title}</h1>
 
-            <div style={S.price}>
-              {event?.price_text || ""}
-            </div>
+            <div style={S.price}>{prizeText}</div>
 
-            <p style={S.desc}>
-              {event?.description || "이벤트 설명이 아직 등록되지 않았습니다."}
-            </p>
+            <p style={S.desc}>{description}</p>
 
             <div style={S.heroActions}>
-              <Link href="/expo" style={S.primaryBtn}>
-                EXPO 메인으로 →
+              <Link href={primaryButtonLink} style={S.primaryBtn}>
+                {primaryButtonText} →
               </Link>
-              <Link href="/expo/live" style={S.ghostBtn}>
-                라이브 일정 보기
+
+              <Link href={secondaryButtonLink} style={S.ghostBtn}>
+                {secondaryButtonText}
               </Link>
             </div>
           </div>
 
           <div style={S.videoSection}>
-            <div style={S.videoFrame}>
-              {embedUrl ? (
-                <iframe
-                  src={embedUrl}
-                  title={event?.title || "이벤트 영상"}
-                  style={S.video}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              ) : (
-                <div style={S.videoFallback}>
-                  영상 링크가 아직 등록되지 않았습니다.
-                </div>
-              )}
-            </div>
+            {heroImageUrl ? (
+              <div style={S.imageFrame}>
+                <img src={heroImageUrl} alt={title} style={S.heroImage} />
+              </div>
+            ) : (
+              <div style={S.videoFrame}>
+                {embedUrl ? (
+                  <iframe
+                    src={embedUrl}
+                    title={title || "이벤트 영상"}
+                    style={S.video}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div style={S.videoFallback}>
+                    영상 링크가 아직 등록되지 않았습니다.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </header>
 
@@ -104,7 +149,7 @@ export default async function ExpoEventPage() {
             </div>
           </div>
 
-          <EventCounter eventId={1} />
+          <EventCounter eventId={eventId} />
         </section>
 
         <section style={S.section}>
@@ -272,6 +317,21 @@ const S: Record<string, React.CSSProperties> = {
 
   videoSection: {
     marginTop: 28,
+  },
+
+  imageFrame: {
+    width: "100%",
+    borderRadius: 26,
+    overflow: "hidden",
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+  },
+
+  heroImage: {
+    width: "100%",
+    display: "block",
+    objectFit: "cover",
   },
 
   videoFrame: {

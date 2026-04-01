@@ -1,6 +1,7 @@
 // src/app/expo/deals/[id]/page.tsx
 import Link from "next/link";
 import { getPublicDeal } from "@/lib/expoPublic";
+import LeadCaptureTracker from "@/components/expo/LeadCaptureTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -25,12 +26,47 @@ function fmtDeadline(iso?: string | null) {
   return `${yy}.${mm}.${dd} ${hh}:${mi}`;
 }
 
+function cleanParam(v: string | string[] | undefined) {
+  if (Array.isArray(v)) return v[0] ?? "";
+  return v ?? "";
+}
+
+function withTrackingParams(
+  href: string,
+  tracking: { src?: string; campaign?: string; video?: string }
+) {
+  const params = new URLSearchParams();
+
+  if (tracking.src) params.set("src", tracking.src);
+  if (tracking.campaign) params.set("campaign", tracking.campaign);
+  if (tracking.video) params.set("video", tracking.video);
+
+  const qs = params.toString();
+  if (!qs) return href;
+
+  return href.includes("?") ? `${href}&${qs}` : `${href}?${qs}`;
+}
+
 export default async function ExpoDealDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    src?: string | string[];
+    campaign?: string | string[];
+    video?: string | string[];
+  }>;
 }) {
   const { id } = await params;
+  const resolvedSearch = await searchParams;
+
+  const tracking = {
+    src: cleanParam(resolvedSearch?.src),
+    campaign: cleanParam(resolvedSearch?.campaign),
+    video: cleanParam(resolvedSearch?.video),
+  };
+
   const dealId = decodeURIComponent(id ?? "").trim();
 
   if (!isUuid(dealId)) {
@@ -38,7 +74,7 @@ export default async function ExpoDealDetailPage({
       <main style={S.pageWrap}>
         <h1 style={S.title}>잘못된 딜 주소입니다.</h1>
         <p style={S.muted}>deal_id(UUID) 형식이 아닙니다: {dealId}</p>
-        <Link href="/expo/deals" style={S.btnGhost}>
+        <Link href={withTrackingParams("/expo/deals", tracking)} style={S.btnGhost}>
           🔥 특가 목록
         </Link>
       </main>
@@ -51,7 +87,7 @@ export default async function ExpoDealDetailPage({
     return (
       <main style={S.pageWrap}>
         <h1 style={S.title}>특가를 찾을 수 없습니다.</h1>
-        <Link href="/expo/deals" style={S.btnGhost}>
+        <Link href={withTrackingParams("/expo/deals", tracking)} style={S.btnGhost}>
           🔥 특가 목록
         </Link>
       </main>
@@ -72,8 +108,20 @@ export default async function ExpoDealDetailPage({
   const boothName = booth?.name ? String(booth.name) : "부스";
   const boothHallId = (booth as any)?.hall_id ? String((booth as any).hall_id) : null;
 
+  const dealsListHref = withTrackingParams("/expo/deals", tracking);
+  const boothHref = boothId ? withTrackingParams(`/expo/booths/${boothId}`, tracking) : null;
+  const hallHref = boothHallId
+    ? withTrackingParams(`/expo/hall/${boothHallId}`, tracking)
+    : null;
+
   return (
     <main style={S.pageWrap}>
+      <LeadCaptureTracker
+        boothId={boothId}
+        dealId={dealId}
+        landingType="deal"
+      />
+
       <header style={S.header}>
         <div>
           <div style={S.kicker}>🔥 EXPO DEAL</div>
@@ -95,18 +143,18 @@ export default async function ExpoDealDetailPage({
         </div>
 
         <div style={S.headerActions}>
-          <Link href="/expo/deals" style={S.btnGhost}>
+          <Link href={dealsListHref} style={S.btnGhost}>
             ← 특가 목록
           </Link>
 
-          {boothId ? (
-            <Link href={`/expo/booths/${boothId}`} style={S.btnGhost}>
+          {boothHref ? (
+            <Link href={boothHref} style={S.btnGhost}>
               부스 보기 →
             </Link>
           ) : null}
 
-          {boothHallId ? (
-            <Link href={`/expo/hall/${boothHallId}`} style={S.btnGhost}>
+          {hallHref ? (
+            <Link href={hallHref} style={S.btnGhost}>
               전시장 →
             </Link>
           ) : null}
@@ -133,12 +181,12 @@ export default async function ExpoDealDetailPage({
                 <a href={buyUrl} target="_blank" rel="noopener noreferrer" style={S.btnPrimary}>
                   구매하기 →
                 </a>
-              ) : boothId ? (
-                <Link href={`/expo/booths/${boothId}`} style={S.btnPrimary}>
+              ) : boothHref ? (
+                <Link href={boothHref} style={S.btnPrimary}>
                   부스에서 문의/구매 →
                 </Link>
               ) : (
-                <Link href="/expo/deals" style={S.btnPrimary}>
+                <Link href={dealsListHref} style={S.btnPrimary}>
                   특가 목록 보기 →
                 </Link>
               )}
@@ -151,10 +199,10 @@ export default async function ExpoDealDetailPage({
         </div>
       </section>
 
-      {boothId ? (
+      {boothHref ? (
         <section style={{ marginTop: 18 }}>
           <div style={S.sectionTitle}>이 딜의 부스</div>
-          <Link href={`/expo/booths/${boothId}`} style={S.boothCard}>
+          <Link href={boothHref} style={S.boothCard}>
             <div style={{ fontWeight: 950, fontSize: 15 }}>{boothName}</div>
             <div style={{ marginTop: 6, fontSize: 13, color: "#666" }}>
               {safe((booth as any)?.region, "지역 미입력")} ·{" "}

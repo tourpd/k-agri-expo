@@ -1,50 +1,60 @@
 import { NextResponse } from "next/server";
-import { getAdminEnv, ADMIN_COOKIE_NAME } from "@/lib/admin-auth";
+import { ADMIN_COOKIE_NAME, getAdminEnv } from "@/lib/admin-auth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function jsonError(message: string, status = 400) {
+  return NextResponse.json({ success: false, error: message }, { status });
+}
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { username, password } = body as {
-      username?: string;
-      password?: string;
-    };
+    const body = await req.json().catch(() => ({}));
 
-    if (!username?.trim() || !password?.trim()) {
-      return NextResponse.json(
-        { success: false, error: "아이디와 비밀번호를 입력해 주세요." },
-        { status: 400 }
-      );
+    const email = String(body?.email || "").trim().toLowerCase();
+    const password = String(body?.password || "").trim();
+
+    if (!email) {
+      return jsonError("이메일을 입력해주세요.", 400);
     }
 
-    const env = getAdminEnv();
-
-    if (username !== env.username || password !== env.password) {
-      return NextResponse.json(
-        { success: false, error: "아이디 또는 비밀번호가 올바르지 않습니다." },
-        { status: 401 }
-      );
+    if (!password) {
+      return jsonError("비밀번호를 입력해주세요.", 400);
     }
+
+    const { adminEmail, adminPassword } = getAdminEnv();
+
+    if (email !== adminEmail || password !== adminPassword) {
+      return jsonError("관리자 계정 정보가 올바르지 않습니다.", 401);
+    }
+
+    const sessionToken = Buffer.from(
+      JSON.stringify({
+        email: adminEmail,
+        role: "admin",
+        ts: Date.now(),
+      })
+    ).toString("base64url");
 
     const res = NextResponse.json({
       success: true,
-      message: "로그인 성공",
+      email: adminEmail,
     });
 
-    res.cookies.set({
-      name: ADMIN_COOKIE_NAME,
-      value: env.sessionToken,
+    res.cookies.set(ADMIN_COOKIE_NAME, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 8, // 8시간
+      maxAge: 60 * 60 * 12,
     });
 
     return res;
-  } catch {
-    return NextResponse.json(
-      { success: false, error: "로그인 처리 중 오류가 발생했습니다." },
-      { status: 500 }
+  } catch (error) {
+    return jsonError(
+      error instanceof Error ? error.message : "관리자 로그인 중 오류가 발생했습니다.",
+      500
     );
   }
 }

@@ -24,45 +24,92 @@ export default function LoginIndexPage() {
 
         <section style={S.hero}>
           <div style={S.kicker}>ENTRY</div>
-          <h1 style={S.title}>이용 목적에 맞게 입장하세요</h1>
+          <h1 style={S.title}>역할에 맞게 바로 시작하세요</h1>
           <p style={S.desc}>
-            농민은 특가와 경품 이벤트를 보고,
-            참가기업은 부스를 운영하고,
-            바이어는 참가 기업을 탐색합니다.
+            농민은 이름과 전화번호로 바로 입장하고,
+            참가기업은 부스를 운영하며,
+            바이어는 참가 기업을 탐색하고 상담을 진행합니다.
           </p>
         </section>
 
         <section style={S.grid}>
-          <Link href="/login/farmer" style={{ ...S.card, ...S.farmerCard }}>
-            <div style={S.cardIcon}>🌾</div>
-            <div style={S.cardLabel}>FARMER</div>
-            <div style={S.cardTitle}>농민 입장</div>
-            <div style={S.cardDesc}>특가 · 경품 · 라이브쇼</div>
-            <div style={S.cardCta}>바로 입장 →</div>
-          </Link>
+          {/* 농민 */}
+          <div style={{ ...S.card, ...S.farmerCard }}>
+            <div>
+              <div style={S.cardIcon}>🌾</div>
+              <div style={S.cardLabel}>FARMER</div>
+              <div style={S.cardTitle}>농민</div>
+              <div style={S.cardDesc}>
+                포토닥터 · 농사 상담 · 특가 · 라이브쇼 · 경품 이벤트
+              </div>
+            </div>
 
-          <Link href="/login/vendor" style={{ ...S.card, ...S.vendorCard }}>
-            <div style={S.cardIcon}>🏢</div>
-            <div style={S.cardLabel}>VENDOR</div>
-            <div style={S.cardTitle}>참가기업 입장</div>
-            <div style={S.cardDesc}>부스 운영 · 제품 등록 · 홍보</div>
-            <div style={S.cardCta}>부스 열기 →</div>
-          </Link>
+            <div style={S.cardBottom}>
+              <div style={S.cardFeature}>
+                이름과 전화번호만 입력하면 바로 엑스포에 입장합니다.
+              </div>
+              <div style={S.actionRowSingle}>
+                <Link href="/enter/farmer" style={S.primaryBtnGreen}>
+                  농민 입장
+                </Link>
+              </div>
+            </div>
+          </div>
 
-          <Link href="/login/buyer" style={{ ...S.card, ...S.buyerCard }}>
-            <div style={S.cardIcon}>🤝</div>
-            <div style={S.cardLabel}>BUYER</div>
-            <div style={S.cardTitle}>바이어 입장</div>
-            <div style={S.cardDesc}>참가 기업 탐색 · 상담 문의</div>
-            <div style={S.cardCta}>기업 찾기 →</div>
-          </Link>
+          {/* 참가기업 */}
+          <div style={{ ...S.card, ...S.vendorCard }}>
+            <div>
+              <div style={S.cardIcon}>🏢</div>
+              <div style={S.cardLabel}>VENDOR</div>
+              <div style={S.cardTitle}>참가기업</div>
+              <div style={S.cardDesc}>
+                부스 운영 · 제품 등록 · 특가 등록 · 콘텐츠 업로드
+              </div>
+            </div>
+
+            <div style={S.cardBottom}>
+              <div style={S.cardFeature}>엑스포 안에서 직접 홍보하고 판매</div>
+              <div style={S.actionRow}>
+                <Link href="/login/vendor" style={S.primaryBtnBlue}>
+                  로그인
+                </Link>
+                <Link href="/signup/vendor" style={S.secondaryBtnWhite}>
+                  회원가입
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* 바이어 */}
+          <div style={{ ...S.card, ...S.buyerCard }}>
+            <div>
+              <div style={S.cardIcon}>🤝</div>
+              <div style={S.cardLabel}>BUYER</div>
+              <div style={S.cardTitle}>바이어</div>
+              <div style={S.cardDesc}>
+                참가 기업 탐색 · 제품 문의 · 업체 상담 · 구매 연결
+              </div>
+            </div>
+
+            <div style={S.cardBottom}>
+              <div style={S.cardFeature}>원하는 기업과 빠르게 연결</div>
+              <div style={S.actionRow}>
+                <Link href="/login/buyer" style={S.primaryBtnOrange}>
+                  로그인
+                </Link>
+                <Link href="/register/buyer" style={S.secondaryBtnWhite}>
+                  회원가입
+                </Link>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section style={S.noteBox}>
           <div style={S.noteTitle}>안내</div>
           <div style={S.noteText}>
-            관리자 화면은 일반 입장 화면에 노출하지 않고,
-            별도 주소 <strong>/login/admin</strong> 에서만 로그인하도록 운영하는 것이 좋습니다.
+            농민은 별도 로그인 없이 <strong>농민 입장</strong>으로 바로 들어가고,
+            바이어/기업/관리자는 각자 전용 로그인 화면을 사용합니다.
           </div>
         </section>
       </div>
@@ -149,7 +196,7 @@ const S: Record<string, React.CSSProperties> = {
     letterSpacing: -1,
   },
   desc: {
-    maxWidth: 760,
+    maxWidth: 840,
     margin: "16px auto 0",
     fontSize: 16,
     lineHeight: 1.9,
@@ -162,7 +209,7 @@ const S: Record<string, React.CSSProperties> = {
     gap: 18,
   },
   card: {
-    minHeight: 320,
+    minHeight: 360,
     borderRadius: 30,
     padding: 28,
     textDecoration: "none",
@@ -172,7 +219,6 @@ const S: Record<string, React.CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
-    transition: "transform 0.2s ease",
   },
   farmerCard: {
     background: "linear-gradient(180deg, #ecfdf5 0%, #dcfce7 100%)",
@@ -207,10 +253,65 @@ const S: Record<string, React.CSSProperties> = {
     lineHeight: 1.8,
     color: "#334155",
   },
-  cardCta: {
+  cardBottom: {
     marginTop: 26,
-    fontSize: 18,
-    fontWeight: 950,
+  },
+  cardFeature: {
+    fontSize: 14,
+    lineHeight: 1.7,
+    color: "#475569",
+    fontWeight: 700,
+  },
+  actionRow: {
+    marginTop: 16,
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  actionRowSingle: {
+    marginTop: 16,
+    display: "flex",
+  },
+  primaryBtnGreen: {
+    display: "inline-block",
+    textDecoration: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    background: "#15803d",
+    color: "#fff",
+    fontWeight: 900,
+    fontSize: 15,
+  },
+  primaryBtnBlue: {
+    display: "inline-block",
+    textDecoration: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    background: "#2563eb",
+    color: "#fff",
+    fontWeight: 900,
+    fontSize: 15,
+  },
+  primaryBtnOrange: {
+    display: "inline-block",
+    textDecoration: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    background: "#ea580c",
+    color: "#fff",
+    fontWeight: 900,
+    fontSize: 15,
+  },
+  secondaryBtnWhite: {
+    display: "inline-block",
+    textDecoration: "none",
+    padding: "12px 18px",
+    borderRadius: 14,
+    background: "#fff",
+    color: "#111",
+    border: "1px solid rgba(15,23,42,0.08)",
+    fontWeight: 900,
+    fontSize: 15,
   },
   noteBox: {
     marginTop: 26,

@@ -1,26 +1,35 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from("events")
-    .select("id, title, status")
-    .order("id", { ascending: true });
+  try {
+    const supabase = createSupabaseAdminClient();
 
-  if (error) {
+    const { data, error } = await supabase
+      .from("expo_events")
+      .select("*")
+      .eq("is_active", true)
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      item: data ?? null,
+    });
+  } catch (e: any) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { ok: false, error: e?.message || "failed to load event" },
       { status: 500 }
     );
   }
-
-  return NextResponse.json({
-    success: true,
-    events: data || [],
-  });
 }

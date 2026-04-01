@@ -16,10 +16,15 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // ⚠️ 관리자 경로 감지
+  const isAdmin =
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/admin");
+
   return (
     <html lang="ko">
       <body style={{ margin: 0, fontFamily: "system-ui" }}>
-        <BrandChrome>{children}</BrandChrome>
+        {isAdmin ? children : <BrandChrome>{children}</BrandChrome>}
       </body>
     </html>
   );

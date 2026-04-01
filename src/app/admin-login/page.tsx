@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
-  const [username, setUsername] = useState("");
+  const router = useRouter();
+
+  const [email, setEmail] = useState("tourpd70@gmail.com");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
@@ -12,12 +15,20 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setErrorText("");
 
-    if (!username.trim()) {
-      setErrorText("관리자 아이디를 입력해 주세요.");
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedEmail) {
+      setErrorText("이메일을 입력해 주세요.");
       return;
     }
 
-    if (!password.trim()) {
+    if (!normalizedEmail.includes("@")) {
+      setErrorText("올바른 이메일 형식으로 입력해 주세요.");
+      return;
+    }
+
+    if (!normalizedPassword) {
       setErrorText("비밀번호를 입력해 주세요.");
       return;
     }
@@ -31,19 +42,21 @@ export default function AdminLoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username.trim(),
-          password: password.trim(),
+          email: normalizedEmail,
+          password: normalizedPassword,
         }),
       });
 
       const data = await res.json();
 
-      if (!data.success) {
+      if (!res.ok || !data.success) {
         setErrorText(data.error || "로그인에 실패했습니다.");
         return;
       }
 
-      window.location.href = "/admin/event";
+      // ✔️ 관리자 성공 이동 경로
+      router.push("/vendor/manage");
+      router.refresh();
     } catch {
       setErrorText("네트워크 오류가 발생했습니다.");
     } finally {
@@ -55,19 +68,22 @@ export default function AdminLoginPage() {
     <main style={S.page}>
       <div style={S.card}>
         <div style={S.eyebrow}>ADMIN</div>
+
         <h1 style={S.title}>관리자 로그인</h1>
+
         <p style={S.desc}>
-          운영자 전용 화면입니다. 관리자 아이디와 비밀번호를 입력해 주세요.
+          관리자 이메일과 비밀번호를 입력해 로그인합니다.
         </p>
 
         <form onSubmit={onSubmit} style={S.form}>
           <div>
-            <label style={S.label}>관리자 아이디</label>
+            <label style={S.label}>관리자 이메일</label>
             <input
+              type="email"
               style={S.input}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="예: admin"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tourpd70@gmail.com"
             />
           </div>
 

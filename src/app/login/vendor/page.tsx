@@ -32,7 +32,7 @@ export default function VendorLoginPage() {
         return;
       }
 
-      router.replace("/vendor/booth");
+      router.replace("/vendor");
       router.refresh();
     } catch (err: any) {
       setMsg(`오류: ${err?.message ?? "unknown"}`);
@@ -81,9 +81,7 @@ export default function VendorLoginPage() {
         {msg ? <div style={S.msg}>{msg}</div> : null}
 
         <div style={S.bottomRow}>
-          <Link href="/vendor/signup" style={S.secondaryBtn}>
-            업체 회원가입
-          </Link>
+         <Link href="/login/vendor/signup">업체 회원가입</Link>
 
           <Link href="/login" style={S.back}>
             ← 로그인 선택으로

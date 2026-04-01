@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -10,25 +11,29 @@ export default function ExpoAdminIndexPage() {
           <div style={S.kicker}>K-Agri Expo Admin</div>
           <h1 style={S.title}>운영 대시보드</h1>
           <div style={S.desc}>
-            메인 편성, 경품 추첨, 전시관 운영, 참가 업체 관리, 입점 신청 검토를 여기서 진행합니다.
+            메인 편성, 농민 고민 카드, 경품 추첨, 전시장 운영, 참가 업체 관리, 입점 신청 검토를
+            여기서 진행합니다.
           </div>
         </div>
 
+        <div style={S.sectionLabel}>콘텐츠 / 편성 운영</div>
         <div style={S.grid}>
           <Link href="/expo/admin/home-slots" style={S.card}>
             <div style={S.cardBadge}>HOME</div>
             <div style={S.cardTitle}>메인페이지 편성실</div>
             <div style={S.cardDesc}>
-              메인 배너, 이달의 경품, 농민 특가, 라이브쇼 영역을 편성합니다.
+              메인 배너, 이달의 핫 이슈, 메인 경품, 현장 특가, 라이브쇼 등 메인페이지 핵심 영역을
+              편성합니다.
             </div>
             <div style={S.cardCta}>바로 가기 →</div>
           </Link>
 
-          <Link href="/expo/admin/draw" style={S.card}>
-            <div style={S.cardBadge}>DRAW</div>
-            <div style={S.cardTitle}>메인 경품 랜덤 추첨</div>
+          <Link href="/expo/admin/problem-cards" style={S.card}>
+            <div style={S.cardBadge}>PROBLEM</div>
+            <div style={S.cardTitle}>농민 고민 해결 카드 편성실</div>
             <div style={S.cardDesc}>
-              이벤트 참여자를 확인하고 라이브 방송용 랜덤 추첨을 진행합니다.
+              월별·작물별·시즌별 농민 고민 해결 카드의 제목, 요약, 링크, 노출 월, 우선순위를
+              관리합니다.
             </div>
             <div style={S.cardCta}>바로 가기 →</div>
           </Link>
@@ -37,17 +42,51 @@ export default function ExpoAdminIndexPage() {
             <div style={S.cardBadge}>FEATURE</div>
             <div style={S.cardTitle}>전시장 편성실</div>
             <div style={S.cardDesc}>
-              메인 슬라이드, 관별 TOP5, 노출 순서와 이동 경로를 관리합니다.
+              메인 슬라이드, 관별 TOP 노출, 카테고리 이동 동선, 추천 부스와 주요 진입 구조를
+              관리합니다.
             </div>
             <div style={S.cardCta}>바로 가기 →</div>
           </Link>
 
+          <Link href="/expo/admin/draw" style={S.card}>
+            <div style={S.cardBadge}>DRAW</div>
+            <div style={S.cardTitle}>메인 경품 랜덤 추첨</div>
+            <div style={S.cardDesc}>
+              이벤트 참여자를 확인하고 라이브 방송용 랜덤 추첨, 당첨자 확인, 재추첨 흐름을
+              운영합니다.
+            </div>
+            <div style={S.cardCta}>바로 가기 →</div>
+          </Link>
+        </div>
+
+        <div style={S.sectionLabel}>업체 / 판매 운영</div>
+        <div style={S.grid}>
           <Link href="/expo/admin/vendor-applications" style={S.card}>
             <div style={S.cardBadge}>VENDOR</div>
             <div style={S.cardTitle}>업체 입점 신청 검토</div>
             <div style={S.cardDesc}>
-              사업자등록증 업로드 신청서를 검토하고 승인 또는 반려 처리합니다.
-              승인 시 vendors와 booths를 자동 생성하는 흐름의 시작점입니다.
+              사업자등록증 업로드 신청서를 검토하고 승인 또는 반려 처리합니다. 승인 시 vendors와
+              booths를 자동 생성하는 운영의 시작점입니다.
+            </div>
+            <div style={S.cardCta}>바로 가기 →</div>
+          </Link>
+
+          <Link href="/expo/deals" style={S.card}>
+            <div style={S.cardBadge}>DEALS</div>
+            <div style={S.cardTitle}>EXPO 특가 실노출 점검</div>
+            <div style={S.cardDesc}>
+              현재 실제 노출 중인 EXPO 특가 목록을 사용자 화면 기준으로 확인하고, 판매 흐름과
+              연결 상태를 점검합니다.
+            </div>
+            <div style={S.cardCta}>바로 가기 →</div>
+          </Link>
+
+          <Link href="/expo/booths" style={S.card}>
+            <div style={S.cardBadge}>BOOTHS</div>
+            <div style={S.cardTitle}>참가 부스 실노출 점검</div>
+            <div style={S.cardDesc}>
+              참가기업 부스 목록, 카테고리별 진입 구조, 공개 부스 페이지 상태를 실제 사용자 화면에서
+              확인합니다.
             </div>
             <div style={S.cardCta}>바로 가기 →</div>
           </Link>
@@ -56,7 +95,8 @@ export default function ExpoAdminIndexPage() {
             <div style={S.cardBadge}>EXPO</div>
             <div style={S.cardTitle}>박람회 메인 보기</div>
             <div style={S.cardDesc}>
-              실제 사용자 화면에서 현재 편성 상태를 바로 확인합니다.
+              실제 사용자 화면에서 현재 편성 상태, 핫 이슈, 상담 영역, 경품/라이브 흐름을 바로
+              확인합니다.
             </div>
             <div style={S.cardCta}>바로 가기 →</div>
           </Link>
@@ -65,6 +105,12 @@ export default function ExpoAdminIndexPage() {
         <div style={S.quickBox}>
           <div style={S.quickTitle}>빠른 운영 링크</div>
           <div style={S.quickLinks}>
+            <Link href="/expo/admin/home-slots" style={S.quickLink}>
+              메인 편성실
+            </Link>
+            <Link href="/expo/admin/problem-cards" style={S.quickLink}>
+              고민 해결 카드 편성
+            </Link>
             <Link href="/expo/event" style={S.quickLink}>
               이벤트 참여 페이지
             </Link>
@@ -119,6 +165,14 @@ const S: Record<string, React.CSSProperties> = {
     lineHeight: 1.8,
     fontSize: 15,
   },
+  sectionLabel: {
+    marginTop: 22,
+    marginBottom: 12,
+    fontSize: 13,
+    fontWeight: 950,
+    color: "#16a34a",
+    letterSpacing: 0.3,
+  },
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(2, 1fr)",
@@ -166,7 +220,7 @@ const S: Record<string, React.CSSProperties> = {
     fontSize: 14,
   },
   quickBox: {
-    marginTop: 20,
+    marginTop: 24,
     background: "#fff",
     border: "1px solid #e5e7eb",
     borderRadius: 24,

@@ -13,6 +13,23 @@ type Params = {
 
 const ALLOWED_STATUS = ["draft", "live", "closed"];
 
+function toNullableTrimmedString(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function toOptionalTrimmedString(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  return value.trim();
+}
+
+function toOptionalNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 export async function PATCH(req: Request, { params }: Params) {
   try {
     const ok = await isAdminAuthenticated();
@@ -43,29 +60,26 @@ export async function PATCH(req: Request, { params }: Params) {
         typeof body.description === "string"
           ? body.description.trim()
           : undefined,
-      website_url:
-        typeof body.website_url === "string"
-          ? body.website_url.trim() || null
-          : undefined,
-      youtube_url:
-        typeof body.youtube_url === "string"
-          ? body.youtube_url.trim() || null
-          : undefined,
-      hero_image_url:
-        typeof body.hero_image_url === "string"
-          ? body.hero_image_url.trim() || null
-          : undefined,
-      logo_url:
-        typeof body.logo_url === "string"
-          ? body.logo_url.trim() || null
-          : undefined,
+
+      website_url: toNullableTrimmedString(body.website_url),
+      youtube_url: toNullableTrimmedString(body.youtube_url),
+      hero_image_url: toNullableTrimmedString(body.hero_image_url),
+      logo_url: toNullableTrimmedString(body.logo_url),
+
       status:
         typeof body.status === "string" &&
         ALLOWED_STATUS.includes(body.status)
           ? body.status
           : undefined,
+
       is_public:
         typeof body.is_public === "boolean" ? body.is_public : undefined,
+
+      sponsor_weight: toOptionalNumber(body.sponsor_weight),
+      manual_boost: toOptionalNumber(body.manual_boost),
+      is_featured:
+        typeof body.is_featured === "boolean" ? body.is_featured : undefined,
+      campaign_tag: toNullableTrimmedString(body.campaign_tag),
     };
 
     const updateData: Record<string, any> = {};
@@ -86,7 +100,7 @@ export async function PATCH(req: Request, { params }: Params) {
       .from("booths")
       .update(updateData)
       .eq("booth_id", boothId)
-      .select()
+      .select("*")
       .single();
 
     if (error) {

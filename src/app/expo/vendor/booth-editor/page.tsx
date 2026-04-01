@@ -38,10 +38,11 @@ export default async function VendorBoothEditorPage() {
     company_name: vendorRow.company_name,
   };
 
+  // ✅ 핵심 수정: owner_user_id 기준 조회
   const { data: booth } = await supabase
     .from("booths")
     .select("*")
-    .eq("vendor_id", vendor.id)
+    .eq("owner_user_id", user.id)
     .maybeSingle();
 
   if (!booth) {
@@ -49,7 +50,7 @@ export default async function VendorBoothEditorPage() {
       <main style={wrap}>
         <h1 style={title}>부스가 아직 없습니다.</h1>
         <p style={muted}>
-          이 업체와 연결된 부스가 없습니다. booths.vendor_id 연결이 필요합니다.
+          관리자 승인 후 자동 생성되거나, 부스 생성 API가 먼저 실행되어야 합니다.
         </p>
       </main>
     );
@@ -59,7 +60,8 @@ export default async function VendorBoothEditorPage() {
     .from("products")
     .select("*")
     .eq("booth_id", booth.booth_id)
-    .order("sort_order", { ascending: true });
+    .not("status", "eq", "deleted") // 🔥 안전
+    .order("created_at", { ascending: false });
 
   return (
     <BoothEditorClient

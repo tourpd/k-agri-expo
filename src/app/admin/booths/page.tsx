@@ -15,6 +15,10 @@ type BoothRow = {
   logo_url: string | null;
   is_public: boolean | null;
   status: string | null;
+  sponsor_weight: number | null;
+  manual_boost: number | null;
+  is_featured: boolean | null;
+  campaign_tag: string | null;
   updated_at?: string | null;
 };
 
@@ -100,6 +104,7 @@ export default function AdminBoothsPage() {
       live: booths.filter((b) => b.status === "live").length,
       draft: booths.filter((b) => b.status === "draft").length,
       publicCount: booths.filter((b) => b.is_public).length,
+      featuredCount: booths.filter((b) => b.is_featured).length,
     };
   }, [booths]);
 
@@ -166,7 +171,13 @@ export default function AdminBoothsPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(selected),
+        body: JSON.stringify({
+          ...selected,
+          sponsor_weight: Number(selected.sponsor_weight ?? 0),
+          manual_boost: Number(selected.manual_boost ?? 0),
+          is_featured: !!selected.is_featured,
+          campaign_tag: (selected.campaign_tag || "").trim() || null,
+        }),
       });
 
       const data = await res.json();
@@ -229,7 +240,7 @@ export default function AdminBoothsPage() {
             <div className="text-sm font-black text-emerald-700">BOOTHS</div>
             <h1 className="mt-2 text-3xl font-black">업체/부스 관리</h1>
             <p className="mt-2 text-slate-600">
-              카드형으로 부스를 관리하고, 공개/비공개 및 운영 상태를 빠르게 바꿀 수 있습니다.
+              부스 정보 관리와 함께 협찬 점수, 수동 부스트, 대표 노출까지 한 화면에서 운영합니다.
             </p>
           </div>
 
@@ -242,11 +253,12 @@ export default function AdminBoothsPage() {
           </button>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatCard label="전체 부스" value={`${stats.total}개`} tone="slate" />
           <StatCard label="운영중" value={`${stats.live}개`} tone="green" />
           <StatCard label="초안" value={`${stats.draft}개`} tone="yellow" />
           <StatCard label="공개중" value={`${stats.publicCount}개`} tone="blue" />
+          <StatCard label="대표노출" value={`${stats.featuredCount}개`} tone="purple" />
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-4">
@@ -361,8 +373,32 @@ export default function AdminBoothsPage() {
                       {row.is_public ? "공개" : "비공개"}
                     </span>
 
-                    {row.website_url ? (
+                    {row.is_featured ? (
+                      <span className="inline-flex rounded-full bg-purple-100 px-2.5 py-1 text-xs font-bold text-purple-700">
+                        대표노출
+                      </span>
+                    ) : null}
+
+                    {(row.sponsor_weight ?? 0) > 0 ? (
+                      <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
+                        협찬 {row.sponsor_weight}
+                      </span>
+                    ) : null}
+
+                    {(row.manual_boost ?? 0) > 0 ? (
                       <span className="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
+                        부스트 {row.manual_boost}
+                      </span>
+                    ) : null}
+
+                    {row.campaign_tag ? (
+                      <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">
+                        {row.campaign_tag}
+                      </span>
+                    ) : null}
+
+                    {row.website_url ? (
+                      <span className="inline-flex rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-bold text-cyan-700">
                         홈페이지
                       </span>
                     ) : null}
@@ -486,6 +522,79 @@ export default function AdminBoothsPage() {
                 </div>
               </div>
 
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-3 text-base font-black text-slate-900">
+                  노출 제어 설정
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-bold">협찬 점수</label>
+                    <input
+                      type="number"
+                      value={selected.sponsor_weight ?? 0}
+                      onChange={(e) =>
+                        setSelected({
+                          ...selected,
+                          sponsor_weight: Number(e.target.value || 0),
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                    />
+                    <div className="mt-1 text-xs text-slate-500">
+                      협찬/집중 노출 가산점
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-bold">수동 부스트</label>
+                    <input
+                      type="number"
+                      value={selected.manual_boost ?? 0}
+                      onChange={(e) =>
+                        setSelected({
+                          ...selected,
+                          manual_boost: Number(e.target.value || 0),
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                    />
+                    <div className="mt-1 text-xs text-slate-500">
+                      운영자가 직접 주는 추가 가중치
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-bold">캠페인 태그</label>
+                  <input
+                    value={selected.campaign_tag || ""}
+                    onChange={(e) =>
+                      setSelected({ ...selected, campaign_tag: e.target.value })
+                    }
+                    placeholder="예: thrips_campaign"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                  />
+                  <div className="mt-1 text-xs text-slate-500">
+                    시즌/이벤트/라이브 연동용 태그
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-3">
+                  <input
+                    id="is_featured"
+                    type="checkbox"
+                    checked={!!selected.is_featured}
+                    onChange={(e) =>
+                      setSelected({ ...selected, is_featured: e.target.checked })
+                    }
+                  />
+                  <label htmlFor="is_featured" className="text-sm font-bold">
+                    대표 노출 부스로 운영
+                  </label>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-bold">대표 이미지 업로드</label>
@@ -590,13 +699,14 @@ function StatCard({
 }: {
   label: string;
   value: string;
-  tone: "slate" | "yellow" | "green" | "blue";
+  tone: "slate" | "yellow" | "green" | "blue" | "purple";
 }) {
   const map = {
     slate: "bg-slate-900 text-white",
     yellow: "bg-yellow-500 text-white",
     green: "bg-emerald-600 text-white",
     blue: "bg-blue-600 text-white",
+    purple: "bg-purple-600 text-white",
   };
 
   return (

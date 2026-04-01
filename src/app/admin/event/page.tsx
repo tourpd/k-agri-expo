@@ -1,423 +1,398 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-type EventRow = {
+type EventForm = {
   id: number;
   title: string;
-  status: string | null;
+  description: string;
+  prize_text: string;
+  hero_image_url: string;
+  hero_video_url: string;
+  primary_button_text: string;
+  primary_button_link: string;
+  secondary_button_text: string;
+  secondary_button_link: string;
+  is_active: boolean;
 };
 
-type WinnerRow = {
-  id: number;
-  event_id: number;
-  entry_id: number;
-  entry_code: string;
-  name: string;
-  phone: string;
-  prize_rank: number;
-  confirmed: boolean;
-  drawn_at: string;
+const EMPTY_FORM: EventForm = {
+  id: 1,
+  title: "",
+  description: "",
+  prize_text: "",
+  hero_image_url: "",
+  hero_video_url: "",
+  primary_button_text: "",
+  primary_button_link: "",
+  secondary_button_text: "",
+  secondary_button_link: "",
+  is_active: true,
 };
 
-const COUNTDOWN_SECONDS = 120;
-
-export default function AdminEventPage() {
-  const [events, setEvents] = useState<EventRow[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<number | "">("");
-  const [selectedEventStatus, setSelectedEventStatus] = useState<string>("open");
-
-  const [loading, setLoading] = useState(false);
-  const [winner, setWinner] = useState<WinnerRow | null>(null);
+export default function AdminEventsPage() {
+  const [form, setForm] = useState<EventForm>(EMPTY_FORM);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
   const [errorText, setErrorText] = useState("");
-  const [history, setHistory] = useState<WinnerRow[]>([]);
 
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
+  async function load() {
+    setLoading(true);
+    setErrorText("");
+    setMessage("");
 
-  const selectedEvent = useMemo(
-    () => events.find((e) => e.id === Number(selectedEventId)) || null,
-    [events, selectedEventId]
-  );
+    try {
+      const res = await fetch("/api/admin/events", { cache: "no-store" });
+      const data = await res.json();
 
-  const loadEvents = async () => {
-    const res = await fetch("/api/admin/events", { cache: "no-store" });
-    const data = await res.json();
-
-    if (data.success) {
-      const nextEvents = data.events || [];
-      setEvents(nextEvents);
-
-      if (nextEvents.length > 0) {
-        const defaultEventId =
-          selectedEventId === "" ? nextEvents[0].id : Number(selectedEventId);
-
-        setSelectedEventId(defaultEventId);
-
-        const current =
-          nextEvents.find((e: EventRow) => e.id === defaultEventId) || nextEvents[0];
-
-        setSelectedEventStatus(current.status || "open");
+      if (!res.ok || !data?.ok) {
+        setErrorText(data?.error || "이벤트 정보를 불러오지 못했습니다.");
+        return;
       }
-    }
-  };
 
-  const loadHistory = async (eventId: number) => {
-    const res = await fetch(`/api/admin/winners?event_id=${eventId}`, {
-      cache: "no-store",
-    });
-    const data = await res.json();
+      const item = data?.item;
+      if (!item) {
+        setForm(EMPTY_FORM);
+        return;
+      }
 
-    if (data.success) {
-      setHistory(data.winners || []);
+      setForm({
+        id: Number(item.id || 1),
+        title: item.title || "",
+        description: item.description || "",
+        prize_text: item.prize_text || "",
+        hero_image_url: item.hero_image_url || "",
+        hero_video_url: item.hero_video_url || "",
+        primary_button_text: item.primary_button_text || "",
+        primary_button_link: item.primary_button_link || "",
+        secondary_button_text: item.secondary_button_text || "",
+        secondary_button_link: item.secondary_button_link || "",
+        is_active: typeof item.is_active === "boolean" ? item.is_active : true,
+      });
+    } catch {
+      setErrorText("네트워크 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
-    loadEvents();
+    load();
   }, []);
 
-  useEffect(() => {
-    if (selectedEventId) {
-      const current = events.find((e) => e.id === Number(selectedEventId));
-      setSelectedEventStatus(current?.status || "open");
-      loadHistory(Number(selectedEventId));
-    }
-  }, [selectedEventId, events]);
+  function update<K extends keyof EventForm>(key: K, value: EventForm[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
 
-  useEffect(() => {
-    if (!timerRunning) return;
-
-    if (secondsLeft <= 0) {
-      setTimerRunning(false);
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setSecondsLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => window.clearTimeout(timer);
-  }, [timerRunning, secondsLeft]);
-
-  const changeEventStatus = async (status: "open" | "closed" | "done") => {
-    if (!selectedEventId) {
-      setErrorText("이벤트를 먼저 선택해 주세요.");
-      return;
-    }
-
-    setLoading(true);
+  async function save() {
+    setSaving(true);
     setErrorText("");
+    setMessage("");
 
     try {
-      const res = await fetch("/api/admin/event-status", {
+      const res = await fetch("/api/admin/events/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          event_id: Number(selectedEventId),
-          status,
-        }),
+        body: JSON.stringify(form),
       });
 
       const data = await res.json();
 
-      if (!data.success) {
-        setErrorText(data.error || "이벤트 상태 변경 중 오류가 발생했습니다.");
+      if (!res.ok || !data?.ok) {
+        setErrorText(data?.error || "저장에 실패했습니다.");
         return;
       }
 
-      setSelectedEventStatus(status);
-      await loadEvents();
+      setMessage("이벤트 정보가 저장되었습니다.");
+      await load();
     } catch {
-      setErrorText("네트워크 오류가 발생했습니다.");
+      setErrorText("저장 중 네트워크 오류가 발생했습니다.");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
-  };
-
-  const drawWinner = async (prizeRank: number) => {
-    if (!selectedEventId) {
-      setErrorText("이벤트를 먼저 선택해 주세요.");
-      return;
-    }
-
-    if (selectedEventStatus === "open") {
-      setErrorText("먼저 응모를 마감해 주세요.");
-      return;
-    }
-
-    setLoading(true);
-    setErrorText("");
-    setWinner(null);
-    setTimerRunning(false);
-    setSecondsLeft(COUNTDOWN_SECONDS);
-
-    try {
-      const res = await fetch("/api/admin/draw", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          event_id: Number(selectedEventId),
-          prize_rank: prizeRank,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setErrorText(data.error || "추첨 중 오류가 발생했습니다.");
-        return;
-      }
-
-      setWinner(data.winner);
-      setSecondsLeft(COUNTDOWN_SECONDS);
-      setTimerRunning(true);
-      await loadHistory(Number(selectedEventId));
-    } catch {
-      setErrorText("네트워크 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const redrawWinner = async () => {
-    if (!winner) {
-      setErrorText("재추첨할 당첨 후보가 없습니다.");
-      return;
-    }
-
-    await drawWinner(winner.prize_rank);
-  };
-
-  const confirmWinner = async () => {
-    if (!winner) {
-      setErrorText("확정할 당첨 후보가 없습니다.");
-      return;
-    }
-
-    setLoading(true);
-    setErrorText("");
-
-    try {
-      const res = await fetch("/api/admin/confirm-winner", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          winner_id: winner.id,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setErrorText(data.error || "당첨 확정 중 오류가 발생했습니다.");
-        return;
-      }
-
-      setWinner((prev) => (prev ? { ...prev, confirmed: true } : prev));
-      setTimerRunning(false);
-      await loadHistory(Number(selectedEventId));
-    } catch {
-      setErrorText("네트워크 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatTime = (sec: number) => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
+  }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-6 text-slate-900">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-3xl bg-white p-6 shadow-lg">
-          <h1 className="text-3xl font-black">라이브 이벤트 추첨 관리자</h1>
-          <p className="mt-2 text-slate-600">
-            응모를 마감한 뒤 등수별 추첨을 진행하고, 2분 안에 전화 연결이 되면 당첨 확정합니다.
-          </p>
-
-          <div className="mt-6">
-            <label className="mb-2 block text-sm font-bold">이벤트 선택</label>
-            <select
-              value={selectedEventId}
-              onChange={(e) => setSelectedEventId(Number(e.target.value))}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
-            >
-              {events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  [{event.id}] {event.title}
-                </option>
-              ))}
-            </select>
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <section style={S.heroCard}>
+          <div style={S.kicker}>EVENT CMS</div>
+          <h1 style={S.title}>이벤트 콘텐츠 관리자</h1>
+          <div style={S.desc}>
+            이벤트 제목, 설명, 상금 문구, 배너 이미지, 대표 영상 링크, 버튼 링크를
+            여기서 직접 관리합니다.
           </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold">
-              현재 상태: {selectedEventStatus || "open"}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => changeEventStatus("closed")}
-              disabled={loading || !selectedEventId}
-              className="rounded-2xl bg-red-600 px-4 py-3 font-black text-white disabled:opacity-60"
-            >
-              응모 마감
-            </button>
-
-            <button
-              type="button"
-              onClick={() => changeEventStatus("open")}
-              disabled={loading || !selectedEventId}
-              className="rounded-2xl bg-emerald-700 px-4 py-3 font-black text-white disabled:opacity-60"
-            >
-              응모 재개
-            </button>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => drawWinner(1)}
-              disabled={loading}
-              className="rounded-2xl bg-yellow-400 px-5 py-3 font-black text-slate-900 disabled:opacity-60"
-            >
-              {loading ? "처리 중..." : "1등 추첨"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => drawWinner(2)}
-              disabled={loading}
-              className="rounded-2xl bg-slate-800 px-5 py-3 font-black text-white disabled:opacity-60"
-            >
-              {loading ? "처리 중..." : "2등 추첨"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => drawWinner(3)}
-              disabled={loading}
-              className="rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white disabled:opacity-60"
-            >
-              {loading ? "처리 중..." : "3등 추첨"}
-            </button>
-          </div>
-
-          {errorText ? (
-            <div className="mt-4 rounded-xl bg-red-100 px-4 py-3 font-bold text-red-700">
-              {errorText}
-            </div>
-          ) : null}
         </section>
 
-        {winner ? (
-          <section className="rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
-            <div className="text-sm font-bold text-emerald-300">현재 당첨 후보</div>
-            <div className="mt-3 text-5xl font-black">{winner.prize_rank}등</div>
-
-            <div className="mt-6 rounded-2xl bg-white/10 p-6">
-              <div className="text-sm text-slate-300">참가번호</div>
-              <div className="mt-2 text-5xl font-black tracking-wide text-yellow-300">
-                {winner.entry_code}
+        {loading ? (
+          <section style={S.formCard}>
+            <div style={S.emptyBox}>불러오는 중...</div>
+          </section>
+        ) : (
+          <section style={S.formCard}>
+            <div style={S.formGrid}>
+              <div style={S.fullCol}>
+                <label style={S.label}>이벤트 제목</label>
+                <input
+                  value={form.title}
+                  onChange={(e) => update("title", e.target.value)}
+                  placeholder="예: 영진로타리 이벤트"
+                  style={S.input}
+                />
               </div>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <div className="text-sm text-slate-300">이름</div>
-                  <div className="mt-1 text-xl font-bold">{winner.name}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-slate-300">전화번호</div>
-                  <div className="mt-1 text-xl font-bold">{winner.phone}</div>
-                </div>
+              <div style={S.fullCol}>
+                <label style={S.label}>상금 문구</label>
+                <input
+                  value={form.prize_text}
+                  onChange={(e) => update("prize_text", e.target.value)}
+                  placeholder="예: 1500만원 상당"
+                  style={S.input}
+                />
               </div>
 
-              <div className="mt-6 rounded-2xl bg-black/20 p-5 text-center">
-                <div className="text-sm font-bold text-slate-300">전화 대기 시간</div>
-                <div className="mt-2 text-6xl font-black text-orange-300">
-                  {formatTime(secondsLeft)}
-                </div>
-                <div className="mt-2 text-sm text-slate-300">
-                  발표 후 2분 안에 전화 연결이 되어야 최종 확정됩니다.
-                </div>
+              <div style={S.fullCol}>
+                <label style={S.label}>이벤트 설명</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => update("description", e.target.value)}
+                  placeholder="이벤트 설명을 입력해 주세요."
+                  style={S.textareaLarge}
+                />
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={confirmWinner}
-                  disabled={loading || winner.confirmed}
-                  className="rounded-2xl bg-yellow-400 px-5 py-3 font-black text-slate-900 disabled:opacity-60"
-                >
-                  {winner.confirmed ? "당첨 확정 완료" : "당첨 확정"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={redrawWinner}
-                  disabled={loading}
-                  className="rounded-2xl bg-red-600 px-5 py-3 font-black text-white disabled:opacity-60"
-                >
-                  재추첨
-                </button>
+              <div style={S.fullCol}>
+                <label style={S.label}>대표 배너 이미지 URL</label>
+                <input
+                  value={form.hero_image_url}
+                  onChange={(e) => update("hero_image_url", e.target.value)}
+                  placeholder="이미지 업로드 관리자에서 받은 공개 URL"
+                  style={S.input}
+                />
               </div>
+
+              <div style={S.fullCol}>
+                <label style={S.label}>대표 영상 링크</label>
+                <input
+                  value={form.hero_video_url}
+                  onChange={(e) => update("hero_video_url", e.target.value)}
+                  placeholder="예: https://www.youtube.com/watch?v=..."
+                  style={S.input}
+                />
+              </div>
+
+              <div>
+                <label style={S.label}>메인 버튼 문구</label>
+                <input
+                  value={form.primary_button_text}
+                  onChange={(e) => update("primary_button_text", e.target.value)}
+                  placeholder="예: 이벤트 참여하기"
+                  style={S.input}
+                />
+              </div>
+
+              <div>
+                <label style={S.label}>메인 버튼 링크</label>
+                <input
+                  value={form.primary_button_link}
+                  onChange={(e) => update("primary_button_link", e.target.value)}
+                  placeholder="예: /expo/event/apply"
+                  style={S.input}
+                />
+              </div>
+
+              <div>
+                <label style={S.label}>보조 버튼 문구</label>
+                <input
+                  value={form.secondary_button_text}
+                  onChange={(e) => update("secondary_button_text", e.target.value)}
+                  placeholder="예: 라이브 일정 보기"
+                  style={S.input}
+                />
+              </div>
+
+              <div>
+                <label style={S.label}>보조 버튼 링크</label>
+                <input
+                  value={form.secondary_button_link}
+                  onChange={(e) => update("secondary_button_link", e.target.value)}
+                  placeholder="예: /expo/live"
+                  style={S.input}
+                />
+              </div>
+
+              <div style={S.fullCol}>
+                <label style={S.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={form.is_active}
+                    onChange={(e) => update("is_active", e.target.checked)}
+                  />
+                  <span>이 이벤트를 활성 상태로 사용</span>
+                </label>
+              </div>
+            </div>
+
+            {message ? <div style={S.successBox}>{message}</div> : null}
+            {errorText ? <div style={S.errorBox}>{errorText}</div> : null}
+
+            <div style={S.actionRow}>
+              <button onClick={save} disabled={saving} style={S.primaryBtn}>
+                {saving ? "저장 중..." : "저장하기"}
+              </button>
+
+              <button onClick={load} disabled={saving} style={S.ghostBtn}>
+                다시 불러오기
+              </button>
             </div>
           </section>
-        ) : null}
-
-        <section className="rounded-3xl bg-white p-6 shadow-lg">
-          <h2 className="text-2xl font-black">추첨 기록</h2>
-
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 text-left">
-                  <th className="px-3 py-3">등수</th>
-                  <th className="px-3 py-3">참가번호</th>
-                  <th className="px-3 py-3">이름</th>
-                  <th className="px-3 py-3">전화번호</th>
-                  <th className="px-3 py-3">확정 여부</th>
-                  <th className="px-3 py-3">추첨시각</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
-                      아직 추첨 기록이 없습니다.
-                    </td>
-                  </tr>
-                ) : (
-                  history.map((row) => (
-                    <tr key={row.id} className="border-b border-slate-100">
-                      <td className="px-3 py-3 font-bold">{row.prize_rank}등</td>
-                      <td className="px-3 py-3">{row.entry_code}</td>
-                      <td className="px-3 py-3">{row.name}</td>
-                      <td className="px-3 py-3">{row.phone}</td>
-                      <td className="px-3 py-3">
-                        {row.confirmed ? "확정" : "대기"}
-                      </td>
-                      <td className="px-3 py-3">
-                        {new Date(row.drawn_at).toLocaleString("ko-KR")}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        )}
       </div>
     </main>
   );
 }
+
+const S: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    background: "#e9eef5",
+    padding: 28,
+  },
+  wrap: {
+    maxWidth: 1280,
+    margin: "0 auto",
+  },
+  heroCard: {
+    borderRadius: 28,
+    background: "#fff",
+    border: "1px solid #dde5ef",
+    boxShadow: "0 10px 28px rgba(15,23,42,0.08)",
+    padding: 28,
+    marginBottom: 22,
+  },
+  kicker: {
+    fontSize: 14,
+    fontWeight: 950,
+    color: "#0f8a5f",
+    letterSpacing: 0.3,
+  },
+  title: {
+    margin: "12px 0 0",
+    fontSize: 34,
+    lineHeight: 1.1,
+    fontWeight: 950,
+    color: "#0f172a",
+  },
+  desc: {
+    marginTop: 14,
+    color: "#64748b",
+    fontSize: 18,
+    lineHeight: 1.8,
+  },
+  formCard: {
+    borderRadius: 28,
+    background: "#fff",
+    border: "1px solid #dde5ef",
+    boxShadow: "0 10px 28px rgba(15,23,42,0.08)",
+    padding: 24,
+  },
+  formGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 18,
+  },
+  fullCol: {
+    gridColumn: "1 / -1",
+  },
+  label: {
+    display: "block",
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: 900,
+    color: "#334155",
+  },
+  input: {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "14px 16px",
+    borderRadius: 14,
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+    fontSize: 16,
+  },
+  textareaLarge: {
+    width: "100%",
+    minHeight: 140,
+    boxSizing: "border-box",
+    padding: "14px 16px",
+    borderRadius: 14,
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+    fontSize: 16,
+    resize: "vertical",
+    lineHeight: 1.7,
+  },
+  checkboxRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    fontSize: 15,
+    fontWeight: 800,
+    color: "#334155",
+  },
+  successBox: {
+    marginTop: 18,
+    borderRadius: 14,
+    border: "1px solid #bbf7d0",
+    background: "#ecfdf5",
+    color: "#166534",
+    padding: 14,
+    fontWeight: 900,
+  },
+  errorBox: {
+    marginTop: 18,
+    borderRadius: 14,
+    border: "1px solid #fecaca",
+    background: "#fef2f2",
+    color: "#991b1b",
+    padding: 14,
+    fontWeight: 900,
+  },
+  actionRow: {
+    marginTop: 20,
+    display: "flex",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  primaryBtn: {
+    padding: "14px 22px",
+    borderRadius: 14,
+    border: "1px solid #111827",
+    background: "#111827",
+    color: "#fff",
+    fontWeight: 950,
+    fontSize: 16,
+    cursor: "pointer",
+  },
+  ghostBtn: {
+    padding: "14px 22px",
+    borderRadius: 14,
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+    color: "#0f172a",
+    fontWeight: 900,
+    fontSize: 16,
+    cursor: "pointer",
+  },
+  emptyBox: {
+    borderRadius: 16,
+    border: "1px solid #e2e8f0",
+    background: "#f8fafc",
+    color: "#64748b",
+    padding: 18,
+    fontWeight: 800,
+  },
+};

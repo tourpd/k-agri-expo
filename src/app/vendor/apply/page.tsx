@@ -3,316 +3,908 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type ProductRow = {
-  id: number;
-  code: string;
-  name: string;
-  description: string | null;
-  price_krw: number;
-  category: string | null;
+type BoothType = "free" | "basic" | "premium";
+type DurationKey = "1m" | "3m";
+
+type ProductCode =
+  | "free_1m"
+  | "basic_1m"
+  | "basic_3m"
+  | "premium_1m"
+  | "premium_3m";
+
+type FormState = {
+  company_name: string;
+  representative_name: string;
+  email: string;
+  phone: string;
+  tax_email: string;
+  business_number: string;
+  open_date: string;
+  business_address: string;
+  biz_type: string;
+  biz_item: string;
+  category_primary: string;
+  company_intro: string;
+  website_url: string;
+  youtube_url: string;
+  brochure_url: string;
+  source_file_name: string;
+  source_file_mime: string;
+  source_extracted_json: Record<string, unknown> | null;
 };
+
+const OPERATIONS = {
+  bankAccount: "기업은행 466-072683-04-011",
+  phone: "010-8216-1253",
+  email: "tourpd70@gmail.com",
+};
+
+const BOOTH_META: Record<
+  BoothType,
+  { title: string; description: string; badge: string }
+> = {
+  free: {
+    title: "무료 체험",
+    description: "1개월 동안 K-Agri Expo 입점 흐름을 체험해보는 기본 플랜",
+    badge: "무료",
+  },
+  basic: {
+    title: "일반 부스",
+    description: "상품/회사 소개와 기본 입점 운영에 적합한 표준 플랜",
+    badge: "기본",
+  },
+  premium: {
+    title: "프리미엄 부스",
+    description: "상단 노출과 강화된 소개 구성이 가능한 확장 플랜",
+    badge: "추천",
+  },
+};
+
+const PRICE_MAP: Record<
+  ProductCode,
+  {
+    booth_type: BoothType;
+    duration_key: DurationKey;
+    duration_months: number;
+    amount_krw: number;
+    label: string;
+  }
+> = {
+  free_1m: {
+    booth_type: "free",
+    duration_key: "1m",
+    duration_months: 1,
+    amount_krw: 0,
+    label: "무료 체험 · 1개월",
+  },
+  basic_1m: {
+    booth_type: "basic",
+    duration_key: "1m",
+    duration_months: 1,
+    amount_krw: 50000,
+    label: "일반 부스 · 1개월",
+  },
+  basic_3m: {
+    booth_type: "basic",
+    duration_key: "3m",
+    duration_months: 3,
+    amount_krw: 120000,
+    label: "일반 부스 · 3개월",
+  },
+  premium_1m: {
+    booth_type: "premium",
+    duration_key: "1m",
+    duration_months: 1,
+    amount_krw: 150000,
+    label: "프리미엄 부스 · 1개월",
+  },
+  premium_3m: {
+    booth_type: "premium",
+    duration_key: "3m",
+    duration_months: 3,
+    amount_krw: 350000,
+    label: "프리미엄 부스 · 3개월",
+  },
+};
+
+function formatKrw(value: number) {
+  return `${value.toLocaleString("ko-KR")}원`;
+}
+
+function getProductCode(
+  boothType: BoothType | null,
+  durationKey: DurationKey | null
+): ProductCode | null {
+  if (!boothType || !durationKey) return null;
+  if (boothType === "free") return "free_1m";
+  if (boothType === "basic" && durationKey === "1m") return "basic_1m";
+  if (boothType === "basic" && durationKey === "3m") return "basic_3m";
+  if (boothType === "premium" && durationKey === "1m") return "premium_1m";
+  if (boothType === "premium" && durationKey === "3m") return "premium_3m";
+  return null;
+}
+
+function onlyDigits(value: string) {
+  return value.replace(/[^\d]/g, "");
+}
+
+function formatBusinessNo(raw: string) {
+  const digits = onlyDigits(raw).slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 10)}`;
+}
+
+function normalizeBusinessNoForSubmit(raw: string) {
+  return onlyDigits(raw).slice(0, 10);
+}
+
+function formatPhone(raw: string) {
+  const digits = onlyDigits(raw).slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`;
+}
+
+function normalizePhoneForSubmit(raw: string) {
+  return onlyDigits(raw).slice(0, 11);
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
 
 export default function VendorApplyPage() {
   const router = useRouter();
 
-  const [products, setProducts] = useState<ProductRow[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [boothType, setBoothType] = useState<BoothType | null>(null);
+  const [durationKey, setDurationKey] = useState<DurationKey | null>(null);
 
-  const [form, setForm] = useState({
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+  const [licensePreviewUrl, setLicensePreviewUrl] = useState("");
+
+  const [isUploadingLicense, setIsUploadingLicense] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [businessLicenseBucket, setBusinessLicenseBucket] = useState("");
+  const [businessLicensePath, setBusinessLicensePath] = useState("");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+
+  const [form, setForm] = useState<FormState>({
     company_name: "",
-    applicant_name: "",
-    phone: "",
+    representative_name: "",
     email: "",
-    product_code: "",
-    note: "",
+    phone: "",
+    tax_email: "",
+    business_number: "",
+    open_date: "",
+    business_address: "",
+    biz_type: "",
+    biz_item: "",
+    category_primary: "",
+    company_intro: "",
+    website_url: "",
+    youtube_url: "",
+    brochure_url: "",
+    source_file_name: "",
+    source_file_mime: "",
+    source_extracted_json: null,
   });
 
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [errorText, setErrorText] = useState("");
-
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const res = await fetch("/api/products", { cache: "no-store" });
-        const data = await res.json();
-
-        if (data.success) {
-          setProducts(data.products || []);
-          if ((data.products || []).length > 0) {
-            setForm((prev) => ({
-              ...prev,
-              product_code: prev.product_code || data.products[0].code,
-            }));
-          }
-        } else {
-          setErrorText(data.error || "상품 목록을 불러오지 못했습니다.");
-        }
-      } catch {
-        setErrorText("상품 목록 조회 중 네트워크 오류가 발생했습니다.");
-      } finally {
-        setLoadingProducts(false);
-      }
+    return () => {
+      if (licensePreviewUrl) URL.revokeObjectURL(licensePreviewUrl);
     };
+  }, [licensePreviewUrl]);
 
-    loadProducts();
-  }, []);
+  const productCode = useMemo(
+    () => getProductCode(boothType, durationKey),
+    [boothType, durationKey]
+  );
 
-  const selectedProduct = useMemo(() => {
-    return products.find((p) => p.code === form.product_code) || null;
-  }, [products, form.product_code]);
+  const selectedPlan = productCode ? PRICE_MAP[productCode] : null;
 
-  const submit = async () => {
-    setMessage("");
-    setErrorText("");
+  const availableDurations: DurationKey[] = useMemo(() => {
+    if (boothType === "free") return ["1m"];
+    if (boothType === "basic") return ["1m", "3m"];
+    if (boothType === "premium") return ["1m", "3m"];
+    return [];
+  }, [boothType]);
 
-    if (!form.company_name.trim()) {
-      setErrorText("회사명을 입력해 주세요.");
+  function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function goNextFromStep1() {
+    if (!boothType) {
+      alert("부스 유형을 먼저 선택해주세요.");
+      return;
+    }
+    if (boothType === "free") setDurationKey("1m");
+    else if (!durationKey) setDurationKey("1m");
+    setStep(2);
+  }
+
+  function goNextFromStep2() {
+    if (!boothType) {
+      alert("부스 유형을 먼저 선택해주세요.");
+      return;
+    }
+    if (!durationKey) {
+      alert("기간을 선택해주세요.");
+      return;
+    }
+    setStep(3);
+  }
+
+  async function handleUploadBusinessLicense() {
+    if (!licenseFile) {
+      alert("사업자등록증 파일을 먼저 선택해주세요.");
       return;
     }
 
-    if (!form.phone.trim()) {
-      setErrorText("연락처를 입력해 주세요.");
-      return;
-    }
-
-    if (!form.product_code.trim()) {
-      setErrorText("신청 상품을 선택해 주세요.");
-      return;
-    }
-
-    setSubmitting(true);
+    setIsUploadingLicense(true);
+    setUploadMessage("");
 
     try {
+      const fd = new FormData();
+      fd.append("file", licenseFile);
+
+      const res = await fetch("/api/vendor/upload-business-license", {
+        method: "POST",
+        body: fd,
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || "사업자등록증 업로드에 실패했습니다.");
+      }
+
+      setBusinessLicenseBucket(json.bucket || "");
+      setBusinessLicensePath(json.path || "");
+      updateForm("source_file_name", json.fileName || licenseFile.name);
+      updateForm("source_file_mime", json.mimeType || licenseFile.type || "");
+      updateForm("source_extracted_json", null);
+      setUploadMessage("사업자등록증 파일 업로드가 완료되었습니다.");
+    } catch (error) {
+      setUploadMessage(
+        error instanceof Error ? error.message : "사업자등록증 업로드에 실패했습니다."
+      );
+    } finally {
+      setIsUploadingLicense(false);
+    }
+  }
+
+  function goNextFromStep3() {
+    if (!licenseFile) {
+      alert("사업자등록증 이미지를 선택해주세요.");
+      return;
+    }
+    if (!businessLicenseBucket || !businessLicensePath) {
+      alert("사업자등록증 파일 업로드를 먼저 완료해주세요.");
+      return;
+    }
+    if (!form.company_name.trim()) {
+      alert("회사명은 필수입니다.");
+      return;
+    }
+    if (!form.representative_name.trim()) {
+      alert("대표자명은 필수입니다.");
+      return;
+    }
+    const normalizedBizNo = normalizeBusinessNoForSubmit(form.business_number);
+    if (normalizedBizNo.length !== 10) {
+      alert("사업자등록번호를 정확히 입력해주세요.");
+      return;
+    }
+    if (!form.business_address.trim()) {
+      alert("사업장 주소는 필수입니다.");
+      return;
+    }
+    if (!form.biz_type.trim()) {
+      alert("업태는 필수입니다.");
+      return;
+    }
+    if (!form.email.trim()) {
+      alert("담당자 이메일은 필수입니다.");
+      return;
+    }
+    if (!isValidEmail(form.email)) {
+      alert("담당자 이메일 형식을 확인해주세요.");
+      return;
+    }
+    const normalizedPhone = normalizePhoneForSubmit(form.phone);
+    if (normalizedPhone.length < 10) {
+      alert("담당자 연락처를 정확히 입력해주세요.");
+      return;
+    }
+    setStep(4);
+  }
+
+  async function handleSubmit() {
+    if (!productCode || !selectedPlan || !boothType || !durationKey) {
+      alert("상품 정보가 올바르지 않습니다.");
+      return;
+    }
+
+    if (!businessLicenseBucket || !businessLicensePath) {
+      alert("사업자등록증 업로드 정보가 없습니다.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitMessage("");
+
+    try {
+      const payload = {
+        booth_type: boothType,
+        duration_key: selectedPlan.duration_key,
+        duration_months: selectedPlan.duration_months,
+        amount_krw: selectedPlan.amount_krw,
+        product_code: productCode,
+
+        company_name: form.company_name.trim(),
+        representative_name: form.representative_name.trim(),
+        email: form.email.trim(),
+        phone: normalizePhoneForSubmit(form.phone),
+        tax_email: form.tax_email.trim(),
+        business_number: normalizeBusinessNoForSubmit(form.business_number),
+        open_date: form.open_date.trim(),
+        business_address: form.business_address.trim(),
+        biz_type: form.biz_type.trim(),
+        biz_item: form.biz_item.trim(),
+
+        category_primary: form.category_primary.trim(),
+        company_intro: form.company_intro.trim(),
+        website_url: form.website_url.trim(),
+        youtube_url: form.youtube_url.trim(),
+        brochure_url: form.brochure_url.trim(),
+
+        source_file_name: form.source_file_name,
+        source_file_mime: form.source_file_mime,
+        source_extracted_json: form.source_extracted_json,
+
+        business_license_bucket: businessLicenseBucket,
+        business_license_path: businessLicensePath,
+      };
+
       const res = await fetch("/api/vendor/apply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const json = await res.json();
 
-      if (!data.success) {
-        setErrorText(data.error || "신청에 실패했습니다.");
-        return;
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || "입점 신청 저장 중 오류가 발생했습니다.");
       }
 
-      setMessage("신청이 접수되었습니다. 완료 페이지로 이동합니다.");
-
-      const complete = data.complete || {};
       const params = new URLSearchParams({
-        order_id: String(complete.order_id || ""),
-        company_name: String(complete.company_name || form.company_name || ""),
-        product_name: String(
-          complete.product_name || selectedProduct?.name || ""
-        ),
-        amount_krw: String(
-          complete.amount_krw || selectedProduct?.price_krw || 0
-        ),
-        phone: String(form.phone || ""),
-      });
+  application_id: json.application_id || "",
+  application_code: json.application_code || "",
+  company_name: json.company_name || form.company_name || "",
+  amount_krw: String(json.amount_krw ?? selectedPlan.amount_krw),
+  booth_type: boothType,
+  duration_key: durationKey,
+  phone: form.phone || "",
+});
 
       router.push(`/vendor/apply/complete?${params.toString()}`);
-    } catch {
-      setErrorText("네트워크 오류가 발생했습니다.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "신청 제출에 실패했습니다.";
+      setSubmitMessage(message);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
-  };
+  }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <section className="rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
-          <div className="text-sm font-black text-emerald-300">
-            VENDOR APPLICATION
+    <main className="mx-auto max-w-5xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">K-Agri Expo 벤더 입점 신청</h1>
+        <p className="mt-2 text-sm text-neutral-600">
+          부스 선택 → 기간 선택 → 사업자등록증 업로드 및 정보 입력 → 최종 확인 → 제출
+        </p>
+      </div>
+
+      <div className="mb-8 grid gap-3 sm:grid-cols-4">
+        {[1, 2, 3, 4].map((n) => {
+          const active = step === n;
+          const done = step > n;
+
+          return (
+            <div
+              key={n}
+              className={`rounded-2xl border p-4 text-sm ${
+                active
+                  ? "border-black bg-black text-white"
+                  : done
+                  ? "border-neutral-300 bg-neutral-100"
+                  : "border-neutral-200 bg-white"
+              }`}
+            >
+              <div className="font-semibold">STEP {n}</div>
+              <div className="mt-1">
+                {n === 1 && "부스 선택"}
+                {n === 2 && "기간 선택"}
+                {n === 3 && "사업자정보 입력"}
+                {n === 4 && "최종 확인"}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedPlan && (
+        <div className="mb-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
+          <div className="text-sm text-neutral-500">현재 선택</div>
+          <div className="mt-1 text-lg font-semibold">{selectedPlan.label}</div>
+          <div className="mt-1 text-sm text-neutral-700">
+            결제 예정 금액: <span className="font-semibold">{formatKrw(selectedPlan.amount_krw)}</span>
           </div>
-          <h1 className="mt-3 text-4xl font-black">업체 입점 신청</h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-slate-200">
-            K-Agri Expo에 참가할 업체는 원하는 입점 상품을 선택하고 신청서를 제출해 주세요.
-            신청 완료 후 입금 안내 페이지가 바로 열리며, 입금 확인 후 부스 개설이 진행됩니다.
-          </p>
+        </div>
+      )}
+
+      {step === 1 && (
+        <section className="space-y-6">
+          <h2 className="text-2xl font-semibold">1. 부스 유형을 선택해주세요</h2>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {(Object.keys(BOOTH_META) as BoothType[]).map((type) => {
+              const meta = BOOTH_META[type];
+              const selected = boothType === type;
+
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setBoothType(type);
+                    if (type === "free") setDurationKey("1m");
+                    else if (!durationKey) setDurationKey("1m");
+                  }}
+                  className={`rounded-3xl border p-6 text-left transition ${
+                    selected
+                      ? "border-black bg-black text-white"
+                      : "border-neutral-200 bg-white hover:border-neutral-400"
+                  }`}
+                >
+                  <div className="mb-3 inline-block rounded-full border px-3 py-1 text-xs">
+                    {meta.badge}
+                  </div>
+                  <div className="text-xl font-bold">{meta.title}</div>
+                  <div className="mt-3 text-sm opacity-90">{meta.description}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={goNextFromStep1}
+              className="rounded-2xl bg-black px-5 py-3 text-white"
+            >
+              다음 단계
+            </button>
+          </div>
         </section>
+      )}
 
-        <section className="rounded-3xl bg-white p-6 shadow-lg">
-          <div className="mb-5">
-            <div className="text-sm font-black text-emerald-700">PRODUCTS</div>
-            <h2 className="mt-2 text-2xl font-black">입점 상품 선택</h2>
+      {step === 2 && (
+        <section className="space-y-6">
+          <h2 className="text-2xl font-semibold">2. 기간을 선택해주세요</h2>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {availableDurations.map((key) => {
+              const code = getProductCode(boothType, key);
+              if (!code) return null;
+              const plan = PRICE_MAP[code];
+              const selected = durationKey === key;
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDurationKey(key)}
+                  className={`rounded-3xl border p-6 text-left transition ${
+                    selected
+                      ? "border-black bg-black text-white"
+                      : "border-neutral-200 bg-white hover:border-neutral-400"
+                  }`}
+                >
+                  <div className="text-lg font-bold">{plan.label}</div>
+                  <div className="mt-2 text-sm">기간: {plan.duration_months}개월</div>
+                  <div className="mt-2 text-2xl font-semibold">{formatKrw(plan.amount_krw)}</div>
+                </button>
+              );
+            })}
           </div>
 
-          {loadingProducts ? (
-            <div className="text-slate-500">상품 정보를 불러오는 중...</div>
-          ) : products.length === 0 ? (
-            <div className="rounded-xl bg-red-50 px-4 py-3 font-bold text-red-700">
-              현재 신청 가능한 상품이 없습니다.
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {products.map((product) => {
-                const active = form.product_code === product.code;
-
-                return (
-                  <button
-                    key={product.code}
-                    type="button"
-                    onClick={() =>
-                      setForm((prev) => ({ ...prev, product_code: product.code }))
-                    }
-                    className={`rounded-2xl border p-5 text-left transition ${
-                      active
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-200 bg-white text-slate-900"
-                    }`}
-                  >
-                    <div className="text-sm font-black text-emerald-400">
-                      {product.category || "PRODUCT"}
-                    </div>
-                    <div className="mt-2 text-xl font-black">{product.name}</div>
-                    <div
-                      className={`mt-3 text-sm leading-7 ${
-                        active ? "text-slate-200" : "text-slate-600"
-                      }`}
-                    >
-                      {product.description || "상품 설명이 없습니다."}
-                    </div>
-                    <div className="mt-4 text-2xl font-black">
-                      {product.price_krw.toLocaleString()}원
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="rounded-2xl border border-neutral-300 px-5 py-3"
+            >
+              이전
+            </button>
+            <button
+              type="button"
+              onClick={goNextFromStep2}
+              className="rounded-2xl bg-black px-5 py-3 text-white"
+            >
+              다음 단계
+            </button>
+          </div>
         </section>
+      )}
 
-        <section className="rounded-3xl bg-white p-6 shadow-lg">
-          <div className="mb-5">
-            <div className="text-sm font-black text-emerald-700">
-              APPLICATION FORM
-            </div>
-            <h2 className="mt-2 text-2xl font-black">신청 정보 입력</h2>
-          </div>
+      {step === 3 && (
+        <section className="space-y-6">
+          <h2 className="text-2xl font-semibold">3. 사업자등록증 업로드 및 사업자정보 입력</h2>
 
-          {selectedProduct ? (
-            <div className="mb-6 rounded-2xl bg-slate-50 p-4">
-              <div className="text-sm font-bold text-slate-500">선택 상품</div>
-              <div className="mt-1 text-xl font-black">{selectedProduct.name}</div>
-              <div className="mt-1 text-sm text-slate-600">
-                {selectedProduct.description || "상품 설명 없음"}
-              </div>
-              <div className="mt-2 text-lg font-black text-emerald-700">
-                {selectedProduct.price_krw.toLocaleString()}원
-              </div>
-            </div>
-          ) : null}
+          <div className="rounded-3xl border border-neutral-200 p-6">
+            <label className="mb-3 block text-sm font-medium">사업자등록증 파일 *</label>
 
-          {message ? (
-            <div className="mb-4 rounded-xl bg-emerald-100 px-4 py-3 font-bold text-emerald-700">
-              {message}
-            </div>
-          ) : null}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const nextFile = e.target.files?.[0] || null;
+                setLicenseFile(nextFile);
+                setBusinessLicenseBucket("");
+                setBusinessLicensePath("");
+                setUploadMessage("");
 
-          {errorText ? (
-            <div className="mb-4 rounded-xl bg-red-100 px-4 py-3 font-bold text-red-700">
-              {errorText}
-            </div>
-          ) : null}
-
-          <div className="grid gap-5">
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-bold">회사명 *</label>
-                <input
-                  value={form.company_name}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      company_name: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                  placeholder="예: 영진로타리"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-bold">담당자명</label>
-                <input
-                  value={form.applicant_name}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      applicant_name: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                  placeholder="예: 홍길동"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-bold">연락처 *</label>
-                <input
-                  value={form.phone}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      phone: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                  placeholder="예: 010-1234-5678"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-bold">이메일</label>
-                <input
-                  value={form.email}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      email: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                  placeholder="예: company@example.com"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-bold">신청 메모</label>
-              <textarea
-                value={form.note}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    note: e.target.value,
-                  }))
+                if (licensePreviewUrl) {
+                  URL.revokeObjectURL(licensePreviewUrl);
+                  setLicensePreviewUrl("");
                 }
-                className="min-h-[140px] w-full rounded-xl border border-slate-300 px-4 py-3"
-                placeholder="희망 노출 방식, 라이브 소개 희망 여부, 문의사항 등을 입력해 주세요."
-              />
+
+                if (nextFile) {
+                  updateForm("source_file_name", nextFile.name);
+                  updateForm("source_file_mime", nextFile.type || "");
+                  updateForm("source_extracted_json", null);
+                  setLicensePreviewUrl(URL.createObjectURL(nextFile));
+                }
+              }}
+              className="block w-full rounded-xl border border-neutral-300 p-3"
+            />
+
+            <div className="mt-2 text-sm text-neutral-500">
+              사업자등록증은 자동인식하지 않고 증빙용으로 보관합니다. 아래 핵심 정보는 직접 입력해주세요.
             </div>
 
-            <div className="pt-2">
+            <div className="mt-4 flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={submit}
-                disabled={submitting || products.length === 0}
-                className="rounded-2xl bg-slate-950 px-6 py-4 text-lg font-black text-white disabled:opacity-60"
+                onClick={handleUploadBusinessLicense}
+                disabled={!licenseFile || isUploadingLicense}
+                className="rounded-2xl bg-black px-5 py-3 text-white disabled:opacity-50"
               >
-                {submitting ? "신청 접수 중..." : "입점 신청하기"}
+                {isUploadingLicense ? "파일 업로드 중..." : "사업자등록증 업로드"}
               </button>
+
+              {licenseFile && (
+                <div className="self-center text-sm text-neutral-600">
+                  선택 파일: {licenseFile.name}
+                </div>
+              )}
             </div>
+
+            {uploadMessage && (
+              <div className="mt-4 rounded-2xl bg-neutral-100 p-4 text-sm whitespace-pre-wrap">
+                {uploadMessage}
+              </div>
+            )}
+
+            {licensePreviewUrl && (
+              <div className="mt-4 rounded-2xl border border-neutral-200 p-4">
+                <div className="mb-2 text-sm font-medium text-neutral-700">업로드 미리보기</div>
+                <img
+                  src={licensePreviewUrl}
+                  alt="사업자등록증 미리보기"
+                  className="max-h-[520px] w-auto rounded-xl border border-neutral-200"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-900">
+            사업자등록증 이미지는 나중에 세금계산서 발행 및 운영 확인용으로 보관됩니다.
+            회사명, 대표자명, 사업자등록번호, 사업장 주소, 업태, 담당자 이메일, 연락처는 직접 정확하게 입력해주세요.
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <InputField
+              label="회사명 *"
+              value={form.company_name}
+              onChange={(v) => updateForm("company_name", v)}
+              placeholder="예: 주식회사 한국농수산티브이"
+            />
+            <InputField
+              label="대표자명 *"
+              value={form.representative_name}
+              onChange={(v) => updateForm("representative_name", v)}
+              placeholder="예: 조세환"
+            />
+            <InputField
+              label="담당자 이메일 *"
+              type="email"
+              value={form.email}
+              onChange={(v) => updateForm("email", v)}
+              placeholder="예: tourpd70@gmail.com"
+            />
+            <InputField
+              label="담당자 연락처 *"
+              value={form.phone}
+              onChange={(v) => updateForm("phone", formatPhone(v))}
+              placeholder="숫자만 입력하면 자동으로 -가 들어갑니다"
+            />
+            <InputField
+              label="세금계산서 이메일"
+              type="email"
+              value={form.tax_email}
+              onChange={(v) => updateForm("tax_email", v)}
+              placeholder="비어 있으면 담당자 이메일로 연락"
+            />
+            <InputField
+              label="사업자등록번호 *"
+              value={form.business_number}
+              onChange={(v) => updateForm("business_number", formatBusinessNo(v))}
+              placeholder="숫자만 입력하면 자동으로 -가 들어갑니다"
+            />
+            <InputField
+              label="개업연월일"
+              value={form.open_date}
+              onChange={(v) => updateForm("open_date", v)}
+              placeholder="예: 2025-07-10"
+            />
+            <InputField
+              label="업태 *"
+              value={form.biz_type}
+              onChange={(v) => updateForm("biz_type", v)}
+              placeholder="예: 정보통신업"
+            />
+            <InputField
+              label="종목"
+              value={form.biz_item}
+              onChange={(v) => updateForm("biz_item", v)}
+              placeholder="예: 방송 프로그램 제작업"
+            />
+            <InputField
+              label="대표 카테고리"
+              value={form.category_primary}
+              onChange={(v) => updateForm("category_primary", v)}
+              placeholder="예: 농자재 / 비료 / 농기계 / 종자"
+            />
+          </div>
+
+          <TextAreaField
+            label="사업장 주소 *"
+            value={form.business_address}
+            onChange={(v) => updateForm("business_address", v)}
+            rows={3}
+            placeholder="예: 충청남도 홍성군 홍성읍 내포로251번길 45"
+          />
+
+          <TextAreaField
+            label="회사 소개"
+            value={form.company_intro}
+            onChange={(v) => updateForm("company_intro", v)}
+            rows={5}
+            placeholder="회사/브랜드/주력 제품 소개를 입력해주세요."
+          />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <InputField
+              label="웹사이트 URL"
+              value={form.website_url}
+              onChange={(v) => updateForm("website_url", v)}
+              placeholder="https://"
+            />
+            <InputField
+              label="유튜브 URL"
+              value={form.youtube_url}
+              onChange={(v) => updateForm("youtube_url", v)}
+              placeholder="https://"
+            />
+            <InputField
+              label="브로슈어 URL"
+              value={form.brochure_url}
+              onChange={(v) => updateForm("brochure_url", v)}
+              placeholder="https://"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="rounded-2xl border border-neutral-300 px-5 py-3"
+            >
+              이전
+            </button>
+            <button
+              type="button"
+              onClick={goNextFromStep3}
+              className="rounded-2xl bg-black px-5 py-3 text-white"
+            >
+              최종 확인으로 이동
+            </button>
           </div>
         </section>
-      </div>
+      )}
+
+      {step === 4 && selectedPlan && (
+        <section className="space-y-6">
+          <h2 className="text-2xl font-semibold">4. 최종 확인</h2>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <SummaryCard
+              title="신청 정보"
+              rows={[
+                ["부스 유형", BOOTH_META[boothType!].title],
+                ["기간", `${selectedPlan.duration_months}개월`],
+                ["상품 코드", productCode || "-"],
+                ["결제 금액", formatKrw(selectedPlan.amount_krw)],
+              ]}
+            />
+
+            <SummaryCard
+              title="사업자 정보"
+              rows={[
+                ["회사명", form.company_name || "-"],
+                ["대표자명", form.representative_name || "-"],
+                ["사업자등록번호", form.business_number || "-"],
+                ["개업연월일", form.open_date || "-"],
+                ["업태", form.biz_type || "-"],
+                ["종목", form.biz_item || "-"],
+                ["사업장 주소", form.business_address || "-"],
+              ]}
+            />
+          </div>
+
+          <SummaryCard
+            title="담당자 / 운영 정보"
+            rows={[
+              ["담당자 이메일", form.email || "-"],
+              ["담당자 연락처", form.phone || "-"],
+              ["세금계산서 이메일", form.tax_email || "-"],
+              ["사업자등록증 파일", form.source_file_name || "-"],
+              ["스토리지 버킷", businessLicenseBucket || "-"],
+              ["스토리지 경로", businessLicensePath || "-"],
+              ["운영 계좌", OPERATIONS.bankAccount],
+              ["문의 전화", OPERATIONS.phone],
+              ["문의 이메일", OPERATIONS.email],
+            ]}
+          />
+
+          <div className="rounded-3xl border border-neutral-200 bg-neutral-50 p-6 text-sm leading-7 text-neutral-700">
+            {selectedPlan.amount_krw === 0 ? (
+              <>무료 체험 신청은 제출 후 운영 검토를 거쳐 진행됩니다.</>
+            ) : (
+              <>
+                유료 부스는 신청 제출 후 아래 계좌로 입금 확인이 되면 승인 절차가 진행됩니다.
+                <br />
+                <strong>기업은행 466-072683-04-011</strong>
+              </>
+            )}
+          </div>
+
+          {submitMessage && (
+            <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+              {submitMessage}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setStep(3)}
+              className="rounded-2xl border border-neutral-300 px-5 py-3"
+            >
+              이전
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="rounded-2xl bg-black px-6 py-3 text-white disabled:opacity-50"
+            >
+              {isSubmitting ? "제출 중..." : "입점 신청 제출"}
+            </button>
+          </div>
+        </section>
+      )}
     </main>
+  );
+}
+
+function InputField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
+  return (
+    <label className="block">
+      <div className="mb-2 text-sm font-medium">{label}</div>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-2xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+      />
+    </label>
+  );
+}
+
+function TextAreaField({
+  label,
+  value,
+  onChange,
+  rows = 4,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <div className="mb-2 text-sm font-medium">{label}</div>
+      <textarea
+        value={value}
+        rows={rows}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-2xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+      />
+    </label>
+  );
+}
+
+function SummaryCard({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: [string, string][];
+}) {
+  return (
+    <div className="rounded-3xl border border-neutral-200 p-6">
+      <div className="mb-4 text-lg font-semibold">{title}</div>
+      <div className="space-y-3">
+        {rows.map(([k, v]) => (
+          <div
+            key={`${k}-${v}`}
+            className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-3 text-sm"
+          >
+            <div className="text-neutral-500">{k}</div>
+            <div className="max-w-[70%] break-words text-right font-medium">{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

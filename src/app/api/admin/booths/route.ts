@@ -1,13 +1,37 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const ALLOWED_STATUS = ["draft", "live", "closed"];
+
+function toNullableTrimmedString(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function toOptionalNumber(value: unknown, fallback = 0) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export async function GET(req: Request) {
   try {
+    const ok = await isAdminAuthenticated();
+
+    if (!ok) {
+      return NextResponse.json(
+        { success: false, error: "관리자 인증이 필요합니다." },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const keyword = (searchParams.get("keyword") || "").trim();
     const status = (searchParams.get("status") || "").trim();
@@ -15,7 +39,24 @@ export async function GET(req: Request) {
 
     let query = supabase
       .from("booths")
-      .select("*")
+      .select(`
+        booth_id,
+        vendor_id,
+        name,
+        intro,
+        description,
+        website_url,
+        youtube_url,
+        hero_image_url,
+        logo_url,
+        is_public,
+        status,
+        sponsor_weight,
+        manual_boost,
+        is_featured,
+        campaign_tag,
+        updated_at
+      `)
       .order("updated_at", { ascending: false });
 
     if (keyword) {
@@ -49,9 +90,12 @@ export async function GET(req: Request) {
       success: true,
       booths: data || [],
     });
-  } catch {
+  } catch (e: any) {
     return NextResponse.json(
-      { success: false, error: "부스 목록 조회 중 오류가 발생했습니다." },
+      {
+        success: false,
+        error: e?.message || "부스 목록 조회 중 오류가 발생했습니다.",
+      },
       { status: 500 }
     );
   }
@@ -59,6 +103,15 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const ok = await isAdminAuthenticated();
+
+    if (!ok) {
+      return NextResponse.json(
+        { success: false, error: "관리자 인증이 필요합니다." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
 
     const {
@@ -73,6 +126,10 @@ export async function POST(req: Request) {
       youtube_url,
       website_url,
       status,
+      sponsor_weight,
+      manual_boost,
+      is_featured,
+      campaign_tag,
     }: {
       name?: string;
       region?: string;
@@ -85,6 +142,10 @@ export async function POST(req: Request) {
       youtube_url?: string;
       website_url?: string;
       status?: string;
+      sponsor_weight?: number;
+      manual_boost?: number;
+      is_featured?: boolean;
+      campaign_tag?: string;
     } = body;
 
     if (!name?.trim()) {
@@ -93,6 +154,11 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    const safeStatus =
+      typeof status === "string" && ALLOWED_STATUS.includes(status.trim())
+        ? status.trim()
+        : "draft";
 
     const { data, error } = await supabase
       .from("booths")
@@ -103,13 +169,18 @@ export async function POST(req: Request) {
         intro: intro?.trim() || null,
         description: description?.trim() || null,
         is_public: typeof is_public === "boolean" ? is_public : true,
-        logo_url: logo_url?.trim() || null,
-        hero_image_url: hero_image_url?.trim() || null,
-        youtube_url: youtube_url?.trim() || null,
-        website_url: website_url?.trim() || null,
-        status: status?.trim() || "draft",
+        logo_url: toNullableTrimmedString(logo_url),
+        hero_image_url: toNullableTrimmedString(hero_image_url),
+        youtube_url: toNullableTrimmedString(youtube_url),
+        website_url: toNullableTrimmedString(website_url),
+        status: safeStatus,
+
+        sponsor_weight: toOptionalNumber(sponsor_weight, 0),
+        manual_boost: toOptionalNumber(manual_boost, 0),
+        is_featured: !!is_featured,
+        campaign_tag: toNullableTrimmedString(campaign_tag),
       })
-      .select()
+      .select("*")
       .single();
 
     if (error) {
@@ -124,9 +195,12 @@ export async function POST(req: Request) {
       booth: data,
       message: "부스가 생성되었습니다.",
     });
-  } catch {
+  } catch (e: any) {
     return NextResponse.json(
-      { success: false, error: "부스 생성 중 오류가 발생했습니다." },
+      {
+        success: false,
+        error: e?.message || "부스 생성 중 오류가 발생했습니다.",
+      },
       { status: 500 }
     );
   }
