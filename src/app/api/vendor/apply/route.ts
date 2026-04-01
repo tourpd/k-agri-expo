@@ -47,6 +47,19 @@ type InsertedApplicationRow = {
   amount_krw: number;
 };
 
+type ValidPriceMap = typeof VALID_PRICE_MAP;
+type ProductCode = keyof ValidPriceMap;
+
+type PricingValidationResult =
+  | {
+      ok: true;
+      expected: ValidPriceMap[ProductCode];
+    }
+  | {
+      ok: false;
+      message: string;
+    };
+
 const VALID_PRICE_MAP = {
   free_1m: {
     booth_type: "free",
@@ -92,15 +105,15 @@ function onlyDigits(value: unknown) {
   return typeof value === "string" ? value.replace(/[^\d]/g, "") : "";
 }
 
-function validatePricing(body: ApplyBody) {
-  const productCode = normalizeString(
-    body.product_code
-  ) as keyof typeof VALID_PRICE_MAP;
-
+function validatePricing(body: ApplyBody): PricingValidationResult {
+  const productCode = normalizeString(body.product_code) as ProductCode;
   const expected = VALID_PRICE_MAP[productCode];
 
   if (!expected) {
-    return { ok: false, message: "유효하지 않은 상품 코드입니다." as const };
+    return {
+      ok: false,
+      message: "유효하지 않은 상품 코드입니다.",
+    };
   }
 
   const boothType = normalizeString(body.booth_type);
@@ -114,10 +127,16 @@ function validatePricing(body: ApplyBody) {
     durationMonths !== expected.duration_months ||
     amountKrw !== expected.amount_krw
   ) {
-    return { ok: false, message: "가격 정보가 올바르지 않습니다." as const };
+    return {
+      ok: false,
+      message: "가격 정보가 올바르지 않습니다.",
+    };
   }
 
-  return { ok: true, expected };
+  return {
+    ok: true,
+    expected,
+  };
 }
 
 function getDateCodeKST() {
