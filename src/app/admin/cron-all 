@@ -1,0 +1,7 @@
+export async function GET() {
+  await runBankMatch();
+  await expireOrders();
+  await autoCloseEvents();
+
+  return Response.json({ success: true });
+}
