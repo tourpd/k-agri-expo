@@ -223,8 +223,13 @@ export default function VendorApplyPage() {
       alert("부스 유형을 먼저 선택해주세요.");
       return;
     }
-    if (boothType === "free") setDurationKey("1m");
-    else if (!durationKey) setDurationKey("1m");
+
+    if (boothType === "free") {
+      setDurationKey("1m");
+    } else if (!durationKey) {
+      setDurationKey("1m");
+    }
+
     setStep(2);
   }
 
@@ -233,10 +238,12 @@ export default function VendorApplyPage() {
       alert("부스 유형을 먼저 선택해주세요.");
       return;
     }
+
     if (!durationKey) {
       alert("기간을 선택해주세요.");
       return;
     }
+
     setStep(3);
   }
 
@@ -284,44 +291,54 @@ export default function VendorApplyPage() {
       alert("사업자등록증 이미지를 선택해주세요.");
       return;
     }
+
     if (!businessLicenseBucket || !businessLicensePath) {
       alert("사업자등록증 파일 업로드를 먼저 완료해주세요.");
       return;
     }
+
     if (!form.company_name.trim()) {
       alert("회사명은 필수입니다.");
       return;
     }
+
     if (!form.representative_name.trim()) {
       alert("대표자명은 필수입니다.");
       return;
     }
+
     const normalizedBizNo = normalizeBusinessNoForSubmit(form.business_number);
     if (normalizedBizNo.length !== 10) {
       alert("사업자등록번호를 정확히 입력해주세요.");
       return;
     }
+
     if (!form.business_address.trim()) {
       alert("사업장 주소는 필수입니다.");
       return;
     }
+
     if (!form.biz_type.trim()) {
       alert("업태는 필수입니다.");
       return;
     }
+
     if (!form.email.trim()) {
       alert("담당자 이메일은 필수입니다.");
       return;
     }
+
     if (!isValidEmail(form.email)) {
       alert("담당자 이메일 형식을 확인해주세요.");
       return;
     }
+
     const normalizedPhone = normalizePhoneForSubmit(form.phone);
     if (normalizedPhone.length < 10) {
       alert("담당자 연락처를 정확히 입력해주세요.");
       return;
     }
+
     setStep(4);
   }
 
@@ -340,6 +357,8 @@ export default function VendorApplyPage() {
     setSubmitMessage("");
 
     try {
+      const normalizedPhone = normalizePhoneForSubmit(form.phone);
+
       const payload = {
         booth_type: boothType,
         duration_key: selectedPlan.duration_key,
@@ -350,7 +369,7 @@ export default function VendorApplyPage() {
         company_name: form.company_name.trim(),
         representative_name: form.representative_name.trim(),
         email: form.email.trim(),
-        phone: normalizePhoneForSubmit(form.phone),
+        phone: normalizedPhone,
         tax_email: form.tax_email.trim(),
         business_number: normalizeBusinessNoForSubmit(form.business_number),
         open_date: form.open_date.trim(),
@@ -387,13 +406,13 @@ export default function VendorApplyPage() {
       }
 
       const params = new URLSearchParams({
-        application_id: json.application_id || "",
-        application_code: json.application_code || "",
-        company_name: json.company_name || form.company_name || "",
-        amount_krw: String(json.amount_krw ?? selectedPlan.amount_krw),
-        booth_type: boothType,
-        duration_key: durationKey,
-        phone: form.phone || "",
+        application_id: String(json.application_id || ""),
+        application_code: String(json.application_code || ""),
+        company_name: String(json.company_name || form.company_name.trim() || ""),
+        booth_type: String(boothType || ""),
+        duration_key: String(durationKey || ""),
+        amount_krw: String(json.amount_krw ?? selectedPlan.amount_krw ?? 0),
+        phone: normalizedPhone,
       });
 
       router.push(`/vendor/apply/complete?${params.toString()}`);
@@ -409,7 +428,9 @@ export default function VendorApplyPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">K-Agri Expo 벤더 입점 신청</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          K-Agri Expo 벤더 입점 신청
+        </h1>
         <p className="mt-2 text-sm text-neutral-600">
           부스 선택 → 기간 선택 → 사업자등록증 업로드 및 정보 입력 → 최종 확인 → 제출
         </p>
@@ -448,7 +469,10 @@ export default function VendorApplyPage() {
           <div className="text-sm text-neutral-500">현재 선택</div>
           <div className="mt-1 text-lg font-semibold">{selectedPlan.label}</div>
           <div className="mt-1 text-sm text-neutral-700">
-            결제 예정 금액: <span className="font-semibold">{formatKrw(selectedPlan.amount_krw)}</span>
+            결제 예정 금액:{" "}
+            <span className="font-semibold">
+              {formatKrw(selectedPlan.amount_krw)}
+            </span>
           </div>
         </div>
       )}
@@ -481,7 +505,9 @@ export default function VendorApplyPage() {
                     {meta.badge}
                   </div>
                   <div className="text-xl font-bold">{meta.title}</div>
-                  <div className="mt-3 text-sm opacity-90">{meta.description}</div>
+                  <div className="mt-3 text-sm opacity-90">
+                    {meta.description}
+                  </div>
                 </button>
               );
             })}
@@ -522,8 +548,12 @@ export default function VendorApplyPage() {
                   }`}
                 >
                   <div className="text-lg font-bold">{plan.label}</div>
-                  <div className="mt-2 text-sm">기간: {plan.duration_months}개월</div>
-                  <div className="mt-2 text-2xl font-semibold">{formatKrw(plan.amount_krw)}</div>
+                  <div className="mt-2 text-sm">
+                    기간: {plan.duration_months}개월
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold">
+                    {formatKrw(plan.amount_krw)}
+                  </div>
                 </button>
               );
             })}
@@ -550,10 +580,14 @@ export default function VendorApplyPage() {
 
       {step === 3 && (
         <section className="space-y-6">
-          <h2 className="text-2xl font-semibold">3. 사업자등록증 업로드 및 사업자정보 입력</h2>
+          <h2 className="text-2xl font-semibold">
+            3. 사업자등록증 업로드 및 사업자정보 입력
+          </h2>
 
           <div className="rounded-3xl border border-neutral-200 p-6">
-            <label className="mb-3 block text-sm font-medium">사업자등록증 파일 *</label>
+            <label className="mb-3 block text-sm font-medium">
+              사업자등록증 파일 *
+            </label>
 
             <input
               type="file"
@@ -591,7 +625,9 @@ export default function VendorApplyPage() {
                 disabled={!licenseFile || isUploadingLicense}
                 className="rounded-2xl bg-black px-5 py-3 text-white disabled:opacity-50"
               >
-                {isUploadingLicense ? "파일 업로드 중..." : "사업자등록증 업로드"}
+                {isUploadingLicense
+                  ? "파일 업로드 중..."
+                  : "사업자등록증 업로드"}
               </button>
 
               {licenseFile && (
@@ -609,7 +645,9 @@ export default function VendorApplyPage() {
 
             {licensePreviewUrl && (
               <div className="mt-4 rounded-2xl border border-neutral-200 p-4">
-                <div className="mb-2 text-sm font-medium text-neutral-700">업로드 미리보기</div>
+                <div className="mb-2 text-sm font-medium text-neutral-700">
+                  업로드 미리보기
+                </div>
                 <img
                   src={licensePreviewUrl}
                   alt="사업자등록증 미리보기"
@@ -620,8 +658,9 @@ export default function VendorApplyPage() {
           </div>
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-900">
-            사업자등록증 이미지는 나중에 세금계산서 발행 및 운영 확인용으로 보관됩니다.
-            회사명, 대표자명, 사업자등록번호, 사업장 주소, 업태, 담당자 이메일, 연락처는 직접 정확하게 입력해주세요.
+            사업자등록증 이미지는 나중에 세금계산서 발행 및 운영 확인용으로
+            보관됩니다. 회사명, 대표자명, 사업자등록번호, 사업장 주소, 업태,
+            담당자 이메일, 연락처는 직접 정확하게 입력해주세요.
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -794,7 +833,8 @@ export default function VendorApplyPage() {
               <>무료 체험 신청은 제출 후 운영 검토를 거쳐 진행됩니다.</>
             ) : (
               <>
-                유료 부스는 신청 제출 후 아래 계좌로 입금 확인이 되면 승인 절차가 진행됩니다.
+                유료 부스는 신청 제출 후 아래 계좌로 입금 확인이 되면 승인
+                절차가 진행됩니다.
                 <br />
                 <strong>기업은행 466-072683-04-011</strong>
               </>
@@ -901,7 +941,9 @@ function SummaryCard({
             className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-3 text-sm"
           >
             <div className="text-neutral-500">{k}</div>
-            <div className="max-w-[70%] break-words text-right font-medium">{v}</div>
+            <div className="max-w-[70%] break-words text-right font-medium">
+              {v}
+            </div>
           </div>
         ))}
       </div>
