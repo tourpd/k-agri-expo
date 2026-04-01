@@ -209,6 +209,12 @@ export default async function ExpoIndexPage() {
         }))
       : problemSectionData.contents;
 
+  const monthlyQuestionItems = (monthlyQuestions ?? []).map((item: any) => ({
+    title: item.title ?? item.question ?? item.label ?? "",
+    description: item.description ?? item.summary ?? "",
+    href: item.href ?? item.link_url ?? "#",
+  }));
+
   return (
     <main style={S.page} className="expo-home">
       <style>{RESPONSIVE_CSS}</style>
@@ -223,7 +229,6 @@ export default async function ExpoIndexPage() {
         heroDescription={heroDescription}
       />
 
-      {/* 카테고리 진입 카드 6개 */}
       <section className="expo-section" style={{ padding: "18px 20px 0" }}>
         <ExpoCategoryEntrySection />
       </section>
@@ -234,9 +239,8 @@ export default async function ExpoIndexPage() {
 
       <ExpoDealsSection items={homeDeals} />
 
-      <ExpoFarmerConsultSection questions={monthlyQuestions} />
+      <ExpoFarmerConsultSection questions={monthlyQuestionItems} />
 
-      {/* 포토닥터 배너 + 농민 고민 해결 */}
       <ExpoProblemSection
         contents={problemContents}
         quickLinks={problemSectionData.quickLinks}
