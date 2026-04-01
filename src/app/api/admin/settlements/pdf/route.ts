@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function formatKrw(n: number) {
-  return n.toLocaleString("ko-KR") + "원";
+  return Number(n || 0).toLocaleString("ko-KR") + "원";
 }
 
 export async function GET(req: Request) {
@@ -31,36 +31,41 @@ export async function GET(req: Request) {
 
     const doc = new PDFDocument({ margin: 50 });
 
-    const buffers: any[] = [];
-    doc.on("data", buffers.push.bind(buffers));
+    const buffers: Buffer[] = [];
+    doc.on("data", (chunk: Buffer) => buffers.push(chunk));
 
-    const endPromise = new Promise<Buffer>((resolve) => {
+    const endPromise = new Promise<Buffer>((resolve, reject) => {
       doc.on("end", () => {
         resolve(Buffer.concat(buffers));
       });
+      doc.on("error", reject);
     });
 
-    // 🔥 제목
+    // 제목
     doc.fontSize(20).text("정산서", { align: "center" });
     doc.moveDown();
 
-    // 🔥 기본 정보
+    // 기본 정보
     doc.fontSize(12);
-    doc.text(`업체 ID: ${data.vendor_id}`);
-    doc.text(`정산 기간: ${data.period_start} ~ ${data.period_end}`);
+    doc.text(`업체 ID: ${data.vendor_id ?? "-"}`);
+    doc.text(`정산 기간: ${data.period_start ?? "-"} ~ ${data.period_end ?? "-"}`);
     doc.moveDown();
 
-    // 🔥 금액 정보
+    // 금액 정보
     doc.text(`총 매출: ${formatKrw(data.total_sales_krw)}`);
-    doc.text(`수수료 (${data.commission_rate * 100}%): ${formatKrw(data.commission_amount_krw)}`);
+    doc.text(
+      `수수료 (${Number(data.commission_rate || 0) * 100}%): ${formatKrw(
+        data.commission_amount_krw
+      )}`
+    );
     doc.text(`지급 금액: ${formatKrw(data.payout_amount_krw)}`);
     doc.moveDown();
 
-    // 🔥 주문 수
-    doc.text(`주문 수: ${data.order_count}건`);
+    // 주문 수
+    doc.text(`주문 수: ${Number(data.order_count || 0)}건`);
     doc.moveDown();
 
-    // 🔥 안내문 (세무 핵심)
+    // 안내문
     doc.fontSize(10).text(
       "※ 본 매출은 공급업체의 매출이며, 한국농수산TV는 판매대행 수수료만 수익으로 처리됩니다.",
       { align: "left" }
@@ -69,8 +74,9 @@ export async function GET(req: Request) {
     doc.end();
 
     const pdfBuffer = await endPromise;
+    const pdfBytes = new Uint8Array(pdfBuffer);
 
-    return new Response(pdfBuffer, {
+    return new Response(pdfBytes, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename=settlement-${settlementId}.pdf`,
