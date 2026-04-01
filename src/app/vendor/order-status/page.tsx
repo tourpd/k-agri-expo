@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type OrderStatusItem = {
@@ -133,7 +133,7 @@ function getProvisionLabel(
   }
 }
 
-export default function VendorOrderStatusPage() {
+function VendorOrderStatusInner() {
   const params = useSearchParams();
 
   const initialApplicationCode = params.get("application_code") || "";
@@ -166,9 +166,11 @@ export default function VendorOrderStatusPage() {
         query.set("phone", phone.trim());
       }
 
-      const res = await fetch(`/api/vendor/order-status?${query.toString()}`, {
-        cache: "no-store",
-      });
+      const qs = query.toString();
+      const res = await fetch(
+        qs ? `/api/vendor/order-status?${qs}` : "/api/vendor/order-status",
+        { cache: "no-store" }
+      );
       const json = await res.json();
 
       if (!res.ok || !json?.success) {
@@ -528,5 +530,13 @@ function DetailCard({
         ))}
       </div>
     </div>
+  );
+}
+
+export default function VendorOrderStatusPage() {
+  return (
+    <Suspense fallback={<div className="p-10">불러오는 중...</div>}>
+      <VendorOrderStatusInner />
+    </Suspense>
   );
 }
