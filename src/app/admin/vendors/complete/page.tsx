@@ -1,17 +1,27 @@
-"use client";
+type CompletePageProps = {
+  searchParams: Promise<{
+    company?: string;
+    product?: string;
+    amount?: string;
+  }>;
+};
 
-import { useSearchParams } from "next/navigation";
+export default async function CompletePage({
+  searchParams,
+}: CompletePageProps) {
+  const params = await searchParams;
 
-export default function CompletePage() {
-  const params = useSearchParams();
+  const company = params.company ?? "";
+  const product = params.product ?? "";
+  const amount = params.amount ?? "";
 
   return (
     <main style={{ padding: 40 }}>
       <h1>신청 완료</h1>
 
-      <p>회사명: {params.get("company")}</p>
-      <p>상품: {params.get("product")}</p>
-      <p>금액: {params.get("amount")}원</p>
+      <p>회사명: {company || "-"}</p>
+      <p>상품: {product || "-"}</p>
+      <p>금액: {amount ? `${amount}원` : "-"}</p>
 
       <div style={{ marginTop: 20, padding: 20, background: "#fff3cd" }}>
         <h3>입금 안내</h3>
