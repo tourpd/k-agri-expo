@@ -387,14 +387,10 @@ export default function VendorApplyPage() {
       }
 
       const params = new URLSearchParams({
-  application_id: json.application_id || "",
-  application_code: json.application_code || "",
-  company_name: json.company_name || form.company_name || "",
-  amount_krw: String(json.amount_krw ?? selectedPlan.amount_krw),
-  booth_type: boothType,
-  duration_key: durationKey,
-  phone: form.phone || "",
-});
+        company: json.company_name || form.company_name || "",
+        product: selectedPlan.label,
+        amount: String(json.amount_krw ?? selectedPlan.amount_krw),
+      });
 
       router.push(`/vendor/apply/complete?${params.toString()}`);
     } catch (error) {
@@ -907,4 +903,4 @@ function SummaryCard({
       </div>
     </div>
   );
-}
+} 
