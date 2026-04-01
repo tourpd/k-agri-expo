@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +34,17 @@ type ApplyBody = {
 
   business_license_bucket?: string;
   business_license_path?: string;
+};
+
+type ExistingApplicationCodeRow = {
+  application_code: string | null;
+};
+
+type InsertedApplicationRow = {
+  application_id: string;
+  application_code: string;
+  company_name: string;
+  amount_krw: number;
 };
 
 const VALID_PRICE_MAP = {
@@ -85,6 +96,7 @@ function validatePricing(body: ApplyBody) {
   const productCode = normalizeString(
     body.product_code
   ) as keyof typeof VALID_PRICE_MAP;
+
   const expected = VALID_PRICE_MAP[productCode];
 
   if (!expected) {
@@ -117,16 +129,15 @@ function getDateCodeKST() {
   return `${yy}${mm}${dd}`;
 }
 
-async function generateApplicationCode(
-  supabase: ReturnType<typeof createClient>
-) {
+async function generateApplicationCode(supabase: SupabaseClient) {
   const dateCode = getDateCodeKST();
   const prefix = `V${dateCode}-`;
 
   const { data, error } = await supabase
     .from("vendor_applications_v2")
     .select("application_code")
-    .ilike("application_code", `${prefix}%`);
+    .ilike("application_code", `${prefix}%`)
+    .returns<ExistingApplicationCodeRow[]>();
 
   if (error) {
     throw new Error(error.message || "신청번호 생성용 조회에 실패했습니다.");
@@ -137,9 +148,12 @@ async function generateApplicationCode(
   for (const row of data || []) {
     const code = row.application_code || "";
     const match = code.match(/^V\d{6}-(\d{4})$/);
+
     if (match?.[1]) {
       const seq = Number(match[1]);
-      if (seq > maxSeq) maxSeq = seq;
+      if (!Number.isNaN(seq) && seq > maxSeq) {
+        maxSeq = seq;
+      }
     }
   }
 
@@ -176,11 +190,13 @@ export async function POST(req: Request) {
     if (!representativeName) return jsonError("대표자명은 필수입니다.");
     if (!email) return jsonError("담당자 이메일은 필수입니다.");
     if (!phone) return jsonError("담당자 연락처는 필수입니다.");
+
     if (phone.length < 10 || phone.length > 11) {
       return jsonError("담당자 연락처 형식이 올바르지 않습니다.");
     }
 
     if (!businessNumber) return jsonError("사업자등록번호는 필수입니다.");
+
     if (businessNumber.length !== 10) {
       return jsonError("사업자등록번호 형식이 올바르지 않습니다.");
     }
@@ -228,7 +244,8 @@ export async function POST(req: Request) {
       source_file_name: normalizeString(body.source_file_name),
       source_file_mime: normalizeString(body.source_file_mime),
       source_extracted_json:
-        body.source_extracted_json && typeof body.source_extracted_json === "object"
+        body.source_extracted_json &&
+        typeof body.source_extracted_json === "object"
           ? body.source_extracted_json
           : null,
 
@@ -242,10 +259,10 @@ export async function POST(req: Request) {
       .from("vendor_applications_v2")
       .insert(insertPayload)
       .select("application_id, application_code, company_name, amount_krw")
-      .single();
+      .single<InsertedApplicationRow>();
 
-    if (error) {
-      return jsonError(error.message || "DB 저장 중 오류가 발생했습니다.", 500);
+    if (error || !data) {
+      return jsonError(error?.message || "DB 저장 중 오류가 발생했습니다.", 500);
     }
 
     return Response.json({
