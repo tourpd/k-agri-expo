@@ -1,0 +1,33 @@
+// src/app/api/expo/deal/route.ts
+import { NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const deal_id = (searchParams.get("deal_id") || "").trim();
+  const code = (searchParams.get("code") || "").trim(); // v2에서 사용
+
+  if (!deal_id) {
+    return NextResponse.json({ ok: false, error: "missing deal_id" }, { status: 400 });
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("booth_deals")
+    .select(
+      "deal_id,booth_id,title,description,image_url,normal_price,expo_price,discount_percent,stock,start_at,end_at,is_active,consulting_count"
+    )
+    .eq("deal_id", deal_id)
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ ok: false, error: "not found" }, { status: 404 });
+
+  // ✅ v1: 가격 게이트는 일단 public 허용 (다음 단계에서 membership/early_access 적용)
+  const gate = { ok: true, reason: "public" as const };
+
+  return NextResponse.json({ ok: true, deal: { ...data, gate, _code: code ? true : false } });
+}

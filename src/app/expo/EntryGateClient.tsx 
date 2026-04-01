@@ -1,0 +1,231 @@
+// src/app/expo/EntryGateClient.tsx
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+
+type Props = {
+  title?: string;
+  subtitle?: string;
+  compact?: boolean;
+};
+
+export default function EntryGateClient({
+  title = "입장 등록",
+  subtitle = "엑스포는 현장 등록 후 입장하는 구조입니다. (필수: 이름/전화번호)",
+  compact = false,
+}: Props) {
+  const router = useRouter();
+  const [loading, setLoading] = React.useState(false);
+  const [msg, setMsg] = React.useState<string | null>(null);
+
+  // ✅ 로컬 저장(자동 입력 보조용) — 쿠키는 httpOnly라 클라에서 못 읽음
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("expo_entry_local_v1");
+      if (!raw) return;
+      const v = JSON.parse(raw);
+      const form = document.getElementById("entryForm") as HTMLFormElement | null;
+      if (!form) return;
+
+      (form.elements.namedItem("role") as HTMLSelectElement | null)?.setAttribute("data-init", "1");
+
+      (form.elements.namedItem("name") as HTMLInputElement | null)!.value = v?.name || "";
+      (form.elements.namedItem("phone") as HTMLInputElement | null)!.value = v?.phone || "";
+      (form.elements.namedItem("region") as HTMLInputElement | null)!.value = v?.region || "";
+      (form.elements.namedItem("crop") as HTMLInputElement | null)!.value = v?.crop || "";
+      const roleEl = form.elements.namedItem("role") as HTMLSelectElement | null;
+      if (roleEl) roleEl.value = v?.role === "buyer" ? "buyer" : "farmer";
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setMsg(null);
+    setLoading(true);
+
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      role: String(fd.get("role") || "farmer"),
+      name: String(fd.get("name") || "").trim(),
+      phone: String(fd.get("phone") || "").trim(),
+      region: String(fd.get("region") || "").trim(),
+      crop: String(fd.get("crop") || "").trim(),
+    };
+
+    if (!payload.name || !payload.phone) {
+      setLoading(false);
+      setMsg("이름/전화번호는 필수입니다.");
+      return;
+    }
+
+    try {
+      // ✅ 서버에 입장 등록 → httpOnly 쿠키 발급
+      const res = await fetch("/api/expo/entry", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        setLoading(false);
+        setMsg(`등록 실패: ${t || "입력값을 확인해 주십시오."}`);
+        return;
+      }
+
+      // ✅ 로컬에도 저장(다음 방문 자동 입력)
+      try {
+        localStorage.setItem(
+          "expo_entry_local_v1",
+          JSON.stringify({
+            role: payload.role === "buyer" ? "buyer" : "farmer",
+            name: payload.name,
+            phone: payload.phone.replace(/\D/g, ""),
+            region: payload.region,
+            crop: payload.crop,
+          })
+        );
+      } catch {}
+
+      setLoading(false);
+      setMsg("등록 완료! 자료 다운로드가 열립니다.");
+
+      // ✅ 서버 컴포넌트가 쿠키를 읽어 allowDownloads=true가 되도록 새로고침/리프레시
+      router.refresh();
+    } catch (err: any) {
+      setLoading(false);
+      setMsg(`등록 실패: 네트워크/서버 오류 (${err?.message || String(err)})`);
+    }
+  }
+
+  return (
+    <div style={{ ...wrap, padding: compact ? 12 : 16 }}>
+      <div style={head}>
+        <div style={h1}>{title}</div>
+        <div style={p}>{subtitle}</div>
+      </div>
+
+      <form id="entryForm" onSubmit={onSubmit} style={form}>
+        <div style={row}>
+          <label style={label}>구분(선택)</label>
+          <select name="role" defaultValue="farmer" style={select}>
+            <option value="farmer">농민</option>
+            <option value="buyer">바이어</option>
+          </select>
+        </div>
+
+        <div style={row}>
+          <label style={label}>이름 (필수)</label>
+          <input name="name" placeholder="예: 조세환" required style={inp} />
+        </div>
+
+        <div style={row}>
+          <label style={label}>전화번호 (필수)</label>
+          <input name="phone" placeholder="숫자만 입력" required inputMode="tel" style={inp} />
+        </div>
+
+        <div style={row}>
+          <label style={label}>지역 (선택)</label>
+          <input name="region" placeholder="예: 경기 고양" style={inp} />
+        </div>
+
+        <div style={row}>
+          <label style={label}>주요 작물 (선택)</label>
+          <input name="crop" placeholder="예: 마늘/고추/양파" style={inp} />
+        </div>
+
+        <button disabled={loading} style={btn}>
+          {loading ? "등록 중..." : "등록하고 입장하기"}
+        </button>
+
+        {msg ? <div style={msgStyle}>{msg}</div> : null}
+
+        <div style={foot}>
+          * 개인정보는 엑스포 상담/자료 제공 목적 외 사용하지 않습니다.
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/* 고령층 UX 기준 */
+const wrap: React.CSSProperties = {
+  border: "1px solid #e5e7eb",
+  borderRadius: 18,
+  background: "#fff",
+};
+
+const head: React.CSSProperties = {
+  marginBottom: 10,
+};
+
+const h1: React.CSSProperties = {
+  fontSize: 22,
+  fontWeight: 950,
+};
+
+const p: React.CSSProperties = {
+  marginTop: 6,
+  fontSize: 15,
+  color: "#666",
+  lineHeight: 1.5,
+};
+
+const form: React.CSSProperties = {
+  display: "grid",
+  gap: 12,
+};
+
+const row: React.CSSProperties = {
+  display: "grid",
+  gap: 6,
+};
+
+const label: React.CSSProperties = {
+  fontSize: 14,
+  fontWeight: 900,
+  color: "#111",
+};
+
+const inp: React.CSSProperties = {
+  height: 56,
+  padding: "0 16px",
+  borderRadius: 16,
+  border: "1px solid #d1d5db",
+  fontSize: 18,
+  outline: "none",
+};
+
+const select: React.CSSProperties = {
+  height: 56,
+  padding: "0 14px",
+  borderRadius: 16,
+  border: "1px solid #d1d5db",
+  fontSize: 18,
+  background: "#fff",
+};
+
+const btn: React.CSSProperties = {
+  height: 56,
+  borderRadius: 16,
+  border: "1px solid #111",
+  background: "#111",
+  color: "#fff",
+  fontSize: 18,
+  fontWeight: 950,
+  cursor: "pointer",
+};
+
+const msgStyle: React.CSSProperties = {
+  fontSize: 15,
+  fontWeight: 950,
+};
+
+const foot: React.CSSProperties = {
+  fontSize: 13,
+  color: "#666",
+  lineHeight: 1.5,
+};
