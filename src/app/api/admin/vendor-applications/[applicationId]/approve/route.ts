@@ -1,102 +1,54 @@
 import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
-function slugify(input: string) {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9가-힣-]/g, "")
-    .slice(0, 60);
-}
+type Params = {
+  params: Promise<{ applicationId: string }>;
+};
 
-export async function POST(
-  _req: Request,
-  ctx: { params: Promise<{ applicationId: string }> }
-) {
+export async function POST(_req: Request, ctx: Params) {
   try {
     const { applicationId } = await ctx.params;
-    const admin = createSupabaseAdminClient();
 
-    const { data: application, error: appError } = await admin
-      .from("vendor_applications")
-      .select("*")
-      .eq("application_id", applicationId)
-      .maybeSingle();
-
-    if (appError) {
+    if (!applicationId) {
       return NextResponse.json(
-        { ok: false, error: appError.message },
-        { status: 500 }
+        { success: false, error: "applicationId가 필요합니다." },
+        { status: 400 }
       );
     }
 
-    if (!application) {
-      return NextResponse.json(
-        { ok: false, error: "입점 신청을 찾을 수 없습니다." },
-        { status: 404 }
-      );
-    }
+    const admin = getSupabaseAdmin();
 
-    if (application.status === "approved" && application.booth_id) {
-      return NextResponse.json({
-        ok: true,
-        booth_id: application.booth_id,
-        message: "이미 승인된 신청입니다.",
-      });
-    }
-
-    const boothName = application.company_name;
-    const boothSlug = slugify(application.company_name);
-
-    const { data: booth, error: boothError } = await admin
-      .from("booths")
-      .insert({
-        vendor_id: application.user_id,
-        owner_user_id: application.user_id,
-        name: boothName,
-        slug: boothSlug,
-        intro: application.company_intro ?? "",
-        category_primary: application.category_primary ?? null,
-        region: null,
-        status: "active",
-      })
-      .select("booth_id")
-      .single();
-
-    if (boothError) {
-      return NextResponse.json(
-        { ok: false, error: boothError.message },
-        { status: 500 }
-      );
-    }
-
-    const { error: appUpdateError } = await admin
-      .from("vendor_applications")
+    const { data, error } = await admin
+      .from("vendor_applications_v2")
       .update({
         status: "approved",
         approved_at: new Date().toISOString(),
-        booth_id: booth.booth_id,
+        updated_at: new Date().toISOString(),
       })
-      .eq("application_id", applicationId);
+      .eq("application_id", applicationId)
+      .select("*")
+      .single();
 
-    if (appUpdateError) {
+    if (error) {
       return NextResponse.json(
-        { ok: false, error: appUpdateError.message },
+        { success: false, error: error.message || "승인 처리 실패" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      ok: true,
-      booth_id: booth.booth_id,
-      message: "승인 완료. 부스가 자동 생성되었습니다.",
+      success: true,
+      item: data,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { ok: false, error: error?.message ?? "unknown error" },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "승인 처리 중 오류가 발생했습니다.",
+      },
       { status: 500 }
     );
   }
