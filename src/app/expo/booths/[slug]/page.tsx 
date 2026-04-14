@@ -1,0 +1,266 @@
+import { notFound } from "next/navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import BoothInquiryCard from "@/components/expo/BoothInquiryCard";
+import BoothFavoriteButton from "@/components/expo/BoothFavoriteButton";
+import GlobalInquiryForm from "@/components/expo/GlobalInquiryForm";
+
+export const dynamic = "force-dynamic";
+
+function formatPhone(phone?: string | null) {
+  if (!phone) return "-";
+  return phone;
+}
+
+function toYoutubeEmbedUrl(url?: string | null) {
+  if (!url) return "";
+
+  try {
+    if (url.includes("youtube.com/watch?v=")) {
+      return url.replace("watch?v=", "embed/");
+    }
+
+    if (url.includes("youtu.be/")) {
+      const id = url.split("youtu.be/")[1]?.split("?")[0];
+      if (!id) return url;
+      return `https://www.youtube.com/embed/${id}`;
+    }
+
+    return url;
+  } catch {
+    return url || "";
+  }
+}
+
+type BoothVendor = {
+  id?: string | null;
+  company_name?: string | null;
+  representative_name?: string | null;
+  contact_name?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  website_url?: string | null;
+};
+
+type BoothRow = {
+  id: string;
+  slug: string;
+  title?: string | null;
+  name?: string | null;
+  company_name?: string | null;
+  hall_code?: string | null;
+  category_primary?: string | null;
+  intro?: string | null;
+  youtube_url?: string | null;
+  brochure_url?: string | null;
+  website_url?: string | null;
+  is_active?: boolean | null;
+  vendors?: BoothVendor | BoothVendor[] | null;
+};
+
+export default async function ExpoBoothDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("booths")
+    .select(
+      `
+      *,
+      vendors (
+        id,
+        company_name,
+        representative_name,
+        contact_name,
+        contact_email,
+        contact_phone,
+        website_url
+      )
+    `
+    )
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error || !data) {
+    return notFound();
+  }
+
+  const booth = data as BoothRow;
+  const vendor = Array.isArray(booth.vendors)
+    ? booth.vendors[0]
+    : booth.vendors || null;
+
+  const boothTitle = booth.title || booth.name || "부스";
+  const boothCompanyName = booth.company_name || vendor?.company_name || "-";
+  const youtubeEmbedUrl = toYoutubeEmbedUrl(booth.youtube_url);
+  const externalWebsiteUrl = booth.website_url || vendor?.website_url || "";
+
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-10">
+      {/* 상단 헤더 */}
+      <section className="mb-10">
+        <h1 className="text-3xl font-bold">{boothTitle}</h1>
+
+        <div className="mt-2 text-neutral-600">{boothCompanyName}</div>
+
+        <div className="mt-4 flex flex-wrap gap-2 text-sm">
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            {booth.hall_code || "관 미지정"}
+          </span>
+          <span className="rounded-full bg-neutral-100 px-3 py-1">
+            {booth.category_primary || "카테고리 없음"}
+          </span>
+        </div>
+      </section>
+
+      {/* CTA 영역 */}
+      <section className="mb-10 rounded-3xl border border-neutral-200 bg-neutral-50 p-6">
+        <div className="mb-4 text-lg font-semibold">📞 지금 바로 상담 / 문의</div>
+
+        <div className="flex flex-wrap gap-3">
+          {vendor?.contact_phone && (
+            <a
+              href={`tel:${vendor.contact_phone}`}
+              className="rounded-2xl bg-black px-5 py-3 text-sm font-semibold text-white"
+            >
+              전화 상담
+            </a>
+          )}
+
+          {vendor?.contact_email && (
+            <a
+              href={`mailto:${vendor.contact_email}`}
+              className="rounded-2xl border border-neutral-300 px-5 py-3 text-sm font-semibold"
+            >
+              이메일 문의
+            </a>
+          )}
+
+          {externalWebsiteUrl && (
+            <a
+              href={externalWebsiteUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-2xl border border-neutral-300 px-5 py-3 text-sm font-semibold"
+            >
+              공식 사이트
+            </a>
+          )}
+
+          <BoothFavoriteButton boothId={booth.id} />
+        </div>
+      </section>
+
+      {/* 소개 */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-xl font-semibold">회사 / 제품 소개</h2>
+
+        <div className="whitespace-pre-wrap rounded-2xl border border-neutral-200 p-5 text-sm leading-7">
+          {booth.intro || "소개 정보가 없습니다."}
+        </div>
+      </section>
+
+      {/* 유튜브 */}
+      {youtubeEmbedUrl && (
+        <section className="mb-10">
+          <h2 className="mb-4 text-xl font-semibold">소개 영상</h2>
+
+          <div className="aspect-video w-full overflow-hidden rounded-2xl border">
+            <iframe
+              src={youtubeEmbedUrl}
+              title={`${boothTitle} 소개 영상`}
+              className="h-full w-full"
+              allowFullScreen
+            />
+          </div>
+        </section>
+      )}
+
+      {/* 브로슈어 */}
+      {booth.brochure_url && (
+        <section className="mb-10">
+          <h2 className="mb-4 text-xl font-semibold">브로슈어</h2>
+
+          <a
+            href={booth.brochure_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex rounded-2xl border border-neutral-300 px-5 py-3 text-sm font-semibold hover:bg-neutral-50"
+          >
+            브로슈어 다운로드
+          </a>
+        </section>
+      )}
+
+      {/* 업체 정보 */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-xl font-semibold">업체 정보</h2>
+
+        <div className="space-y-3 rounded-2xl border border-neutral-200 p-5 text-sm">
+          <div>회사명: {vendor?.company_name || booth.company_name || "-"}</div>
+          <div>대표자: {vendor?.representative_name || "-"}</div>
+          <div>담당자: {vendor?.contact_name || "-"}</div>
+          <div>연락처: {formatPhone(vendor?.contact_phone)}</div>
+          <div>이메일: {vendor?.contact_email || "-"}</div>
+        </div>
+      </section>
+
+      {/* 문의 폼 영역 */}
+      <section className="mb-10 grid gap-6 xl:grid-cols-2">
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-7 text-blue-900">
+            국내 바이어 또는 일반 문의는 아래 폼으로 접수됩니다.
+            접수 후 관리자가 먼저 검토하고 연결합니다.
+          </div>
+
+          <BoothInquiryCard
+            boothId={booth.id}
+            boothName={boothTitle}
+            defaultContactName={vendor?.contact_name || ""}
+            defaultEmail={vendor?.contact_email || ""}
+            defaultPhone={vendor?.contact_phone || ""}
+          />
+        </div>
+
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-7 text-amber-900">
+            해외 바이어 문의는 별도 검토 후 수출 상담 흐름으로 진행됩니다.
+            자동으로 벤더에 바로 전달되지 않습니다.
+          </div>
+
+          <GlobalInquiryForm boothId={booth.id} boothName={boothTitle} />
+        </div>
+      </section>
+
+      {/* 하단 CTA */}
+      <section className="mt-12 rounded-3xl bg-black p-8 text-center text-white">
+        <div className="mb-3 text-xl font-semibold">지금 바로 상담 받아보세요</div>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          {vendor?.contact_phone && (
+            <a
+              href={`tel:${vendor.contact_phone}`}
+              className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black"
+            >
+              전화하기
+            </a>
+          )}
+
+          {vendor?.contact_email && (
+            <a
+              href={`mailto:${vendor.contact_email}`}
+              className="rounded-2xl border border-white px-5 py-3 text-sm font-semibold"
+            >
+              이메일
+            </a>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}

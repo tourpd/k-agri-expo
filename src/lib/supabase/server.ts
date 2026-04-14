@@ -1,70 +1,63 @@
+import "server-only";
+
 import { createServerClient } from "@supabase/ssr";
-import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
+function getEnv(name: string) {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`Missing environment variable: ${name}`);
+  }
+
+  return value;
+}
+
 /**
- * ✅ 일반 서버 클라이언트 (로그인 세션 기반)
- * - 로그인된 사용자 정보 조회용
- * - /vendor, /mypage 등에서 사용
+ * 사용자 세션 기반 SSR 클라이언트
+ * - 로그인 상태 / 쿠키 기반 페이지에서 사용
+ * - anon key 사용
+ * - RLS 영향을 받음
  */
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  return createServerClient(url, anon, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
+  return createServerClient(
+    getEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {
+          // SSR/server component에서는 refresh token 재기록 금지
+        },
       },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        } catch {
-          /**
-           * Server Component에서는 쿠키 쓰기가 제한될 수 있음
-           * (auth callback route에서 처리하는 것이 안전)
-           */
-        }
-      },
-    },
-  });
+    }
+  );
 }
 
 /**
- * ✅ 관리자용 클라이언트 (SERVICE ROLE)
- * - DB 강제 수정 / 승인 / 삭제 등
- * - 절대 클라이언트 코드로 보내면 안 됨
+ * 운영/관리용 서버 클라이언트
+ * - service role 사용
+ * - RLS를 우회해서 안정적으로 조회/수정 가능
+ * - hall_booth_slots, booths, admin 데이터 조회에 사용
  */
 export function createSupabaseAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-  return createSupabaseJsClient(url, serviceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  });
+  return createClient(
+    getEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    getEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
 }
 
-/**
- * ✅ 브라우저용 클라이언트 (필요 시)
- * - client component에서 사용
- */
-export function createSupabaseBrowserClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  return createSupabaseJsClient(url, anon);
-}
-
-/**
- * ✅ 관리자 이메일 판별
- */
 export function isAdminEmail(email: string | null | undefined) {
   if (!email) return false;
 
@@ -75,5 +68,5 @@ export function isAdminEmail(email: string | null | undefined) {
     .map((v) => v.trim().toLowerCase())
     .filter(Boolean);
 
-  return adminEmails.includes(email.toLowerCase());
+  return adminEmails.includes(email.trim().toLowerCase());
 }

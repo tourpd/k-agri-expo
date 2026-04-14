@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -9,15 +9,14 @@ export const dynamic = "force-dynamic";
 
 export default function BuyerLoginPage() {
   const router = useRouter();
-  const supabase = useMemo(() => supabaseBrowser(), []);
+  const supabase = supabaseBrowser();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setMsg("");
@@ -35,8 +34,10 @@ export default function BuyerLoginPage() {
 
       router.replace("/buyer");
       router.refresh();
-    } catch (err: any) {
-      setMsg(`오류: ${err?.message ?? "unknown"}`);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+      setMsg(`오류: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -48,9 +49,7 @@ export default function BuyerLoginPage() {
         <div style={S.kicker}>BUYER LOGIN</div>
         <h1 style={S.title}>바이어 로그인</h1>
 
-        <p style={S.desc}>
-          이메일과 비밀번호로 로그인합니다.
-        </p>
+        <p style={S.desc}>이메일과 비밀번호로 로그인합니다.</p>
 
         <form onSubmit={onSubmit} style={S.form}>
           <label style={S.label}>이메일</label>
@@ -58,7 +57,9 @@ export default function BuyerLoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="buyer@company.com"
             style={S.input}
+            autoComplete="email"
             required
           />
 
@@ -67,7 +68,9 @@ export default function BuyerLoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="비밀번호 입력"
             style={S.input}
+            autoComplete="current-password"
             required
           />
 
@@ -80,7 +83,7 @@ export default function BuyerLoginPage() {
 
         <div style={S.bottomRow}>
           <Link href="/buyer/signup" style={S.secondaryBtn}>
-            회원가입
+            바이어 회원가입
           </Link>
 
           <Link href="/login" style={S.back}>
@@ -109,11 +112,30 @@ const S = {
     padding: 28,
     boxShadow: "0 24px 70px rgba(15,23,42,0.12)",
   },
-  kicker: { fontSize: 12, fontWeight: 950, color: "#ea580c" },
-  title: { margin: "10px 0 0", fontSize: 34, fontWeight: 950 },
-  desc: { marginTop: 12, color: "#64748b", lineHeight: 1.7 },
-  form: { marginTop: 20 },
-  label: { display: "block", fontSize: 13, fontWeight: 900, marginBottom: 8 },
+  kicker: {
+    fontSize: 12,
+    fontWeight: 950,
+    color: "#ea580c",
+  },
+  title: {
+    margin: "10px 0 0",
+    fontSize: 34,
+    fontWeight: 950,
+  },
+  desc: {
+    marginTop: 12,
+    color: "#64748b",
+    lineHeight: 1.7,
+  },
+  form: {
+    marginTop: 20,
+  },
+  label: {
+    display: "block",
+    fontSize: 13,
+    fontWeight: 900,
+    marginBottom: 8,
+  },
   input: {
     width: "100%",
     padding: "14px 16px",
@@ -133,29 +155,38 @@ const S = {
     fontWeight: 950,
     cursor: "pointer",
   },
+  secondaryBtn: {
+    display: "inline-block",
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid #ddd",
+    background: "#fff",
+    color: "#111",
+    textDecoration: "none",
+    fontWeight: 900,
+  },
   msg: {
     marginTop: 16,
     padding: 12,
     borderRadius: 12,
-    background: "#f8fafc",
-    color: "#334155",
+    background: "#fef2f2",
+    color: "#b91c1c",
+    lineHeight: 1.7,
+    whiteSpace: "pre-wrap" as const,
   },
   bottomRow: {
     marginTop: 18,
     display: "flex",
     justifyContent: "space-between",
-  },
-  secondaryBtn: {
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid #ddd",
-    textDecoration: "none",
-    fontWeight: 900,
-    color: "#111",
+    gap: 12,
+    flexWrap: "wrap" as const,
+    alignItems: "center",
   },
   back: {
     color: "#111",
     textDecoration: "none",
     fontWeight: 900,
+    display: "inline-flex",
+    alignItems: "center",
   },
 } satisfies Record<string, React.CSSProperties>;

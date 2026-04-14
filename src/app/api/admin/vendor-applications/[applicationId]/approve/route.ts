@@ -1,53 +1,54 @@
-import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type Params = {
   params: Promise<{ applicationId: string }>;
 };
 
-export async function POST(_req: Request, ctx: Params) {
+export async function POST(req: NextRequest, ctx: Params) {
   try {
     const { applicationId } = await ctx.params;
 
     if (!applicationId) {
       return NextResponse.json(
-        { success: false, error: "applicationId가 필요합니다." },
+        { ok: false, success: false, error: "applicationId가 필요합니다." },
         { status: 400 }
       );
     }
 
-    const admin = getSupabaseAdmin();
+    const origin = new URL(req.url).origin;
 
-    const { data, error } = await admin
-      .from("vendor_applications_v2")
-      .update({
-        status: "approved",
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("application_id", applicationId)
-      .select("*")
-      .single();
+    const response = await fetch(
+      `${origin}/api/admin/vendor-applications/${applicationId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: req.headers.get("cookie") || "",
+        },
+        body: JSON.stringify({
+          action: "approve",
+        }),
+        cache: "no-store",
+      }
+    );
 
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message || "승인 처리 실패" },
-        { status: 500 }
-      );
-    }
+    const json = await response.json();
 
-    return NextResponse.json({
-      success: true,
-      item: data,
+    return NextResponse.json(json, {
+      status: response.status,
     });
   } catch (error) {
     return NextResponse.json(
       {
+        ok: false,
         success: false,
         error:
-          error instanceof Error ? error.message : "승인 처리 중 오류가 발생했습니다.",
+          error instanceof Error
+            ? error.message
+            : "승인 처리 중 오류가 발생했습니다.",
       },
       { status: 500 }
     );

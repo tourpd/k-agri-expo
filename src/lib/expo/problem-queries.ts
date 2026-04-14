@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type {
   ExpoProblemContent,
   ExpoProblemQuickLink,
@@ -11,41 +11,85 @@ function getSeasonKey(month: number) {
   return "winter";
 }
 
+function matchesMonthAndSeason<T extends {
+  month_key?: number | null;
+  season_key?: string | null;
+  start_at?: string | null;
+  end_at?: string | null;
+}>(
+  items: T[],
+  month: number,
+  seasonKey: string,
+  now: Date
+) {
+  const nowTime = now.getTime();
+
+  return items.filter((item) => {
+    const monthOk =
+      item.month_key == null || Number(item.month_key) === month;
+
+    const seasonOk =
+      item.season_key == null || String(item.season_key) === seasonKey;
+
+    const startOk =
+      !item.start_at || new Date(item.start_at).getTime() <= nowTime;
+
+    const endOk =
+      !item.end_at || new Date(item.end_at).getTime() >= nowTime;
+
+    return monthOk && seasonOk && startOk && endOk;
+  });
+}
+
 export async function getExpoProblemSectionData() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   const now = new Date();
   const month = now.getMonth() + 1;
   const seasonKey = getSeasonKey(month);
-  const nowIso = now.toISOString();
 
-  const [{ data: contents }, { data: quickLinks }] = await Promise.all([
+  const [
+    { data: rawContents, error: contentError },
+    { data: rawQuickLinks, error: quickLinkError },
+  ] = await Promise.all([
     supabase
       .from("expo_problem_contents")
       .select("*")
       .eq("is_active", true)
-      .or(`month_key.is.null,month_key.eq.${month}`)
-      .or(`season_key.is.null,season_key.eq.${seasonKey}`)
-      .or(`start_at.is.null,start_at.lte.${nowIso}`)
-      .or(`end_at.is.null,end_at.gte.${nowIso}`)
-      .order("priority", { ascending: true })
-      .limit(4),
+      .order("priority", { ascending: true }),
 
     supabase
       .from("expo_problem_quick_links")
       .select("*")
       .eq("is_active", true)
-      .or(`month_key.is.null,month_key.eq.${month}`)
-      .or(`season_key.is.null,season_key.eq.${seasonKey}`)
-      .or(`start_at.is.null,start_at.lte.${nowIso}`)
-      .or(`end_at.is.null,end_at.gte.${nowIso}`)
-      .order("priority", { ascending: true })
-      .limit(6),
+      .order("priority", { ascending: true }),
   ]);
 
+  if (contentError) {
+    console.error("[getExpoProblemSectionData] contents error:", contentError);
+  }
+
+  if (quickLinkError) {
+    console.error("[getExpoProblemSectionData] quickLinks error:", quickLinkError);
+  }
+
+  const filteredContents = matchesMonthAndSeason(
+    (rawContents ?? []) as ExpoProblemContent[],
+    month,
+    seasonKey,
+    now
+  ).slice(0, 4);
+
+  const filteredQuickLinks = matchesMonthAndSeason(
+    (rawQuickLinks ?? []) as ExpoProblemQuickLink[],
+    month,
+    seasonKey,
+    now
+  ).slice(0, 6);
+
   return {
-    contents: (contents ?? []) as ExpoProblemContent[],
-    quickLinks: (quickLinks ?? []) as ExpoProblemQuickLink[],
+    contents: filteredContents,
+    quickLinks: filteredQuickLinks,
     currentMonth: month,
     currentSeason: seasonKey,
   };

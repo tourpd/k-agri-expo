@@ -1,22 +1,26 @@
+import "server-only";
+
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let adminClient: SupabaseClient | null = null;
 
-export function getSupabaseAdmin(): SupabaseClient {
-  if (adminClient) return adminClient;
+function getEnv(name: string) {
+  const value = process.env[name]?.trim();
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-
-  if (!url) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL이 설정되지 않았습니다.");
+  if (!value) {
+    throw new Error(`❌ Missing environment variable: ${name}`);
   }
 
-  if (!serviceRoleKey) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY가 설정되지 않았습니다.");
-  }
+  return value;
+}
 
-  adminClient = createClient(url, serviceRoleKey, {
+function createAdminClientInstance(): SupabaseClient {
+  const url = getEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
+
+  console.log("[supabase-admin] creating admin client");
+
+  return createClient(url, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -28,6 +32,49 @@ export function getSupabaseAdmin(): SupabaseClient {
       },
     },
   });
+}
+
+/**
+ * ✅ 싱글톤 관리자 클라이언트
+ * - 서버에서만 사용
+ * - RLS 완전 우회
+ * - 모든 hall / booth / slot 조회 안정 보장
+ */
+export function getSupabaseAdmin(): SupabaseClient {
+  if (adminClient) {
+    return adminClient;
+  }
+
+  adminClient = createAdminClientInstance();
 
   return adminClient;
+}
+
+/**
+ * 🔁 기존 코드 호환용 alias
+ */
+export function createSupabaseAdminClient(): SupabaseClient {
+  return getSupabaseAdmin();
+}
+
+/**
+ * 🔍 디버깅용 헬퍼 (필요할 때만 사용)
+ */
+export async function debugSupabaseConnection() {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    const { data, error } = await supabase
+      .from("hall_booth_slots")
+      .select("*")
+      .limit(1);
+
+    console.log("[supabase-admin] test query result:", data);
+
+    if (error) {
+      console.error("[supabase-admin] test query error:", error);
+    }
+  } catch (err) {
+    console.error("[supabase-admin] connection failed:", err);
+  }
 }

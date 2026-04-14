@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 export default function AdminLoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("tourpd70@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -14,6 +14,8 @@ export default function AdminLoginPage() {
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setError("");
 
@@ -50,16 +52,21 @@ export default function AdminLoginPage() {
         }),
       });
 
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
 
       if (!res.ok || !json?.success) {
-        throw new Error(json?.error || "로그인에 실패했습니다.");
+        throw new Error(json?.error || "관리자 로그인에 실패했습니다.");
       }
 
-      router.push("/vendor/manage");
+      // AUTH_BASECAMP_v1 기준: 관리자 성공 후 관리자 홈으로만 이동
+      router.push("/expo/admin");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "로그인 중 오류가 발생했습니다.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "로그인 중 오류가 발생했습니다."
+      );
     } finally {
       setLoading(false);
     }
@@ -71,18 +78,21 @@ export default function AdminLoginPage() {
         <section style={S.card}>
           <div style={S.eyebrow}>ADMIN</div>
           <h1 style={S.title}>관리자 로그인</h1>
-          <p style={S.desc}>관리자 이메일과 비밀번호를 입력해 로그인합니다.</p>
+          <p style={S.desc}>
+            관리자 이메일과 비밀번호를 입력해 로그인합니다.
+          </p>
 
-          <form onSubmit={handleLogin} style={S.form}>
+          <form onSubmit={handleLogin} style={S.form} autoComplete="off">
             <label style={S.labelWrap}>
               <div style={S.label}>관리자 이메일</div>
               <input
                 type="email"
+                name="admin_email"
                 style={S.input}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="tourpd70@gmail.com"
-                autoComplete="username"
+                placeholder="관리자 이메일 입력"
+                autoComplete="off"
                 inputMode="email"
               />
             </label>
@@ -92,11 +102,12 @@ export default function AdminLoginPage() {
               <div style={S.passwordWrap}>
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="admin_password"
                   style={S.passwordInput}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="비밀번호 입력"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -110,7 +121,11 @@ export default function AdminLoginPage() {
 
             {error ? <div style={S.error}>{error}</div> : null}
 
-            <button type="submit" style={loading ? S.buttonDisabled : S.button} disabled={loading}>
+            <button
+              type="submit"
+              style={loading ? S.buttonDisabled : S.button}
+              disabled={loading}
+            >
               {loading ? "로그인 중..." : "관리자 로그인"}
             </button>
           </form>

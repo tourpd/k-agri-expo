@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 export default function AdminLoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("tourpd70@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
 
@@ -54,7 +55,6 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // ✔️ 관리자 성공 이동 경로
       router.push("/vendor/manage");
       router.refresh();
     } catch {
@@ -67,12 +67,14 @@ export default function AdminLoginPage() {
   return (
     <main style={S.page}>
       <div style={S.card}>
-        <div style={S.eyebrow}>ADMIN</div>
+        <div style={S.eyebrow}>ADMIN LOGIN</div>
 
         <h1 style={S.title}>관리자 로그인</h1>
 
         <p style={S.desc}>
           관리자 이메일과 비밀번호를 입력해 로그인합니다.
+          <br />
+          로그인 후 업체 승인, 입금 확인, 부스 운영을 관리할 수 있습니다.
         </p>
 
         <form onSubmit={onSubmit} style={S.form}>
@@ -83,19 +85,35 @@ export default function AdminLoginPage() {
               style={S.input}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tourpd70@gmail.com"
+              placeholder="예: admin@kagri-expo.com"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 
           <div>
             <label style={S.label}>비밀번호</label>
-            <input
-              type="password"
-              style={S.input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호 입력"
-            />
+
+            <div style={S.passwordWrap}>
+              <input
+                type={showPassword ? "text" : "password"}
+                style={S.passwordInput}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호 입력"
+                autoComplete="current-password"
+              />
+
+              <button
+                type="button"
+                style={S.toggleBtn}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? "숨김" : "보기"}
+              </button>
+            </div>
           </div>
 
           {errorText ? <div style={S.error}>{errorText}</div> : null}
@@ -165,6 +183,35 @@ const S: Record<string, React.CSSProperties> = {
     border: "1px solid #dbe2ea",
     boxSizing: "border-box",
     fontSize: 18,
+    outline: "none",
+    background: "#fff",
+  },
+  passwordWrap: {
+    position: "relative",
+  },
+  passwordInput: {
+    width: "100%",
+    padding: "18px 76px 18px 18px",
+    borderRadius: 18,
+    border: "1px solid #dbe2ea",
+    boxSizing: "border-box",
+    fontSize: 18,
+    outline: "none",
+    background: "#fff",
+  },
+  toggleBtn: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: "translateY(-50%)",
+    border: "none",
+    background: "transparent",
+    color: "#475569",
+    fontSize: 14,
+    fontWeight: 800,
+    cursor: "pointer",
+    padding: "8px 10px",
+    borderRadius: 10,
   },
   submitBtn: {
     marginTop: 8,
@@ -177,6 +224,7 @@ const S: Record<string, React.CSSProperties> = {
     fontSize: 22,
     fontWeight: 950,
     cursor: "pointer",
+    opacity: 1,
   },
   error: {
     borderRadius: 16,

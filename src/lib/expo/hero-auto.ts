@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type CmsHeroSettingsRow = {
   id: number;
@@ -103,21 +103,41 @@ function pickTopAssets(rows: LeadIssueRow[]) {
   let topBooth: any | null = null;
 
   for (const row of rows) {
-    if (!topDeal && Array.isArray(row.recommended_deals) && row.recommended_deals.length > 0) {
+    if (
+      !topDeal &&
+      Array.isArray(row.recommended_deals) &&
+      row.recommended_deals.length > 0
+    ) {
       topDeal = row.recommended_deals[0];
     }
-    if (!topBooth && Array.isArray(row.recommended_booths) && row.recommended_booths.length > 0) {
+
+    if (
+      !topBooth &&
+      Array.isArray(row.recommended_booths) &&
+      row.recommended_booths.length > 0
+    ) {
       topBooth = row.recommended_booths[0];
     }
+
     if (topDeal && topBooth) break;
   }
 
   const recommendedDealCount = rows.reduce((acc, row) => {
-    return acc + (Array.isArray(row.recommended_deals) ? row.recommended_deals.length : 0);
+    return (
+      acc +
+      (Array.isArray(row.recommended_deals)
+        ? row.recommended_deals.length
+        : 0)
+    );
   }, 0);
 
   const recommendedBoothCount = rows.reduce((acc, row) => {
-    return acc + (Array.isArray(row.recommended_booths) ? row.recommended_booths.length : 0);
+    return (
+      acc +
+      (Array.isArray(row.recommended_booths)
+        ? row.recommended_booths.length
+        : 0)
+    );
   }, 0);
 
   return {
@@ -128,7 +148,13 @@ function pickTopAssets(rows: LeadIssueRow[]) {
   };
 }
 
-function buildAutoHero(issueKey: string | null, count: number, topDeal: any | null, topBooth: any | null, windowDays: number): AutoHeroResult {
+function buildAutoHero(
+  issueKey: string | null,
+  count: number,
+  topDeal: any | null,
+  topBooth: any | null,
+  windowDays: number
+): AutoHeroResult {
   const label = issueLabel(issueKey);
 
   return {
@@ -147,10 +173,14 @@ function buildAutoHero(issueKey: string | null, count: number, topDeal: any | nu
   };
 }
 
-async function getHeroSettings(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>) {
+async function getHeroSettings() {
+  const supabase = createSupabaseAdminClient();
+
   const { data, error } = await supabase
     .from("cms_settings")
-    .select("id, hero_mode, hero_auto_window_days, hero_auto_min_leads, hero_auto_min_share, hero_auto_min_gap")
+    .select(
+      "id, hero_mode, hero_auto_window_days, hero_auto_min_leads, hero_auto_min_share, hero_auto_min_gap"
+    )
     .eq("id", 1)
     .single();
 
@@ -162,8 +192,8 @@ async function getHeroSettings(supabase: Awaited<ReturnType<typeof createSupabas
 }
 
 export async function getAutoHeroDecision(): Promise<AutoHeroDecision> {
-  const supabase = await createSupabaseServerClient();
-  const settings = await getHeroSettings(supabase);
+  const supabase = createSupabaseAdminClient();
+  const settings = await getHeroSettings();
 
   const windowDays = clampWindowDays(settings?.hero_auto_window_days);
   const minLeads = clampMinLeads(settings?.hero_auto_min_leads);
@@ -207,12 +237,14 @@ export async function getAutoHeroDecision(): Promise<AutoHeroDecision> {
   }
 
   const counts = new Map<string, number>();
+
   for (const row of rows) {
     const key = row.issue_key || "general";
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
   const sortedIssues = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+
   const top = sortedIssues[0] ?? [null, 0];
   const second = sortedIssues[1] ?? [null, 0];
 
@@ -225,7 +257,9 @@ export async function getAutoHeroDecision(): Promise<AutoHeroDecision> {
   if (topIssueShare < minShare) {
     return {
       shouldUseAutoHero: false,
-      reason: `1위 이슈 점유율이 ${formatPercent(topIssueShare)}로 최소 기준 ${formatPercent(minShare)}보다 낮습니다.`,
+      reason: `1위 이슈 점유율이 ${formatPercent(topIssueShare)}로 최소 기준 ${formatPercent(
+        minShare
+      )}보다 낮습니다.`,
       totalLeads,
       windowDays,
       topIssueKey,
@@ -256,8 +290,12 @@ export async function getAutoHeroDecision(): Promise<AutoHeroDecision> {
     };
   }
 
-  const issueRows = rows.filter((r) => (r.issue_key || "general") === topIssueKey);
-  const { topDeal, topBooth, recommendedDealCount, recommendedBoothCount } = pickTopAssets(issueRows);
+  const issueRows = rows.filter(
+    (r) => (r.issue_key || "general") === topIssueKey
+  );
+
+  const { topDeal, topBooth, recommendedDealCount, recommendedBoothCount } =
+    pickTopAssets(issueRows);
 
   if (recommendedDealCount + recommendedBoothCount < MIN_RECOMMENDED_ASSETS) {
     return {
@@ -286,7 +324,9 @@ export async function getAutoHeroDecision(): Promise<AutoHeroDecision> {
 
   return {
     shouldUseAutoHero: true,
-    reason: `최근 ${windowDays}일 동안 ${issueLabel(topIssueKey)} 이슈가 ${topIssueCount}건으로 가장 강하게 나타났습니다.`,
+    reason: `최근 ${windowDays}일 동안 ${issueLabel(
+      topIssueKey
+    )} 이슈가 ${topIssueCount}건으로 가장 강하게 나타났습니다.`,
     totalLeads,
     windowDays,
     topIssueKey,

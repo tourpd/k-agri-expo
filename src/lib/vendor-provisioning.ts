@@ -1,491 +1,579 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { allocateBoothSlot } from "@/lib/booth-slot-allocator";
-import {
-  DEFAULT_BOOTH_COVER_URL,
-  DEFAULT_BOOTH_LOGO_URL,
-} from "@/lib/booth-default-images";
+import { autoPlaceExpo } from "@/lib/expo-auto-placement";
 
 type VendorApplicationRow = {
-  application_id: string;
-  application_code: string | null;
-  company_name: string | null;
-  representative_name: string | null;
-  email: string | null;
-  phone: string | null;
-  tax_email: string | null;
-  business_number: string | null;
-  business_address: string | null;
-  category_primary: string | null;
-  company_intro: string | null;
-  website_url: string | null;
-  youtube_url: string | null;
-  booth_type: string | null;
-  provision_status: string | null;
-  provision_result: string | null;
-  provisioned_vendor_id: string | null;
-  provisioned_booth_id: string | null;
-};
+  id: string;
+  application_code?: string | null;
+  order_code?: string | null;
 
-type ExistingBoothRow = {
-  booth_id: string;
-  hall_id: string | null;
-  slot_code: string | null;
+  company_name?: string | null;
+  representative_name?: string | null;
+  ceo_name?: string | null;
+  contact_name?: string | null;
+  contact_email?: string | null;
+  email?: string | null;
+  contact_phone?: string | null;
+  phone?: string | null;
+
+  business_number?: string | null;
+  business_address?: string | null;
+  address?: string | null;
+  biz_type?: string | null;
+  business_type?: string | null;
+  biz_item?: string | null;
+  business_item?: string | null;
+
+  category_primary?: string | null;
+  company_intro?: string | null;
+  intro?: string | null;
+  website_url?: string | null;
+  youtube_url?: string | null;
+  brochure_url?: string | null;
+
+  preferred_hall_1?: string | null;
+  preferred_hall_2?: string | null;
+  preferred_category?: string | null;
+  placement_preference?: string | null;
+  promotion_preference?: string | null;
+
+  assigned_hall?: string | null;
+  assigned_slot_code?: string | null;
+  assigned_booth_id?: string | null;
+
+  provisioned_vendor_id?: string | null;
+  provisioned_booth_id?: string | null;
 };
 
 type ProvisionResult = {
-  vendorId: string;
-  boothId: string;
+  vendorId: string | null;
+  boothId: string | null;
   reused: boolean;
   hallId: string | null;
   slotCode: string | null;
 };
 
-function normalize(value: string | null | undefined) {
-  return (value || "").trim();
+function normalizeString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
-function mapPlanType(boothType: string) {
-  if (boothType === "premium") return "premium";
-  if (boothType === "basic") return "basic";
-  return "basic";
+function nullableString(value: unknown) {
+  const v = normalizeString(value);
+  return v || null;
 }
 
-function mapTier(boothType: string) {
-  if (boothType === "premium") return "premium";
-  return "basic";
+function slugify(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9가-힣-_]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
-function mapCompanyType(boothType: string) {
-  if (boothType === "premium") return "premium";
-  return "general";
+function uniqueSlug(base: string) {
+  const safeBase = base || "booth";
+  const tail = Math.random().toString(36).slice(2, 7);
+  return `${safeBase}-${tail}`;
 }
 
-function mapFeatured(boothType: string) {
-  return boothType === "premium";
+function pickCategory(application: VendorApplicationRow) {
+  return (
+    nullableString(application.preferred_category) ||
+    nullableString(application.category_primary) ||
+    null
+  );
 }
 
-function mapSponsorWeight(boothType: string) {
-  if (boothType === "premium") return 100;
-  if (boothType === "basic") return 30;
-  return 0;
-}
+function inferHallFromCategory(category: string | null) {
+  if (!category) return null;
 
-function mapSponsorSortOrder(boothType: string) {
-  if (boothType === "premium") return 10;
-  if (boothType === "basic") return 200;
-  return 999;
-}
-
-function mapManualBoost(boothType: string) {
-  if (boothType === "premium") return 30;
-  if (boothType === "basic") return 5;
-  return 0;
-}
-
-function normalizeBoothTypeForSlot(
-  value: string
-): "free" | "basic" | "premium" {
-  if (value === "premium") return "premium";
-  if (value === "basic") return "basic";
-  return "free";
-}
-
-async function findExistingVendorIdByCompanyOrEmail(params: {
-  companyName: string;
-  email: string;
-}) {
-  const supabase = getSupabaseAdmin();
-
-  if (params.companyName) {
-    const { data, error } = await supabase
-      .from("vendors")
-      .select("id")
-      .eq("company_name", params.companyName)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(error.message || "기존 vendor 조회 중 오류가 발생했습니다.");
-    }
-
-    if (data?.id) return data.id;
+  if (category === "insect_food" || category === "insect_bio") {
+    return "future_insect";
   }
 
-  if (params.email) {
-    const { data, error } = await supabase
+  if (category === "machinery") return "machinery";
+  if (category === "smart_farm") return "smart_farm";
+  if (category === "eco_friendly") return "eco_friendly";
+  if (category === "seed" || category === "seedling") return "seeds_seedlings";
+
+  return "agri_inputs";
+}
+
+function pickHall(application: VendorApplicationRow) {
+  const category = pickCategory(application);
+
+  return (
+    nullableString(application.assigned_hall) ||
+    nullableString(application.preferred_hall_1) ||
+    nullableString(application.preferred_hall_2) ||
+    inferHallFromCategory(category) ||
+    null
+  );
+}
+
+function pickCompanyName(application: VendorApplicationRow) {
+  return normalizeString(application.company_name) || "이름없는 업체";
+}
+
+function pickRepName(application: VendorApplicationRow) {
+  return (
+    normalizeString(application.representative_name) ||
+    normalizeString(application.ceo_name) ||
+    normalizeString(application.contact_name) ||
+    ""
+  );
+}
+
+function pickEmail(application: VendorApplicationRow) {
+  return (
+    normalizeString(application.contact_email) ||
+    normalizeString(application.email) ||
+    ""
+  );
+}
+
+function pickPhone(application: VendorApplicationRow) {
+  return (
+    normalizeString(application.contact_phone) ||
+    normalizeString(application.phone) ||
+    ""
+  );
+}
+
+function pickExpoPromoMeta(application: VendorApplicationRow) {
+  const companyName = pickCompanyName(application);
+  const intro =
+    nullableString(application.company_intro) ||
+    nullableString(application.intro) ||
+    null;
+
+  const promotionPreference = nullableString(application.promotion_preference);
+
+  return {
+    promotionPreference,
+    title:
+      promotionPreference === "new_product_focus"
+        ? `${companyName} 신제품`
+        : companyName,
+    subtitle:
+      promotionPreference === "new_product_focus"
+        ? intro || "새롭게 주목할 제품을 확인하세요"
+        : intro || "지금 확인하세요",
+    imageUrl: null,
+    linkUrl: null,
+  };
+}
+
+async function readApplication(applicationId: string) {
+  const supabase = getSupabaseAdmin();
+
+  const { data, error } = await supabase
+    .from("vendor_applications_v2")
+    .select("*")
+    .eq("id", applicationId)
+    .single();
+
+  if (error || !data) {
+    throw new Error("신청 데이터를 찾을 수 없습니다.");
+  }
+
+  return data as VendorApplicationRow;
+}
+
+async function findExistingVendor(application: VendorApplicationRow) {
+  const supabase = getSupabaseAdmin();
+
+  if (application.provisioned_vendor_id) {
+    const { data } = await supabase
       .from("vendors")
       .select("id")
-      .eq("email", params.email)
+      .eq("id", application.provisioned_vendor_id)
       .maybeSingle();
 
-    if (error) {
-      throw new Error(error.message || "기존 vendor 조회 중 오류가 발생했습니다.");
-    }
+    if (data?.id) return data.id as string;
+  }
 
-    if (data?.id) return data.id;
+  const businessNumber = normalizeString(application.business_number);
+  if (businessNumber) {
+    const { data } = await supabase
+      .from("vendors")
+      .select("id")
+      .eq("business_number", businessNumber)
+      .maybeSingle();
+
+    if (data?.id) return data.id as string;
+  }
+
+  const companyName = pickCompanyName(application);
+  if (companyName) {
+    const { data } = await supabase
+      .from("vendors")
+      .select("id")
+      .eq("company_name", companyName)
+      .maybeSingle();
+
+    if (data?.id) return data.id as string;
   }
 
   return null;
 }
 
-async function findExistingBooth(params: {
-  vendorId: string;
-  boothName: string;
-}) {
+async function createVendor(application: VendorApplicationRow) {
   const supabase = getSupabaseAdmin();
+
+  const payload = {
+    company_name: pickCompanyName(application),
+    representative_name: nullableString(pickRepName(application)),
+    contact_name: nullableString(application.contact_name),
+    contact_email: nullableString(pickEmail(application)),
+    contact_phone: nullableString(pickPhone(application)),
+    business_number: nullableString(application.business_number),
+    address:
+      nullableString(application.business_address) ||
+      nullableString(application.address),
+    business_type:
+      nullableString(application.biz_type) ||
+      nullableString(application.business_type),
+    business_item:
+      nullableString(application.biz_item) ||
+      nullableString(application.business_item),
+    website_url: nullableString(application.website_url),
+    youtube_url: nullableString(application.youtube_url),
+    brochure_url: nullableString(application.brochure_url),
+    intro:
+      nullableString(application.company_intro) ||
+      nullableString(application.intro),
+    application_id: application.id,
+    application_code:
+      nullableString(application.application_code) ||
+      nullableString(application.order_code),
+    status: "active",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("vendors")
+    .insert(payload)
+    .select("id")
+    .single();
+
+  if (error || !data?.id) {
+    throw new Error(error?.message || "vendor 생성에 실패했습니다.");
+  }
+
+  return data.id as string;
+}
+
+async function getOrCreateVendor(application: VendorApplicationRow) {
+  const existingVendorId = await findExistingVendor(application);
+  if (existingVendorId) {
+    return { vendorId: existingVendorId, reused: true };
+  }
+
+  const vendorId = await createVendor(application);
+  return { vendorId, reused: false };
+}
+
+async function findExistingBooth(application: VendorApplicationRow) {
+  const supabase = getSupabaseAdmin();
+
+  if (application.assigned_booth_id) {
+    const { data } = await supabase
+      .from("booths")
+      .select("id")
+      .eq("id", application.assigned_booth_id)
+      .maybeSingle();
+
+    if (data?.id) return data.id as string;
+  }
+
+  if (application.provisioned_booth_id) {
+    const { data } = await supabase
+      .from("booths")
+      .select("id")
+      .eq("id", application.provisioned_booth_id)
+      .maybeSingle();
+
+    if (data?.id) return data.id as string;
+  }
+
+  const { data } = await supabase
+    .from("booths")
+    .select("id")
+    .eq("application_id", application.id)
+    .maybeSingle();
+
+  if (data?.id) return data.id as string;
+
+  return null;
+}
+
+async function createBooth(application: VendorApplicationRow, vendorId: string) {
+  const supabase = getSupabaseAdmin();
+
+  const companyName = pickCompanyName(application);
+  const hallCode = pickHall(application);
+  const categoryPrimary = pickCategory(application);
+  const intro =
+    nullableString(application.company_intro) ||
+    nullableString(application.intro);
+
+  const baseSlug = slugify(companyName || "booth");
+  const boothSlug = uniqueSlug(baseSlug);
+
+  const payload = {
+    vendor_id: vendorId,
+    application_id: application.id,
+    application_code:
+      nullableString(application.application_code) ||
+      nullableString(application.order_code),
+
+    name: companyName,
+    title: companyName,
+    slug: boothSlug,
+    company_name: companyName,
+    vendor_name: companyName,
+
+    hall_code: hallCode,
+    category_primary: categoryPrimary,
+    intro,
+    website_url: nullableString(application.website_url),
+    youtube_url: nullableString(application.youtube_url),
+    brochure_url: nullableString(application.brochure_url),
+
+    status: "live",
+    is_active: true,
+    is_visible: true,
+
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
   const { data, error } = await supabase
     .from("booths")
-    .select("booth_id, hall_id, slot_code")
-    .eq("vendor_id", params.vendorId)
-    .eq("name", params.boothName)
-    .maybeSingle<ExistingBoothRow>();
+    .insert(payload)
+    .select("id, hall_code")
+    .single();
 
-  if (error) {
-    throw new Error(error.message || "기존 booth 조회 중 오류가 발생했습니다.");
+  if (error || !data?.id) {
+    throw new Error(error?.message || "booth 생성에 실패했습니다.");
   }
 
-  return data || null;
+  return {
+    boothId: data.id as string,
+    hallId: (data.hall_code as string | null) ?? hallCode ?? null,
+  };
+}
+
+async function getOrCreateBooth(
+  application: VendorApplicationRow,
+  vendorId: string
+) {
+  const existingBoothId = await findExistingBooth(application);
+
+  if (existingBoothId) {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from("booths")
+      .select("id, hall_code")
+      .eq("id", existingBoothId)
+      .single();
+
+    return {
+      boothId: existingBoothId,
+      hallId: (data?.hall_code as string | null) ?? pickHall(application),
+      reused: true,
+    };
+  }
+
+  const created = await createBooth(application, vendorId);
+
+  return {
+    boothId: created.boothId,
+    hallId: created.hallId,
+    reused: false,
+  };
+}
+
+async function assignRequestedSlot(
+  boothId: string,
+  application: VendorApplicationRow
+) {
+  const supabase = getSupabaseAdmin();
+
+  const requestedSlot = nullableString(application.assigned_slot_code);
+  if (!requestedSlot) return null;
+
+  const trySlots = await supabase
+    .from("slots")
+    .update({
+      booth_id: boothId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("slot_code", requestedSlot)
+    .is("booth_id", null)
+    .select("slot_code")
+    .maybeSingle();
+
+  if (!trySlots.error && trySlots.data?.slot_code) {
+    return trySlots.data.slot_code as string;
+  }
+
+  const tryHallSlots = await supabase
+    .from("hall_booth_slots")
+    .update({
+      booth_id: boothId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("slot_code", requestedSlot)
+    .is("booth_id", null)
+    .select("slot_code")
+    .maybeSingle();
+
+  if (!tryHallSlots.error && tryHallSlots.data?.slot_code) {
+    return tryHallSlots.data.slot_code as string;
+  }
+
+  return null;
+}
+
+async function autoAssignFreeSlot(boothId: string, hallCode: string | null) {
+  const supabase = getSupabaseAdmin();
+  if (!hallCode) return null;
+
+  const candidatesFromSlots = await supabase
+    .from("slots")
+    .select("slot_code, hall_code, priority_order")
+    .eq("hall_code", hallCode)
+    .is("booth_id", null)
+    .order("priority_order", { ascending: true })
+    .limit(1);
+
+  if (!candidatesFromSlots.error && candidatesFromSlots.data?.[0]?.slot_code) {
+    const slotCode = candidatesFromSlots.data[0].slot_code as string;
+
+    const assigned = await supabase
+      .from("slots")
+      .update({
+        booth_id: boothId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("slot_code", slotCode)
+      .is("booth_id", null)
+      .select("slot_code")
+      .maybeSingle();
+
+    if (!assigned.error && assigned.data?.slot_code) {
+      return assigned.data.slot_code as string;
+    }
+  }
+
+  const candidatesFromHallSlots = await supabase
+    .from("hall_booth_slots")
+    .select("slot_code, hall_code, priority_order")
+    .eq("hall_code", hallCode)
+    .is("booth_id", null)
+    .order("priority_order", { ascending: true })
+    .limit(1);
+
+  if (
+    !candidatesFromHallSlots.error &&
+    candidatesFromHallSlots.data?.[0]?.slot_code
+  ) {
+    const slotCode = candidatesFromHallSlots.data[0].slot_code as string;
+
+    const assigned = await supabase
+      .from("hall_booth_slots")
+      .update({
+        booth_id: boothId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("slot_code", slotCode)
+      .is("booth_id", null)
+      .select("slot_code")
+      .maybeSingle();
+
+    if (!assigned.error && assigned.data?.slot_code) {
+      return assigned.data.slot_code as string;
+    }
+  }
+
+  return null;
+}
+
+async function syncApplicationProvisionResult(params: {
+  applicationId: string;
+  vendorId: string | null;
+  boothId: string | null;
+  hallId: string | null;
+  slotCode: string | null;
+}) {
+  const supabase = getSupabaseAdmin();
+
+  const patch: Record<string, unknown> = {
+    provisioned_vendor_id: params.vendorId,
+    provisioned_booth_id: params.boothId,
+    assigned_booth_id: params.boothId,
+    assigned_hall: params.hallId,
+    assigned_slot_code: params.slotCode,
+    booth_progress_status: params.slotCode ? "assigned" : "building",
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("vendor_applications_v2")
+    .update(patch)
+    .eq("id", params.applicationId);
+
+  if (error) {
+    throw new Error(error.message || "신청 결과 동기화에 실패했습니다.");
+  }
 }
 
 export async function provisionVendorAndBooth(
   applicationId: string
 ): Promise<ProvisionResult> {
-  const supabase = getSupabaseAdmin();
+  const application = await readApplication(applicationId);
 
-  const { data: app, error: appError } = await supabase
-    .from("vendor_applications_v2")
-    .select(`
-      application_id,
-      application_code,
-      company_name,
-      representative_name,
-      email,
-      phone,
-      tax_email,
-      business_number,
-      business_address,
-      category_primary,
-      company_intro,
-      website_url,
-      youtube_url,
-      booth_type,
-      provision_status,
-      provision_result,
-      provisioned_vendor_id,
-      provisioned_booth_id
-    `)
-    .eq("application_id", applicationId)
-    .single<VendorApplicationRow>();
+  const vendorResult = await getOrCreateVendor(application);
+  const boothResult = await getOrCreateBooth(application, vendorResult.vendorId);
 
-  if (appError || !app) {
-    throw new Error(appError?.message || "신청 정보를 찾지 못했습니다.");
+  const finalHallId = boothResult.hallId || pickHall(application);
+
+  let finalSlotCode =
+    (await assignRequestedSlot(boothResult.boothId, application)) || null;
+
+  if (!finalSlotCode) {
+    finalSlotCode = await autoAssignFreeSlot(boothResult.boothId, finalHallId);
   }
 
-  if (app.provisioned_vendor_id && app.provisioned_booth_id) {
-    return {
-      vendorId: app.provisioned_vendor_id,
-      boothId: app.provisioned_booth_id,
-      reused: true,
-      hallId: null,
-      slotCode: null,
-    };
-  }
+  await syncApplicationProvisionResult({
+    applicationId,
+    vendorId: vendorResult.vendorId,
+    boothId: boothResult.boothId,
+    hallId: finalHallId,
+    slotCode: finalSlotCode,
+  });
 
-  const nowIso = new Date().toISOString();
+  if (boothResult.boothId) {
+    const promo = pickExpoPromoMeta(application);
 
-  const companyName = normalize(app.company_name);
-  const representativeName = normalize(app.representative_name);
-  const email = normalize(app.tax_email) || normalize(app.email);
-  const phone = normalize(app.phone);
-  const categoryPrimary = normalize(app.category_primary);
-  const companyIntro = normalize(app.company_intro);
-  const businessAddress = normalize(app.business_address);
-  const websiteUrl = normalize(app.website_url);
-  const youtubeUrl = normalize(app.youtube_url);
-  const boothType = normalize(app.booth_type) || "basic";
-  const slotBoothType = normalizeBoothTypeForSlot(boothType);
-  const boothName = companyName || app.application_code || "새 벤더 부스";
-
-  let vendorId = app.provisioned_vendor_id || null;
-  let boothId = app.provisioned_booth_id || null;
-
-  const vendorWasReused = !!vendorId;
-  const boothWasReused = !!boothId;
-
-  let finalHallId: string | null = null;
-  let finalSlotCode: string | null = null;
-
-  // 1) vendor 생성 또는 재사용
-  if (!vendorId) {
-    const existingVendorId = await findExistingVendorIdByCompanyOrEmail({
-      companyName,
-      email,
+    await autoPlaceExpo(boothResult.boothId, {
+      promotionPreference: promo.promotionPreference,
+      title: promo.title,
+      subtitle: promo.subtitle,
+      imageUrl: promo.imageUrl,
+      linkUrl: promo.linkUrl,
     });
-
-    if (existingVendorId) {
-      vendorId = existingVendorId;
-
-      const { error: updateVendorError } = await supabase
-        .from("vendors")
-        .update({
-          email: email || null,
-          company_name: companyName || null,
-          contact_name: representativeName || null,
-          tier: mapTier(boothType),
-          plan_type: mapPlanType(boothType),
-          verify_status: "approved",
-          status: "active",
-          approved_at: nowIso,
-        })
-        .eq("id", vendorId);
-
-      if (updateVendorError) {
-        throw new Error(
-          updateVendorError.message || "vendor 갱신 중 오류가 발생했습니다."
-        );
-      }
-    } else {
-      const { data: insertedVendor, error: insertVendorError } = await supabase
-        .from("vendors")
-        .insert({
-          user_id: null,
-          email: email || null,
-          company_name: companyName || null,
-          contact_name: representativeName || null,
-          tier: mapTier(boothType),
-          plan_type: mapPlanType(boothType),
-          verify_status: "approved",
-          approved_at: nowIso,
-          approved_by: null,
-          status: "active",
-        })
-        .select("id")
-        .single();
-
-      if (insertVendorError || !insertedVendor) {
-        throw new Error(
-          insertVendorError?.message || "vendor 생성 중 오류가 발생했습니다."
-        );
-      }
-
-      vendorId = insertedVendor.id;
-    }
-  }
-
-  if (!vendorId) {
-    throw new Error("vendorId 생성에 실패했습니다.");
-  }
-
-  // 2) booth 생성 또는 재사용
-  if (!boothId) {
-    const existingBooth = await findExistingBooth({
-      vendorId,
-      boothName,
-    });
-
-    if (existingBooth?.booth_id) {
-      boothId = existingBooth.booth_id;
-
-      if (!existingBooth.hall_id || !existingBooth.slot_code) {
-        const allocatedSlot = await allocateBoothSlot(slotBoothType);
-        finalHallId = allocatedSlot.hallId;
-        finalSlotCode = allocatedSlot.slotCode;
-      } else {
-        finalHallId = existingBooth.hall_id;
-        finalSlotCode = existingBooth.slot_code;
-      }
-
-      const { error: updateBoothError } = await supabase
-        .from("booths")
-        .update({
-          name: boothName,
-          category_primary: categoryPrimary || null,
-          region: businessAddress || null,
-          contact_name: representativeName || null,
-          phone: phone || null,
-          email: email || null,
-          intro: companyIntro || null,
-          description: companyIntro || null,
-          status: "approved",
-          vendor_id: vendorId,
-          owner_user_id: null,
-          vendor_user_id: null,
-          website_url: websiteUrl || null,
-          youtube_url: youtubeUrl || null,
-          company_type: mapCompanyType(boothType),
-          hall_id: finalHallId,
-          slot_code: finalSlotCode,
-          is_public: true,
-          is_active: true,
-          is_published: true,
-          is_verified: true,
-          is_featured: mapFeatured(boothType),
-          sponsor_weight: mapSponsorWeight(boothType),
-          sponsor_sort_order: mapSponsorSortOrder(boothType),
-          manual_boost: mapManualBoost(boothType),
-          cover_image_url: DEFAULT_BOOTH_COVER_URL,
-          logo_image_url: DEFAULT_BOOTH_LOGO_URL,
-          updated_at: nowIso,
-        })
-        .eq("booth_id", boothId);
-
-      if (updateBoothError) {
-        throw new Error(
-          updateBoothError.message || "booth 갱신 중 오류가 발생했습니다."
-        );
-      }
-    } else {
-      const allocatedSlot = await allocateBoothSlot(slotBoothType);
-      finalHallId = allocatedSlot.hallId;
-      finalSlotCode = allocatedSlot.slotCode;
-
-      const { data: insertedBooth, error: insertBoothError } = await supabase
-        .from("booths")
-        .insert({
-          owner_user_id: null,
-          vendor_user_id: null,
-          vendor_id: vendorId,
-          name: boothName,
-          category_primary: categoryPrimary || null,
-          region: businessAddress || null,
-          contact_name: representativeName || null,
-          phone: phone || null,
-          email: email || null,
-          intro: companyIntro || null,
-          description: companyIntro || null,
-          status: "approved",
-          is_published: true,
-          website_url: websiteUrl || null,
-          youtube_url: youtubeUrl || null,
-          company_type: mapCompanyType(boothType),
-          is_verified: true,
-          hall_id: finalHallId,
-          slot_code: finalSlotCode,
-          is_public: true,
-          is_active: true,
-          is_featured: mapFeatured(boothType),
-          sponsor_weight: mapSponsorWeight(boothType),
-          sponsor_sort_order: mapSponsorSortOrder(boothType),
-          manual_boost: mapManualBoost(boothType),
-          cover_image_url: DEFAULT_BOOTH_COVER_URL,
-          logo_image_url: DEFAULT_BOOTH_LOGO_URL,
-          updated_at: nowIso,
-        })
-        .select("booth_id")
-        .single();
-
-      if (insertBoothError || !insertedBooth) {
-        throw new Error(
-          insertBoothError?.message || "booth 생성 중 오류가 발생했습니다."
-        );
-      }
-
-      boothId = insertedBooth.booth_id;
-    }
-  } else {
-    const { data: existingProvisionedBooth, error: provisionedBoothError } =
-      await supabase
-        .from("booths")
-        .select("booth_id, hall_id, slot_code")
-        .eq("booth_id", boothId)
-        .maybeSingle<ExistingBoothRow>();
-
-    if (provisionedBoothError) {
-      throw new Error(
-        provisionedBoothError.message ||
-          "기존 provisioned booth 조회 중 오류가 발생했습니다."
-      );
-    }
-
-    if (!existingProvisionedBooth) {
-      throw new Error("연결된 booth를 찾지 못했습니다.");
-    }
-
-    if (
-      !existingProvisionedBooth.hall_id ||
-      !existingProvisionedBooth.slot_code
-    ) {
-      const allocatedSlot = await allocateBoothSlot(slotBoothType);
-      finalHallId = allocatedSlot.hallId;
-      finalSlotCode = allocatedSlot.slotCode;
-    } else {
-      finalHallId = existingProvisionedBooth.hall_id;
-      finalSlotCode = existingProvisionedBooth.slot_code;
-    }
-
-    const { error: updateBoothError } = await supabase
-      .from("booths")
-      .update({
-        name: boothName,
-        category_primary: categoryPrimary || null,
-        region: businessAddress || null,
-        contact_name: representativeName || null,
-        phone: phone || null,
-        email: email || null,
-        intro: companyIntro || null,
-        description: companyIntro || null,
-        status: "approved",
-        vendor_id: vendorId,
-        owner_user_id: null,
-        vendor_user_id: null,
-        website_url: websiteUrl || null,
-        youtube_url: youtubeUrl || null,
-        company_type: mapCompanyType(boothType),
-        hall_id: finalHallId,
-        slot_code: finalSlotCode,
-        is_public: true,
-        is_active: true,
-        is_published: true,
-        is_verified: true,
-        is_featured: mapFeatured(boothType),
-        sponsor_weight: mapSponsorWeight(boothType),
-        sponsor_sort_order: mapSponsorSortOrder(boothType),
-        manual_boost: mapManualBoost(boothType),
-        cover_image_url: DEFAULT_BOOTH_COVER_URL,
-        logo_image_url: DEFAULT_BOOTH_LOGO_URL,
-        updated_at: nowIso,
-      })
-      .eq("booth_id", boothId);
-
-    if (updateBoothError) {
-      throw new Error(
-        updateBoothError.message ||
-          "기존 provisioned booth 갱신 중 오류가 발생했습니다."
-      );
-    }
-  }
-
-  if (!boothId) {
-    throw new Error("boothId 생성에 실패했습니다.");
-  }
-
-  const resultMessage =
-    finalHallId && finalSlotCode
-      ? `vendor/booth 자동 생성 완료 (${finalHallId} / ${finalSlotCode})`
-      : "vendor/booth 자동 생성 완료";
-
-  const { error: updateAppError } = await supabase
-    .from("vendor_applications_v2")
-    .update({
-      provision_status: "completed",
-      provision_result: resultMessage,
-      provisioned_vendor_id: vendorId,
-      provisioned_booth_id: boothId,
-      updated_at: nowIso,
-    })
-    .eq("application_id", applicationId);
-
-  if (updateAppError) {
-    throw new Error(
-      updateAppError.message || "신청건 provision 결과 저장 중 오류가 발생했습니다."
-    );
   }
 
   return {
-    vendorId,
-    boothId,
-    reused: vendorWasReused && boothWasReused,
+    vendorId: vendorResult.vendorId,
+    boothId: boothResult.boothId,
+    reused: vendorResult.reused || boothResult.reused,
     hallId: finalHallId,
     slotCode: finalSlotCode,
   };
-} 
+}

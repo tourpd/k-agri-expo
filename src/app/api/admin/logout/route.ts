@@ -5,7 +5,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const res = NextResponse.json({ success: true });
+  const res = NextResponse.json({
+    success: true,
+    redirectTo: "/admin/login",
+  });
 
   res.cookies.set(ADMIN_COOKIE_NAME, "", {
     httpOnly: true,

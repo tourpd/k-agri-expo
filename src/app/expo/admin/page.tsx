@@ -1,18 +1,31 @@
 import React from "react";
 import Link from "next/link";
+import AdminLogoutButton from "@/components/admin/AdminLogoutButton";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-export default function ExpoAdminIndexPage() {
+export default async function ExpoAdminIndexPage() {
+  await requireAdminUser();
+
   return (
     <main style={S.page}>
       <div style={S.wrap}>
-        <div style={S.header}>
-          <div style={S.kicker}>K-Agri Expo Admin</div>
-          <h1 style={S.title}>운영 대시보드</h1>
-          <div style={S.desc}>
-            메인 편성, 농민 고민 카드, 경품 추첨, 전시장 운영, 참가 업체 관리, 입점 신청 검토를
-            여기서 진행합니다.
+        <div style={S.headerTopRow}>
+          <div style={S.header}>
+            <div style={S.kicker}>K-Agri Expo Admin</div>
+            <h1 style={S.title}>운영 대시보드</h1>
+            <div style={S.desc}>
+              메인 편성, 농민 고민 카드, 경품 추첨, 전시장 운영, 참가 업체 관리, 입점 신청 검토를
+              여기서 진행합니다.
+            </div>
+          </div>
+
+          <div style={S.headerActions}>
+            <Link href="/expo" style={S.ghostBtn}>
+              박람회 메인 보기
+            </Link>
+            <AdminLogoutButton />
           </div>
         </div>
 
@@ -143,8 +156,37 @@ const S: Record<string, React.CSSProperties> = {
     maxWidth: 1360,
     margin: "0 auto",
   },
-  header: {
+  headerTopRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+    flexWrap: "wrap",
     marginBottom: 22,
+  },
+  header: {
+    flex: 1,
+    minWidth: 320,
+  },
+  headerActions: {
+    display: "flex",
+    gap: 10,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  ghostBtn: {
+    height: 42,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 14px",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+    color: "#0f172a",
+    textDecoration: "none",
+    fontWeight: 900,
+    fontSize: 14,
   },
   kicker: {
     fontSize: 12,
