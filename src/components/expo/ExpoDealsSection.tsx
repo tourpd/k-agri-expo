@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import type { ExpoHomeDealItem } from "@/lib/expo/home-deals";
+import ExpoDealLeadButton from "@/components/expo/ExpoDealLeadButton";
 
 function formatDeadline(v?: string | null) {
   if (!v) return "마감일 미정";
@@ -37,35 +38,57 @@ export default function ExpoDealsSection({
 
       <div style={S.grid}>
         {items.map((item) => (
-          <Link
-            key={item.deal_id}
-            href={`/expo/deals/${item.deal_id}`}
-            style={S.card}
-          >
-            <div style={S.topRow}>
-              <div style={S.badge}>EXPO 특가</div>
-              <div style={S.booth}>{item.booth_name || "참가 부스"}</div>
+          <div key={item.deal_id} style={S.card}>
+            {/* 카드 클릭 영역 */}
+            <Link
+              href={`/expo/deals/${item.deal_id}`}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div style={S.topRow}>
+                <div style={S.badge}>EXPO 특가</div>
+                <div style={S.booth}>{item.booth_name || "참가 부스"}</div>
+              </div>
+
+              <div style={S.cardTitle}>
+                {item.title || "특가 제목 없음"}
+              </div>
+
+              <div style={S.cardDesc}>
+                {item.description || "지금 확인해 보셔야 할 행사 특가입니다."}
+              </div>
+
+              <div style={S.priceWrap}>
+                <div style={S.regularPrice}>
+                  {item.regular_price_text || "-"}
+                </div>
+                <div style={S.arrow}>→</div>
+                <div style={S.expoPrice}>
+                  {item.expo_price_text || "-"}
+                </div>
+              </div>
+
+              <div style={S.meta}>
+                <span>{item.stock_text || "수량 문의"}</span>
+                <span>{formatDeadline(item.deadline_at)}</span>
+              </div>
+            </Link>
+
+            {/* 👉 핵심: 전환 버튼 영역 */}
+            <div style={S.buttonWrap}>
+              <Link
+                href={`/expo/deals/${item.deal_id}`}
+                style={S.detailBtn}
+              >
+                상세 보기
+              </Link>
+
+              <ExpoDealLeadButton
+                dealId={item.deal_id}
+                boothId={item.booth_id || null}
+                label="🔥 특가 상담 요청"
+              />
             </div>
-
-            <div style={S.cardTitle}>{item.title || "특가 제목 없음"}</div>
-
-            <div style={S.cardDesc}>
-              {item.description || "지금 확인해 보셔야 할 행사 특가입니다."}
-            </div>
-
-            <div style={S.priceWrap}>
-              <div style={S.regularPrice}>{item.regular_price_text || "-"}</div>
-              <div style={S.arrow}>→</div>
-              <div style={S.expoPrice}>{item.expo_price_text || "-"}</div>
-            </div>
-
-            <div style={S.meta}>
-              <span>{item.stock_text || "수량 문의"}</span>
-              <span>{formatDeadline(item.deadline_at)}</span>
-            </div>
-
-            <div style={S.cta}>특가 보러가기 →</div>
-          </Link>
+          </div>
         ))}
       </div>
     </section>
@@ -119,14 +142,14 @@ const S: Record<string, React.CSSProperties> = {
     gap: 14,
   },
   card: {
-    display: "block",
-    textDecoration: "none",
-    color: "#0f172a",
     background: "#fff",
     border: "1px solid #e5e7eb",
     borderRadius: 24,
     padding: 20,
     boxShadow: "0 12px 24px rgba(15,23,42,0.05)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
   },
   topRow: {
     display: "flex",
@@ -136,7 +159,6 @@ const S: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
   },
   badge: {
-    display: "inline-block",
     borderRadius: 999,
     background: "#fee2e2",
     color: "#b91c1c",
@@ -167,7 +189,6 @@ const S: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: 10,
-    flexWrap: "wrap",
   },
   regularPrice: {
     fontSize: 14,
@@ -192,10 +213,22 @@ const S: Record<string, React.CSSProperties> = {
     fontSize: 13,
     fontWeight: 700,
   },
-  cta: {
-    marginTop: 16,
-    fontWeight: 950,
-    fontSize: 14,
+
+  /* 👉 핵심 영역 */
+  buttonWrap: {
+    marginTop: 18,
+    display: "flex",
+    gap: 8,
+  },
+  detailBtn: {
+    flex: 1,
+    textAlign: "center",
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    padding: "10px 12px",
+    fontSize: 13,
+    fontWeight: 900,
+    textDecoration: "none",
     color: "#0f172a",
   },
 };

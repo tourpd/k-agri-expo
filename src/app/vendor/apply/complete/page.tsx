@@ -190,17 +190,11 @@ export default async function VendorApplyCompletePage({
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <div className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900">
-              신청정보 저장: {displayApplicationNo} / {companyName}
-            </div>
-
-            <Link
-              href={statusHref}
-              className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white"
-            >
-              신청 상태 확인
-            </Link>
+           <div className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900">
+                신청정보 저장: {displayApplicationNo} / {companyName}
+           </div>
           </div>
+
         </section>
 
         {isFree ? (

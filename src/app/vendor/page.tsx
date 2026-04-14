@@ -1,48 +1,112 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUserAndProfile } from "@/lib/authz";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireVendorUser } from "@/lib/vendor-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
+type VendorRow = {
+  user_id?: string | null;
+  verify_status?: string | null;
+  company_name?: string | null;
+  tier?: string | null;
+  approved_at?: string | null;
+  created_at?: string | null;
+};
+
+type VendorApplicationRow = {
+  id?: string | null;
+  application_id?: string | null;
+  user_id?: string | null;
+  status?: string | null;
+  admin_note?: string | null;
+  created_at?: string | null;
+};
+
+type BoothRow = {
+  booth_id?: string | null;
+  vendor_user_id?: string | null;
+  status?: string | null;
+  is_public?: boolean | null;
+  is_active?: boolean | null;
+  is_published?: boolean | null;
+  created_at?: string | null;
+};
+
+function safe(v: unknown, fallback = "") {
+  const s = typeof v === "string" ? v : "";
+  return s.trim() ? s.trim() : fallback;
+}
+
 export default async function VendorHome() {
-  const { user, profile } = await getCurrentUserAndProfile();
+  const session = await requireVendorUser();
+  const userId = safe(session.user_id, "");
 
-  if (!user) redirect("/login/vendor");
-  if (!profile || profile.role !== "vendor") redirect("/login");
-
-  const supabase = await createSupabaseServerClient();
-
-  const [{ data: vendor }, { data: latestApplication }] = await Promise.all([
-    supabase
-      .from("vendors")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-
-    supabase
-      .from("vendor_applications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  // 1) 승인 완료면 바로 운영 대시보드
-  if (vendor?.status === "approved") {
-    redirect("/vendor/dashboard");
+  if (!userId) {
+    redirect("/vendor/login");
   }
 
-  // 2) 입점 신청 기록이 전혀 없으면: 시작 화면
-  if (!latestApplication) {
+  const supabase = createSupabaseAdminClient();
+
+  const [{ data: vendor }, { data: latestApplication }, { data: booths }] =
+    await Promise.all([
+      supabase
+        .from("vendors")
+        .select("user_id,verify_status,company_name,tier,approved_at,created_at")
+        .eq("user_id", userId)
+        .maybeSingle(),
+
+      supabase
+        .from("vendor_applications_v2")
+        .select("id,application_id,user_id,status,admin_note,created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+
+      supabase
+        .from("booths")
+        .select("booth_id,vendor_user_id,status,is_public,is_active,is_published,created_at")
+        .eq("vendor_user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1),
+    ]);
+
+  const vendorRow = (vendor ?? null) as VendorRow | null;
+  const applicationRow = (latestApplication ?? null) as VendorApplicationRow | null;
+  const boothRows = (booths ?? []) as BoothRow[];
+  const boothRow = boothRows.length > 0 ? boothRows[0] : null;
+
+  const vendorStatus = safe(vendorRow?.verify_status, "").toLowerCase();
+  const applicationStatus = safe(applicationRow?.status, "").toLowerCase();
+  const boothId = safe(boothRow?.booth_id, "");
+
+  console.log("[vendor/page] userId =", userId);
+  console.log("[vendor/page] vendorRow =", vendorRow);
+  console.log("[vendor/page] applicationRow =", applicationRow);
+  console.log("[vendor/page] boothCount =", boothRows.length);
+  console.log("[vendor/page] boothRow =", boothRow);
+
+  // 1) 부스가 있으면 기존 업체로 판단 → 바로 운영 페이지
+  if (boothId) {
+    redirect("/vendor/manage");
+  }
+
+  // 2) vendors 승인 상태인데 부스만 아직 없으면 대기 페이지
+  if (vendorStatus === "approved") {
+    redirect("/vendor/waiting");
+  }
+
+  // 3) 신청 기록이 전혀 없으면: 신규 업체 시작 화면
+  if (!applicationRow) {
     return (
       <main style={S.page}>
         <div style={S.card}>
           <div style={S.kicker}>VENDOR HOME</div>
           <h1 style={S.title}>업체 홈</h1>
           <p style={S.desc}>
-            업체 계정은 생성되었습니다. 이제 입점 신청을 하시면 관리자 검토 후 부스 운영이 열립니다.
+            업체 계정은 생성되었습니다. 이제 입점 신청을 하시면 관리자 검토 후
+            부스 운영이 열립니다.
           </p>
 
           <div style={S.buttonRow}>
@@ -65,17 +129,21 @@ export default async function VendorHome() {
     );
   }
 
-  const applicationStatus = latestApplication.status || "pending";
-
-  // 3) 검토 중
-  if (applicationStatus === "pending") {
+  // 4) 검토 중
+  if (
+    applicationStatus === "pending" ||
+    applicationStatus === "submitted" ||
+    applicationStatus === "review" ||
+    applicationStatus === "under_review"
+  ) {
     return (
       <main style={S.page}>
         <div style={S.card}>
           <div style={S.kicker}>VENDOR HOME</div>
           <h1 style={S.title}>입점 검토 중</h1>
           <p style={S.desc}>
-            입점 신청이 접수되어 현재 관리자 검토 중입니다. 승인 후 부스 운영이 열립니다.
+            입점 신청이 접수되어 현재 관리자 검토 중입니다. 승인 후 부스 운영이
+            열립니다.
           </p>
 
           <div style={S.statusBox}>
@@ -84,8 +152,11 @@ export default async function VendorHome() {
           </div>
 
           <div style={S.buttonRow}>
+            <Link href="/vendor/application-status" style={S.secondaryBtn}>
+              신청 상태 보기
+            </Link>
             <Link href="/vendor/apply" style={S.secondaryBtn}>
-              신청 내용 다시 보기
+              신청 내용 보기
             </Link>
           </div>
         </div>
@@ -93,26 +164,31 @@ export default async function VendorHome() {
     );
   }
 
-  // 4) 반려됨
-  if (applicationStatus === "rejected") {
+  // 5) 반려 / 보완 요청
+  if (
+    applicationStatus === "rejected" ||
+    applicationStatus === "revision_requested" ||
+    applicationStatus === "needs_revision"
+  ) {
     return (
       <main style={S.page}>
         <div style={S.card}>
           <div style={S.kicker}>VENDOR HOME</div>
-          <h1 style={S.title}>입점 반려</h1>
+          <h1 style={S.title}>입점 보완 필요</h1>
           <p style={S.desc}>
-            입점 신청이 반려되었습니다. 내용을 보완한 뒤 다시 신청해 주세요.
+            입점 신청이 반려되었거나 보완 요청 상태입니다. 내용을 수정한 뒤 다시
+            신청해 주세요.
           </p>
 
           <div style={S.statusBox}>
             <div style={S.statusLabel}>현재 상태</div>
-            <div style={S.statusValueRejected}>반려</div>
+            <div style={S.statusValueRejected}>보완 필요</div>
           </div>
 
-          {latestApplication.admin_note ? (
+          {safe(applicationRow?.admin_note, "") ? (
             <div style={S.noteBox}>
               <div style={S.noteTitle}>관리자 메모</div>
-              <div style={S.noteText}>{latestApplication.admin_note}</div>
+              <div style={S.noteText}>{safe(applicationRow?.admin_note, "")}</div>
             </div>
           ) : null}
 
@@ -126,7 +202,7 @@ export default async function VendorHome() {
     );
   }
 
-  // 5) 신청서는 approved인데 vendor.status 반영이 늦은 경우 대비
+  // 6) 신청서는 approved인데 booth 생성 전
   if (applicationStatus === "approved") {
     return (
       <main style={S.page}>
@@ -134,7 +210,8 @@ export default async function VendorHome() {
           <div style={S.kicker}>VENDOR HOME</div>
           <h1 style={S.title}>승인 완료</h1>
           <p style={S.desc}>
-            입점 승인이 완료되었습니다. 부스와 상품 운영 화면으로 이동하실 수 있습니다.
+            입점 승인이 완료되었습니다. 현재 부스 개설 또는 연결 작업을 준비
+            중입니다.
           </p>
 
           <div style={S.statusBox}>
@@ -143,11 +220,8 @@ export default async function VendorHome() {
           </div>
 
           <div style={S.buttonRow}>
-            <Link href="/vendor/dashboard" style={S.primaryBtn}>
-              대시보드로 이동 →
-            </Link>
-            <Link href="/vendor/booth" style={S.secondaryBtn}>
-              부스 관리
+            <Link href="/vendor/waiting" style={S.primaryBtn}>
+              준비 상태 보기 →
             </Link>
           </div>
         </div>
@@ -155,17 +229,20 @@ export default async function VendorHome() {
     );
   }
 
-  // 예외 상황 fallback
+  // 7) 예외 fallback
   return (
     <main style={S.page}>
       <div style={S.card}>
         <div style={S.kicker}>VENDOR HOME</div>
         <h1 style={S.title}>업체 홈</h1>
         <p style={S.desc}>
-          현재 상태를 불러오는 중입니다. 문제가 계속되면 다시 로그인해 주세요.
+          현재 상태를 확인하는 중입니다. 문제가 계속되면 다시 로그인해 주세요.
         </p>
 
         <div style={S.buttonRow}>
+          <Link href="/vendor/application-status" style={S.secondaryBtn}>
+            신청 상태 보기
+          </Link>
           <Link href="/vendor/apply" style={S.secondaryBtn}>
             입점 신청 페이지
           </Link>

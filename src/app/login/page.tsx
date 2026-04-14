@@ -7,7 +7,7 @@ export default function LoginIndexPage() {
     <main style={S.page}>
       <div style={S.wrap}>
         <header style={S.header}>
-          <Link href="/" style={S.brand}>
+          <Link href="/expo" style={S.brand}>
             <div style={S.brandLogo}>K</div>
             <div>
               <div style={S.brandTitle}>K-Agri Expo</div>
@@ -24,10 +24,9 @@ export default function LoginIndexPage() {
 
         <section style={S.hero}>
           <div style={S.kicker}>ENTRY</div>
-          <h1 style={S.title}>역할에 맞게 바로 시작하세요</h1>
+          <h1 style={S.title}>원하는 역할을 선택해 시작하세요</h1>
           <p style={S.desc}>
-            농민은 이름과 전화번호로 바로 입장하고,
-            참가기업은 부스를 운영하며,
+            농민은 바로 입장하고, 참가기업은 부스와 특가를 운영하며,
             바이어는 참가 기업을 탐색하고 상담을 진행합니다.
           </p>
         </section>
@@ -63,18 +62,20 @@ export default function LoginIndexPage() {
               <div style={S.cardLabel}>VENDOR</div>
               <div style={S.cardTitle}>참가기업</div>
               <div style={S.cardDesc}>
-                부스 운영 · 제품 등록 · 특가 등록 · 콘텐츠 업로드
+                부스 운영 · 제품 등록 · 특가 등록 · 자료 업로드 · 신청 상태 확인
               </div>
             </div>
 
             <div style={S.cardBottom}>
-              <div style={S.cardFeature}>엑스포 안에서 직접 홍보하고 판매</div>
+              <div style={S.cardFeature}>
+                로그인 후 업체 대시보드에서 부스와 운영 정보를 관리합니다.
+              </div>
               <div style={S.actionRow}>
                 <Link href="/login/vendor" style={S.primaryBtnBlue}>
-                  로그인
+                  업체 로그인
                 </Link>
-                <Link href="/signup/vendor" style={S.secondaryBtnWhite}>
-                  회원가입
+                <Link href="/vendor/apply" style={S.secondaryBtnWhite}>
+                  입점 신청
                 </Link>
               </div>
             </div>
@@ -92,13 +93,15 @@ export default function LoginIndexPage() {
             </div>
 
             <div style={S.cardBottom}>
-              <div style={S.cardFeature}>원하는 기업과 빠르게 연결</div>
+              <div style={S.cardFeature}>
+                원하는 기업과 빠르게 연결하고 상담 흐름을 시작합니다.
+              </div>
               <div style={S.actionRow}>
                 <Link href="/login/buyer" style={S.primaryBtnOrange}>
-                  로그인
+                  바이어 로그인
                 </Link>
                 <Link href="/register/buyer" style={S.secondaryBtnWhite}>
-                  회원가입
+                  바이어 등록
                 </Link>
               </div>
             </div>
@@ -108,8 +111,10 @@ export default function LoginIndexPage() {
         <section style={S.noteBox}>
           <div style={S.noteTitle}>안내</div>
           <div style={S.noteText}>
-            농민은 별도 로그인 없이 <strong>농민 입장</strong>으로 바로 들어가고,
-            바이어/기업/관리자는 각자 전용 로그인 화면을 사용합니다.
+            농민은 별도 로그인 없이 <strong>농민 입장</strong>으로 바로 들어갑니다.
+            참가기업은 <strong>업체 로그인</strong> 또는{" "}
+            <strong>입점 신청</strong>을 이용하고, 관리자는 상단 우측의{" "}
+            <strong>관리자 로그인</strong>을 사용합니다.
           </div>
         </section>
       </div>
@@ -209,7 +214,7 @@ const S: Record<string, React.CSSProperties> = {
     gap: 18,
   },
   card: {
-    minHeight: 360,
+    minHeight: 370,
     borderRadius: 30,
     padding: 28,
     textDecoration: "none",

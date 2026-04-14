@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type ExpoProblemCard = {
   id: string;
@@ -30,17 +30,23 @@ function sortCards(a: ExpoProblemCard, b: ExpoProblemCard) {
   if (a.is_featured !== b.is_featured) {
     return a.is_featured ? -1 : 1;
   }
+
   if (a.priority !== b.priority) {
     return a.priority - b.priority;
   }
+
   const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
   const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+
   return bTime - aTime;
 }
 
-export async function getMonthlyProblemCards(limit = 4): Promise<ExpoProblemCard[]> {
+export async function getMonthlyProblemCards(
+  limit = 4
+): Promise<ExpoProblemCard[]> {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
+
     const currentMonth = new Date().getMonth() + 1;
     const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 

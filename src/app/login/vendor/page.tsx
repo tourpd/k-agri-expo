@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -9,14 +9,14 @@ export const dynamic = "force-dynamic";
 
 export default function VendorLoginPage() {
   const router = useRouter();
-  const supabase = useMemo(() => supabaseBrowser(), []);
+  const supabase = supabaseBrowser();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setMsg("");
@@ -34,8 +34,10 @@ export default function VendorLoginPage() {
 
       router.replace("/vendor");
       router.refresh();
-    } catch (err: any) {
-      setMsg(`오류: ${err?.message ?? "unknown"}`);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.";
+      setMsg(`오류: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -46,6 +48,7 @@ export default function VendorLoginPage() {
       <div style={S.card}>
         <div style={S.kicker}>VENDOR LOGIN</div>
         <h1 style={S.title}>업체 로그인</h1>
+
         <p style={S.desc}>
           업체 이메일과 비밀번호로 로그인합니다.
           <br />
@@ -60,6 +63,7 @@ export default function VendorLoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="vendor@company.com"
             style={S.input}
+            autoComplete="email"
             required
           />
 
@@ -70,6 +74,7 @@ export default function VendorLoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호 입력"
             style={S.input}
+            autoComplete="current-password"
             required
           />
 
@@ -81,7 +86,9 @@ export default function VendorLoginPage() {
         {msg ? <div style={S.msg}>{msg}</div> : null}
 
         <div style={S.bottomRow}>
-         <Link href="/login/vendor/signup">업체 회원가입</Link>
+          <Link href="/login/vendor/signup" style={S.secondaryBtn}>
+            업체 회원가입
+          </Link>
 
           <Link href="/login" style={S.back}>
             ← 로그인 선택으로
@@ -166,9 +173,10 @@ const S = {
     marginTop: 16,
     padding: 12,
     borderRadius: 12,
-    background: "#f8fafc",
-    color: "#334155",
+    background: "#fef2f2",
+    color: "#b91c1c",
     lineHeight: 1.7,
+    whiteSpace: "pre-wrap" as const,
   },
   bottomRow: {
     marginTop: 18,
@@ -176,7 +184,7 @@ const S = {
     justifyContent: "space-between",
     alignItems: "center",
     gap: 12,
-    flexWrap: "wrap",
+    flexWrap: "wrap" as const,
   },
   back: {
     color: "#111",

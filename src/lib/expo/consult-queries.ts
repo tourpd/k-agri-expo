@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type ConsultQuestionPreset = {
   id: string;
@@ -8,7 +8,11 @@ export type ConsultQuestionPreset = {
   intent_key: string | null;
 };
 
-function monthInRange(month: number, startMonth: number | null, endMonth: number | null) {
+function monthInRange(
+  month: number,
+  startMonth: number | null,
+  endMonth: number | null
+) {
   if (!startMonth || !endMonth) return true;
 
   if (startMonth <= endMonth) {
@@ -18,41 +22,53 @@ function monthInRange(month: number, startMonth: number | null, endMonth: number
   return month >= startMonth || month <= endMonth;
 }
 
-export async function getMonthlyConsultQuestions(): Promise<ConsultQuestionPreset[]> {
-  const supabase = await createSupabaseServerClient();
-  const currentMonth = new Date().getMonth() + 1;
+export async function getMonthlyConsultQuestions(): Promise<
+  ConsultQuestionPreset[]
+> {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const currentMonth = new Date().getMonth() + 1;
 
-  const { data, error } = await supabase
-    .from("consult_question_presets")
-    .select(`
-      id,
-      question_text,
-      crop_key,
-      symptom_key,
-      intent_key,
-      start_month,
-      end_month,
-      priority,
-      is_active
-    `)
-    .eq("is_active", true)
-    .order("priority", { ascending: true });
+    const { data, error } = await supabase
+      .from("consult_question_presets")
+      .select(`
+        id,
+        question_text,
+        crop_key,
+        symptom_key,
+        intent_key,
+        start_month,
+        end_month,
+        priority,
+        is_active
+      `)
+      .eq("is_active", true)
+      .order("priority", { ascending: true });
 
-  if (error || !data) {
+    if (error || !data) {
+      console.error("[getMonthlyConsultQuestions] supabase error:", error);
+      return [];
+    }
+
+    return data
+      .filter((row: any) =>
+        monthInRange(
+          currentMonth,
+          row.start_month ?? null,
+          row.end_month ?? null
+        )
+      )
+      .slice(0, 6)
+      .map((row: any) => ({
+        id: String(row.id),
+        question_text: String(row.question_text ?? "").trim(),
+        crop_key: row.crop_key ?? null,
+        symptom_key: row.symptom_key ?? null,
+        intent_key: row.intent_key ?? null,
+      }))
+      .filter((row) => row.question_text);
+  } catch (error) {
+    console.error("[getMonthlyConsultQuestions] unexpected error:", error);
     return [];
   }
-
-  return data
-    .filter((row: any) =>
-      monthInRange(currentMonth, row.start_month ?? null, row.end_month ?? null)
-    )
-    .slice(0, 6)
-    .map((row: any) => ({
-      id: String(row.id),
-      question_text: String(row.question_text ?? "").trim(),
-      crop_key: row.crop_key ?? null,
-      symptom_key: row.symptom_key ?? null,
-      intent_key: row.intent_key ?? null,
-    }))
-    .filter((row) => row.question_text);
 }

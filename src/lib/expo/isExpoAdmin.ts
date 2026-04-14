@@ -1,19 +1,16 @@
-// src/lib/expo/isExpoAdmin.ts
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, isAdminEmail } from "@/lib/supabase/server";
 
 export async function isExpoAdmin(): Promise<boolean> {
   const supabase = await createSupabaseServerClient();
-  const { data: userRes, error: userErr } = await supabase.auth.getUser();
-  const userId = userRes?.user?.id ?? null;
 
-  if (userErr || !userId) return false;
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from("expo_admins")
-    .select("user_id")
-    .eq("user_id", userId)
-    .maybeSingle();
+  if (error || !user?.email) {
+    return false;
+  }
 
-  if (error) return false;
-  return !!data;
+  return isAdminEmail(user.email);
 }

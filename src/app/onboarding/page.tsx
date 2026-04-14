@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 type Role = "farmer" | "buyer" | "vendor" | "media" | "general";
@@ -47,56 +47,84 @@ function toggle(arr: string[], v: string) {
 }
 
 export default function OnboardingPage() {
-  const supabase = useMemo(() => supabaseBrowser(), []);
+  const supabase = supabaseBrowser();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
-  const [userId, setUserId] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
 
   const [role, setRole] = useState<Role>("farmer");
   const [interestTags, setInterestTags] = useState<string[]>([]);
   const [crops, setCrops] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [region, setRegion] = useState<string>("");
-  const [displayName, setDisplayName] = useState<string>("");
+  const [region, setRegion] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
+    async function bootstrap() {
       setLoading(true);
       setMsg("");
 
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
-      if (!user) {
-        window.location.href = "/login?force=1";
-        return;
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          window.location.href = "/login?force=1";
+          return;
+        }
+
+        if (cancelled) return;
+
+        setUserId(user.id);
+        setEmail(user.email ?? "");
+        setDisplayName((user.email?.split("@")[0] ?? "guest").slice(0, 30));
+
+        const { data: prof, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        if (prof) {
+          if (prof.role === "vendor") {
+            window.location.href = "/vendor";
+            return;
+          }
+
+          if (prof.role === "buyer") {
+            window.location.href = "/buyer";
+            return;
+          }
+
+          window.location.href = "/";
+          return;
+        }
+      } catch (e) {
+        if (!cancelled) {
+          const message =
+            e instanceof Error ? e.message : "알 수 없는 오류가 발생했습니다.";
+          setMsg(`불러오기 실패: ${message}`);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
+    }
 
-      if (cancelled) return;
-
-      setUserId(user.id);
-      setEmail(user.email ?? "");
-      setDisplayName((user.email?.split("@")[0] ?? "guest").slice(0, 30));
-
-      // 이미 profiles 있으면 vendor로
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (prof) {
-        window.location.href = "/vendor";
-        return;
-      }
-
-      setLoading(false);
-    })();
+    bootstrap();
 
     return () => {
       cancelled = true;
@@ -104,6 +132,11 @@ export default function OnboardingPage() {
   }, [supabase]);
 
   async function save() {
+    if (!userId) {
+      setMsg("로그인 정보가 없습니다. 다시 로그인해 주세요.");
+      return;
+    }
+
     setSaving(true);
     setMsg("");
 
@@ -120,14 +153,24 @@ export default function OnboardingPage() {
       };
 
       const { error } = await supabase.from("profiles").insert(payload);
+
       if (error) throw error;
 
-      // 역할별 첫 랜딩
-      if (role === "vendor") window.location.href = "/vendor";
-      else window.location.href = "/";
-    } catch (e: any) {
-      console.error(e);
-      setMsg(`저장 실패: ${e?.message ?? "알 수 없는 오류"}`);
+      if (role === "vendor") {
+        window.location.href = "/vendor";
+        return;
+      }
+
+      if (role === "buyer") {
+        window.location.href = "/buyer";
+        return;
+      }
+
+      window.location.href = "/";
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "알 수 없는 오류가 발생했습니다.";
+      setMsg(`저장 실패: ${message}`);
     } finally {
       setSaving(false);
     }
@@ -149,7 +192,15 @@ export default function OnboardingPage() {
       </p>
 
       {msg && (
-        <div style={{ marginTop: 12, border: "1px solid #111", padding: 12, borderRadius: 12, background: "#fafafa" }}>
+        <div
+          style={{
+            marginTop: 12,
+            border: "1px solid #111",
+            padding: 12,
+            borderRadius: 12,
+            background: "#fafafa",
+          }}
+        >
           {msg}
         </div>
       )}
@@ -172,7 +223,9 @@ export default function OnboardingPage() {
               />
               <div>
                 <div style={{ fontWeight: 900 }}>{r.label}</div>
-                <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>{r.desc}</div>
+                <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>
+                  {r.desc}
+                </div>
               </div>
             </label>
           ))}
@@ -229,7 +282,13 @@ export default function OnboardingPage() {
 
       <section style={card()}>
         <h2 style={h2()}>명찰(표식) 정보</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 12,
+          }}
+        >
           <div>
             <div style={label()}>표시 이름(명찰)</div>
             <input

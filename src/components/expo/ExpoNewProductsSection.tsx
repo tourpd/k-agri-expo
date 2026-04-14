@@ -1,181 +1,185 @@
 import React from "react";
-import Link from "next/link";
-import ActionLink from "@/components/expo/ActionLink";
-import type { HomeSlot } from "@/types/expo-home";
-import { isExternalLink, resolveLink, safeText } from "@/lib/expo/home-utils";
+
+type ExpoNewProductItem = {
+  id?: string;
+  title?: string | null;
+  subtitle?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
+  badge?: string | null;
+  meta_1?: string | null;
+  meta_2?: string | null;
+  slot_type?: string | null;
+  section_key?: string | null;
+};
+
+function normalizeString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function pickBadge(item: ExpoNewProductItem) {
+  const badge = normalizeString(item.badge);
+  if (badge) return badge;
+
+  const slotType = normalizeString(item.slot_type);
+  const sectionKey = normalizeString(item.section_key);
+
+  if (slotType === "featured" || sectionKey === "featured") {
+    return "이달의 신제품";
+  }
+
+  return "NEW";
+}
+
+function pickDescription(item: ExpoNewProductItem) {
+  return (
+    normalizeString(item.description) ||
+    normalizeString(item.subtitle) ||
+    "새롭게 등록된 업체와 제품을 확인해보세요."
+  );
+}
+
+function pickHref(item: ExpoNewProductItem) {
+  return normalizeString(item.link_url) || "#";
+}
+
+function CardInner({ item }: { item: ExpoNewProductItem }) {
+  const badge = pickBadge(item);
+  const title = normalizeString(item.title) || "신규 입점 업체";
+  const desc = pickDescription(item);
+  const meta1 = normalizeString(item.meta_1);
+  const meta2 = normalizeString(item.meta_2);
+  const imageUrl = normalizeString(item.image_url);
+
+  return (
+    <div className="expo-new-card h-full rounded-[28px] border border-neutral-200 bg-white p-5 shadow-sm transition hover:-translate-y-[2px] hover:shadow-md">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <span
+          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+            badge === "이달의 신제품"
+              ? "bg-emerald-100 text-emerald-800"
+              : "bg-neutral-100 text-neutral-700"
+          }`}
+        >
+          {badge}
+        </span>
+      </div>
+
+      {imageUrl ? (
+        <div className="mb-4 overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50">
+          <img
+            src={imageUrl}
+            alt={title}
+            className="h-48 w-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="mb-4 flex h-48 items-center justify-center rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 text-sm text-neutral-400">
+          이미지 준비중
+        </div>
+      )}
+
+      <div className="text-lg font-bold text-neutral-900">{title}</div>
+
+      <p className="mt-3 min-h-[72px] text-sm leading-6 text-neutral-600">
+        {desc}
+      </p>
+
+      {(meta1 || meta2) && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {meta1 && (
+            <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">
+              {meta1}
+            </span>
+          )}
+          {meta2 && (
+            <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700">
+              {meta2}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="mt-5">
+        <span className="inline-flex items-center text-sm font-semibold text-neutral-900">
+          자세히 보기
+          <span className="ml-1">→</span>
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function ExpoNewProductsSection({
   items,
 }: {
-  items: HomeSlot[];
+  items?: ExpoNewProductItem[];
 }) {
+  const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
+
+  if (safeItems.length === 0) {
+    return (
+      <section className="expo-section" style={{ padding: "18px 20px 0" }}>
+        <div className="rounded-[32px] border border-neutral-200 bg-white p-6 shadow-sm">
+          <div className="expo-section-head mb-5 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
+                신규 입점 / 신제품
+              </h2>
+              <p className="mt-2 text-sm text-neutral-500">
+                새롭게 입점한 업체와 주목할 신제품을 곧 만나보실 수 있습니다.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
+            현재 노출할 신규 입점 또는 신제품 항목이 없습니다.
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id="new-products" style={S.sectionWrap} className="expo-section">
-      <div style={S.sectionHead} className="expo-section-head">
-        <div>
-          <div style={S.sectionEyebrow}>NEW PRODUCTS SPOTLIGHT</div>
-          <h2 style={S.sectionTitle}>⭐ 이달의 신제품</h2>
-          <div style={S.sectionDesc}>
-            메인에서는 과한 판매보다 박람회다운 신제품 소개 중심으로 노출합니다.
+    <section className="expo-section" style={{ padding: "18px 20px 0" }}>
+      <div className="rounded-[32px] border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="expo-section-head mb-5 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
+              신규 입점 / 이달의 신제품
+            </h2>
+            <p className="mt-2 text-sm text-neutral-500">
+              새롭게 입점한 업체와 지금 주목할 제품을 빠르게 확인해보세요.
+            </p>
           </div>
         </div>
 
-        <Link href="/expo/hall/new-products" style={S.moreLink}>
-          전체 보기 →
-        </Link>
-      </div>
+        <div className="expo-new-grid grid grid-cols-3 gap-4">
+          {safeItems.map((item, index) => {
+            const href = pickHref(item);
+            const key = item.id || `${item.title || "item"}-${index}`;
 
-      <div style={S.newProductsGrid} className="expo-new-grid">
-        {items.length === 0 ? (
-          <>
-            <div style={S.newProductCard} className="expo-new-card">
-              <div style={S.newProductBadge}>NEW</div>
-              <div style={S.newProductTitle}>싹쓰리충 골드</div>
-              <div style={S.newProductDesc}>친환경 해충 방제 솔루션</div>
-              <Link href="/expo/hall/new-products" style={S.newProductBtn}>
-                자세히 보기 →
-              </Link>
-            </div>
-
-            <div style={S.newProductCard} className="expo-new-card">
-              <div style={S.newProductBadge}>NEW</div>
-              <div style={S.newProductTitle}>메가파워칼</div>
-              <div style={S.newProductDesc}>비대기 집중 관리용 고칼륨 자재</div>
-              <Link href="/expo/hall/new-products" style={S.newProductBtn}>
-                자세히 보기 →
-              </Link>
-            </div>
-
-            <div style={S.newProductCard} className="expo-new-card">
-              <div style={S.newProductBadge}>NEW</div>
-              <div style={S.newProductTitle}>신형 농업 장비</div>
-              <div style={S.newProductDesc}>현장 효율을 높이는 신규 전시 품목</div>
-              <Link href="/expo/hall/new-products" style={S.newProductBtn}>
-                자세히 보기 →
-              </Link>
-            </div>
-          </>
-        ) : (
-          items.map((item) => {
-            const href = resolveLink(item.link_type, item.link_value);
-            const external = isExternalLink(item.link_type, item.link_value);
+            if (href && href !== "#") {
+              return (
+                <a
+                  key={key}
+                  href={href}
+                  className="block h-full"
+                >
+                  <CardInner item={item} />
+                </a>
+              );
+            }
 
             return (
-              <ActionLink
-                key={item.id}
-                href={href}
-                external={external}
-                style={S.newProductCard}
-              >
-                <div style={S.newProductBadge}>
-                  {safeText(item.badge_text, "NEW")}
-                </div>
-
-                <div style={S.newProductTitle}>
-                  {safeText(item.title, "이달의 신제품")}
-                </div>
-
-                <div style={S.newProductDesc}>
-                  {safeText(
-                    item.description || item.subtitle,
-                    "신제품 설명이 아직 등록되지 않았습니다."
-                  )}
-                </div>
-
-                <div style={S.newProductBtn}>
-                  {safeText(item.button_text, "자세히 보기")} →
-                </div>
-              </ActionLink>
+              <div key={key} className="h-full">
+                <CardInner item={item} />
+              </div>
             );
-          })
-        )}
+          })}
+        </div>
       </div>
     </section>
   );
 }
-
-const S: Record<string, React.CSSProperties> = {
-  sectionWrap: {
-    maxWidth: 1440,
-    margin: "0 auto",
-    padding: "28px 24px 0",
-  },
-  sectionHead: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 16,
-    alignItems: "flex-end",
-    flexWrap: "wrap",
-    marginBottom: 16,
-  },
-  sectionEyebrow: {
-    fontSize: 12,
-    fontWeight: 950,
-    color: "#16a34a",
-    letterSpacing: 0.4,
-  },
-  sectionTitle: {
-    margin: "8px 0 0",
-    fontSize: "clamp(26px, 5vw, 34px)",
-    lineHeight: 1.1,
-    fontWeight: 950,
-    letterSpacing: -0.8,
-  },
-  sectionDesc: {
-    marginTop: 10,
-    fontSize: 15,
-    color: "#64748b",
-    lineHeight: 1.8,
-  },
-  moreLink: {
-    textDecoration: "none",
-    color: "#0f172a",
-    fontWeight: 900,
-    fontSize: 14,
-  },
-  newProductsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 16,
-  },
-  newProductCard: {
-    textDecoration: "none",
-    color: "#0f172a",
-    borderRadius: 28,
-    padding: 22,
-    background: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%)",
-    border: "1px solid #fdba74",
-    boxShadow: "0 14px 34px rgba(15,23,42,0.06)",
-    display: "block",
-  },
-  newProductBadge: {
-    display: "inline-block",
-    padding: "7px 10px",
-    borderRadius: 999,
-    background: "#fff",
-    fontSize: 11,
-    fontWeight: 950,
-    color: "#c2410c",
-  },
-  newProductTitle: {
-    marginTop: 18,
-    fontSize: "clamp(20px, 4.6vw, 24px)",
-    lineHeight: 1.15,
-    fontWeight: 950,
-  },
-  newProductDesc: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#6b7280",
-    lineHeight: 1.8,
-    minHeight: 62,
-  },
-  newProductBtn: {
-    display: "inline-block",
-    marginTop: 16,
-    textDecoration: "none",
-    fontWeight: 950,
-    fontSize: 14,
-    color: "#c2410c",
-  },
-};

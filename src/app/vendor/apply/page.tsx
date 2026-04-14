@@ -13,6 +13,42 @@ type ProductCode =
   | "premium_1m"
   | "premium_3m";
 
+type PlacementPreference =
+  | "category_cluster"
+  | "problem_solution"
+  | "crop_focused"
+  | "new_product_first"
+  | "operator_recommended";
+
+type PromotionPreference =
+  | "standard"
+  | "new_product"
+  | "live_feature"
+  | "deal_focus"
+  | "kftv_pick";
+
+type HallCode =
+  | "agri_inputs"
+  | "machinery"
+  | "seeds_seedlings"
+  | "smart_farm"
+  | "eco_friendly"
+  | "future_insect";
+
+type CategoryCode =
+  | "fertilizer"
+  | "pesticide"
+  | "soil_conditioner"
+  | "seed"
+  | "seedling"
+  | "machinery"
+  | "facility"
+  | "smart_farm"
+  | "eco_friendly"
+  | "insect_food"
+  | "insect_bio"
+  | "other";
+
 type FormState = {
   company_name: string;
   representative_name: string;
@@ -32,6 +68,12 @@ type FormState = {
   source_file_name: string;
   source_file_mime: string;
   source_extracted_json: Record<string, unknown> | null;
+
+  preferred_hall_1: HallCode | "";
+  preferred_hall_2: HallCode | "";
+  preferred_category: CategoryCode | "";
+  placement_preference: PlacementPreference;
+  promotion_preference: PromotionPreference;
 };
 
 const OPERATIONS = {
@@ -108,6 +150,94 @@ const PRICE_MAP: Record<
   },
 };
 
+const HALL_OPTIONS: { value: HallCode; label: string }[] = [
+  { value: "agri_inputs", label: "농자재관" },
+  { value: "machinery", label: "농기계관" },
+  { value: "seeds_seedlings", label: "종자·묘종관" },
+  { value: "smart_farm", label: "스마트팜관" },
+  { value: "eco_friendly", label: "친환경관" },
+  { value: "future_insect", label: "미래 곤충관" },
+];
+
+const CATEGORY_OPTIONS: { value: CategoryCode; label: string }[] = [
+  { value: "fertilizer", label: "비료·영양제" },
+  { value: "pesticide", label: "병해충·방제자재" },
+  { value: "soil_conditioner", label: "토양개량·활력제" },
+  { value: "seed", label: "종자" },
+  { value: "seedling", label: "묘종" },
+  { value: "machinery", label: "농기계" },
+  { value: "facility", label: "시설·하우스 자재" },
+  { value: "smart_farm", label: "스마트농업·센서·AI" },
+  { value: "eco_friendly", label: "친환경·유기농자재" },
+  { value: "insect_food", label: "식용곤충·곤충소재 식품" },
+  { value: "insect_bio", label: "곤충기반 바이오소재" },
+  { value: "other", label: "기타" },
+];
+
+const PLACEMENT_OPTIONS: {
+  value: PlacementPreference;
+  title: string;
+  desc: string;
+}[] = [
+  {
+    value: "category_cluster",
+    title: "동종 카테고리 묶음",
+    desc: "비슷한 제품군 안에서 함께 비교 노출",
+  },
+  {
+    value: "problem_solution",
+    title: "문제해결형 노출",
+    desc: "병해충·비대·생육 문제 중심으로 연결 노출",
+  },
+  {
+    value: "crop_focused",
+    title: "작물별 집중 노출",
+    desc: "작물관 안에서 우선 노출",
+  },
+  {
+    value: "new_product_first",
+    title: "신제품 우선 노출",
+    desc: "신제품/신기술 중심으로 먼저 보이기",
+  },
+  {
+    value: "operator_recommended",
+    title: "운영팀 추천 배치",
+    desc: "운영 목적에 맞게 가장 적합한 위치에 배치",
+  },
+];
+
+const PROMOTION_OPTIONS: {
+  value: PromotionPreference;
+  title: string;
+  desc: string;
+}[] = [
+  {
+    value: "standard",
+    title: "기본 노출",
+    desc: "일반 부스 소개 중심",
+  },
+  {
+    value: "new_product",
+    title: "신제품 강조",
+    desc: "신제품/출시 소식 중심",
+  },
+  {
+    value: "live_feature",
+    title: "라이브 소개 희망",
+    desc: "라이브쇼 연계 노출 희망",
+  },
+  {
+    value: "deal_focus",
+    title: "특가 중심",
+    desc: "행사 특가·프로모션 강조",
+  },
+  {
+    value: "kftv_pick",
+    title: "한국농수산TV 추천관 희망",
+    desc: "콘텐츠 연계 강조 노출 희망",
+  },
+];
+
 function formatKrw(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
@@ -155,6 +285,26 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+function hallLabel(value: string) {
+  return HALL_OPTIONS.find((item) => item.value === value)?.label ?? value ?? "-";
+}
+
+function categoryLabel(value: string) {
+  return CATEGORY_OPTIONS.find((item) => item.value === value)?.label ?? value ?? "-";
+}
+
+function placementLabel(value: PlacementPreference) {
+  return (
+    PLACEMENT_OPTIONS.find((item) => item.value === value)?.title ?? value ?? "-"
+  );
+}
+
+function promotionLabel(value: PromotionPreference) {
+  return (
+    PROMOTION_OPTIONS.find((item) => item.value === value)?.title ?? value ?? "-"
+  );
+}
+
 export default function VendorApplyPage() {
   const router = useRouter();
 
@@ -164,6 +314,7 @@ export default function VendorApplyPage() {
 
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [licensePreviewUrl, setLicensePreviewUrl] = useState("");
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   const [isUploadingLicense, setIsUploadingLicense] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -192,6 +343,12 @@ export default function VendorApplyPage() {
     source_file_name: "",
     source_file_mime: "",
     source_extracted_json: null,
+
+    preferred_hall_1: "agri_inputs",
+    preferred_hall_2: "",
+    preferred_category: "fertilizer",
+    placement_preference: "category_cluster",
+    promotion_preference: "standard",
   });
 
   useEffect(() => {
@@ -218,7 +375,27 @@ export default function VendorApplyPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function resetBusinessLicenseUpload() {
+    setLicenseFile(null);
+    setBusinessLicenseBucket("");
+    setBusinessLicensePath("");
+    setUploadMessage("");
+    setSubmitMessage("");
+
+    updateForm("source_file_name", "");
+    updateForm("source_file_mime", "");
+    updateForm("source_extracted_json", null);
+
+    if (licensePreviewUrl) {
+      URL.revokeObjectURL(licensePreviewUrl);
+    }
+    setLicensePreviewUrl("");
+    setFileInputKey((prev) => prev + 1);
+  }
+
   function goNextFromStep1() {
+    setSubmitMessage("");
+
     if (!boothType) {
       alert("부스 유형을 먼저 선택해주세요.");
       return;
@@ -234,6 +411,8 @@ export default function VendorApplyPage() {
   }
 
   function goNextFromStep2() {
+    setSubmitMessage("");
+
     if (!boothType) {
       alert("부스 유형을 먼저 선택해주세요.");
       return;
@@ -255,6 +434,7 @@ export default function VendorApplyPage() {
 
     setIsUploadingLicense(true);
     setUploadMessage("");
+    setSubmitMessage("");
 
     try {
       const fd = new FormData();
@@ -268,7 +448,9 @@ export default function VendorApplyPage() {
       const json = await res.json();
 
       if (!res.ok || !json?.success) {
-        throw new Error(json?.error || "사업자등록증 업로드에 실패했습니다.");
+        throw new Error(
+          json?.detail || json?.error || "사업자등록증 업로드에 실패했습니다."
+        );
       }
 
       setBusinessLicenseBucket(json.bucket || "");
@@ -279,7 +461,9 @@ export default function VendorApplyPage() {
       setUploadMessage("사업자등록증 파일 업로드가 완료되었습니다.");
     } catch (error) {
       setUploadMessage(
-        error instanceof Error ? error.message : "사업자등록증 업로드에 실패했습니다."
+        error instanceof Error
+          ? error.message
+          : "사업자등록증 업로드에 실패했습니다."
       );
     } finally {
       setIsUploadingLicense(false);
@@ -287,6 +471,8 @@ export default function VendorApplyPage() {
   }
 
   function goNextFromStep3() {
+    setSubmitMessage("");
+
     if (!licenseFile) {
       alert("사업자등록증 이미지를 선택해주세요.");
       return;
@@ -323,6 +509,11 @@ export default function VendorApplyPage() {
       return;
     }
 
+    if (!form.biz_item.trim()) {
+      alert("종목은 필수입니다.");
+      return;
+    }
+
     if (!form.email.trim()) {
       alert("담당자 이메일은 필수입니다.");
       return;
@@ -333,9 +524,43 @@ export default function VendorApplyPage() {
       return;
     }
 
+    if (form.tax_email.trim() && !isValidEmail(form.tax_email)) {
+      alert("세금계산서 이메일 형식을 확인해주세요.");
+      return;
+    }
+
     const normalizedPhone = normalizePhoneForSubmit(form.phone);
     if (normalizedPhone.length < 10) {
       alert("담당자 연락처를 정확히 입력해주세요.");
+      return;
+    }
+
+    if (!form.preferred_hall_1) {
+      alert("희망 관 1순위를 선택해주세요.");
+      return;
+    }
+
+    if (!form.preferred_category) {
+      alert("희망 카테고리를 선택해주세요.");
+      return;
+    }
+
+    if (
+      form.preferred_hall_2 &&
+      form.preferred_hall_1 &&
+      form.preferred_hall_1 === form.preferred_hall_2
+    ) {
+      alert("희망 관 1순위와 2순위는 다르게 선택해주세요.");
+      return;
+    }
+
+    if (!form.placement_preference) {
+      alert("희망 노출 구조를 선택해주세요.");
+      return;
+    }
+
+    if (!form.promotion_preference) {
+      alert("홍보 선호 방식을 선택해주세요.");
       return;
     }
 
@@ -359,29 +584,63 @@ export default function VendorApplyPage() {
     try {
       const normalizedPhone = normalizePhoneForSubmit(form.phone);
 
+      const normalizedTaxEmail = form.tax_email.trim() || form.email.trim();
+
+      const normalizedBizType = form.biz_type.trim() || "기타";
+
+      const normalizedBizItem =
+        form.biz_item.trim() ||
+        normalizedBizType ||
+        form.category_primary.trim() ||
+        form.preferred_category ||
+        "기타";
+
+      const normalizedCategoryPrimary =
+        form.category_primary.trim() || form.preferred_category || "other";
+
+      const normalizedCompanyIntro =
+        form.company_intro.trim() || "회사 소개 미입력";
+
       const payload = {
         booth_type: boothType,
         duration_key: selectedPlan.duration_key,
         duration_months: selectedPlan.duration_months,
         amount_krw: selectedPlan.amount_krw,
         product_code: productCode,
+        plan_code: productCode,
 
         company_name: form.company_name.trim(),
         representative_name: form.representative_name.trim(),
+        ceo_name: form.representative_name.trim(),
+        contact_name: form.representative_name.trim(),
+
         email: form.email.trim(),
+        contact_email: form.email.trim(),
         phone: normalizedPhone,
-        tax_email: form.tax_email.trim(),
+        contact_phone: normalizedPhone,
+        tax_email: normalizedTaxEmail,
+
         business_number: normalizeBusinessNoForSubmit(form.business_number),
         open_date: form.open_date.trim(),
         business_address: form.business_address.trim(),
-        biz_type: form.biz_type.trim(),
-        biz_item: form.biz_item.trim(),
 
-        category_primary: form.category_primary.trim(),
-        company_intro: form.company_intro.trim(),
+        biz_type: normalizedBizType,
+        business_type: normalizedBizType,
+        biz_item: normalizedBizItem,
+        business_item: normalizedBizItem,
+
+        category_primary: normalizedCategoryPrimary,
+        company_intro: normalizedCompanyIntro,
+
         website_url: form.website_url.trim(),
         youtube_url: form.youtube_url.trim(),
         brochure_url: form.brochure_url.trim(),
+
+        preferred_hall_1: form.preferred_hall_1,
+        preferred_hall_2: form.preferred_hall_2 || null,
+        preferred_category: form.preferred_category,
+        placement_preference: form.placement_preference,
+        promotion_preference: form.promotion_preference,
 
         source_file_name: form.source_file_name,
         source_file_mime: form.source_file_mime,
@@ -401,16 +660,38 @@ export default function VendorApplyPage() {
 
       const json = await res.json();
 
-      if (!res.ok || !json?.success) {
-        throw new Error(json?.error || "입점 신청 저장 중 오류가 발생했습니다.");
+      if (!res.ok || !(json?.success || json?.ok)) {
+        throw new Error(
+          json?.detail ||
+            json?.error ||
+            "입점 신청 저장 중 오류가 발생했습니다."
+        );
       }
 
+      const applicationId =
+        json.application_id ??
+        json.application?.application_id ??
+        json.application?.id ??
+        "";
+
+      const applicationCode =
+        json.application_code ??
+        json.application?.application_code ??
+        json.application?.order_code ??
+        json.order_code ??
+        "";
+
+      const companyName =
+        json.company_name ??
+        json.application?.company_name ??
+        form.company_name.trim();
+
       const params = new URLSearchParams({
-        application_id: String(json.application_id || ""),
-        application_code: String(json.application_code || ""),
-        company_name: String(json.company_name || form.company_name.trim() || ""),
+        application_id: String(applicationId),
+        application_code: String(applicationCode),
+        company_name: String(companyName),
         booth_type: String(boothType || ""),
-        duration_key: String(durationKey || ""),
+        duration_key: String(selectedPlan.duration_key || durationKey || ""),
         amount_krw: String(json.amount_krw ?? selectedPlan.amount_krw ?? 0),
         phone: normalizedPhone,
       });
@@ -491,9 +772,13 @@ export default function VendorApplyPage() {
                   key={type}
                   type="button"
                   onClick={() => {
+                    setSubmitMessage("");
                     setBoothType(type);
-                    if (type === "free") setDurationKey("1m");
-                    else if (!durationKey) setDurationKey("1m");
+                    if (type === "free") {
+                      setDurationKey("1m");
+                    } else if (!durationKey) {
+                      setDurationKey("1m");
+                    }
                   }}
                   className={`rounded-3xl border p-6 text-left transition ${
                     selected
@@ -540,7 +825,10 @@ export default function VendorApplyPage() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setDurationKey(key)}
+                  onClick={() => {
+                    setSubmitMessage("");
+                    setDurationKey(key);
+                  }}
                   className={`rounded-3xl border p-6 text-left transition ${
                     selected
                       ? "border-black bg-black text-white"
@@ -584,16 +872,44 @@ export default function VendorApplyPage() {
             3. 사업자등록증 업로드 및 사업자정보 입력
           </h2>
 
+          <div className="rounded-3xl border border-blue-200 bg-blue-50 p-5 text-sm leading-7 text-blue-900">
+            <div className="font-bold">입점 신청 안내</div>
+            <div className="mt-2">
+              1. 사업자등록증 전체가 잘 보이도록 정면에서 촬영하거나 스캔본을 올려주세요.
+            </div>
+            <div>2. 글자가 흐리거나 빛반사가 심한 이미지는 다시 업로드해 주세요.</div>
+            <div>3. JPG, PNG, WEBP 이미지 파일 업로드를 권장합니다.</div>
+            <div>4. 잘못 올렸으면 아래에서 다시 선택 후 재업로드하면 됩니다.</div>
+            <div>5. 파일 업로드 후 아래 회사 정보는 직접 다시 확인해 주세요.</div>
+          </div>
+
           <div className="rounded-3xl border border-neutral-200 p-6">
             <label className="mb-3 block text-sm font-medium">
               사업자등록증 파일 *
             </label>
 
             <input
+              key={fileInputKey}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={(e) => {
                 const nextFile = e.target.files?.[0] || null;
+
+                if (!nextFile) return;
+
+                if (!nextFile.type.startsWith("image/")) {
+                  alert("이미지 파일만 업로드할 수 있습니다.");
+                  e.currentTarget.value = "";
+                  return;
+                }
+
+                if (nextFile.size > 10 * 1024 * 1024) {
+                  alert("파일 용량은 10MB 이하만 업로드해 주세요.");
+                  e.currentTarget.value = "";
+                  return;
+                }
+
+                setSubmitMessage("");
                 setLicenseFile(nextFile);
                 setBusinessLicenseBucket("");
                 setBusinessLicensePath("");
@@ -604,18 +920,16 @@ export default function VendorApplyPage() {
                   setLicensePreviewUrl("");
                 }
 
-                if (nextFile) {
-                  updateForm("source_file_name", nextFile.name);
-                  updateForm("source_file_mime", nextFile.type || "");
-                  updateForm("source_extracted_json", null);
-                  setLicensePreviewUrl(URL.createObjectURL(nextFile));
-                }
+                updateForm("source_file_name", nextFile.name);
+                updateForm("source_file_mime", nextFile.type || "");
+                updateForm("source_extracted_json", null);
+                setLicensePreviewUrl(URL.createObjectURL(nextFile));
               }}
               className="block w-full rounded-xl border border-neutral-300 p-3"
             />
 
             <div className="mt-2 text-sm text-neutral-500">
-              사업자등록증은 자동인식하지 않고 증빙용으로 보관합니다. 아래 핵심 정보는 직접 입력해주세요.
+              사업자등록증은 증빙용으로 업로드됩니다. 핵심 정보는 아래에 직접 입력해주세요.
             </div>
 
             <div className="mt-4 flex flex-wrap gap-3">
@@ -630,6 +944,14 @@ export default function VendorApplyPage() {
                   : "사업자등록증 업로드"}
               </button>
 
+              <button
+                type="button"
+                onClick={resetBusinessLicenseUpload}
+                className="rounded-2xl border border-neutral-300 px-5 py-3"
+              >
+                업로드 취소 / 다시 선택
+              </button>
+
               {licenseFile && (
                 <div className="self-center text-sm text-neutral-600">
                   선택 파일: {licenseFile.name}
@@ -640,6 +962,14 @@ export default function VendorApplyPage() {
             {uploadMessage && (
               <div className="mt-4 rounded-2xl bg-neutral-100 p-4 text-sm whitespace-pre-wrap">
                 {uploadMessage}
+              </div>
+            )}
+
+            {(businessLicenseBucket || businessLicensePath) && (
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-7 text-emerald-800">
+                업로드 완료되었습니다.
+                <br />
+                다른 사업자등록증으로 바꾸려면 “업로드 취소 / 다시 선택” 후 다시 업로드해 주세요.
               </div>
             )}
 
@@ -658,9 +988,9 @@ export default function VendorApplyPage() {
           </div>
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-900">
-            사업자등록증 이미지는 나중에 세금계산서 발행 및 운영 확인용으로
-            보관됩니다. 회사명, 대표자명, 사업자등록번호, 사업장 주소, 업태,
-            담당자 이메일, 연락처는 직접 정확하게 입력해주세요.
+            사업자등록증 이미지는 나중에 세금계산서 발행 및 운영 확인용으로 보관됩니다.
+            회사명, 대표자명, 사업자등록번호, 사업장 주소, 업태, 종목, 담당자 이메일,
+            연락처는 직접 정확하게 입력해주세요.
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -694,7 +1024,7 @@ export default function VendorApplyPage() {
               type="email"
               value={form.tax_email}
               onChange={(v) => updateForm("tax_email", v)}
-              placeholder="비어 있으면 담당자 이메일로 연락"
+              placeholder="비어 있으면 담당자 이메일이 자동 사용됩니다"
             />
             <InputField
               label="사업자등록번호 *"
@@ -712,13 +1042,13 @@ export default function VendorApplyPage() {
               label="업태 *"
               value={form.biz_type}
               onChange={(v) => updateForm("biz_type", v)}
-              placeholder="예: 정보통신업"
+              placeholder="예: 전자상거래"
             />
             <InputField
-              label="종목"
+              label="종목 *"
               value={form.biz_item}
               onChange={(v) => updateForm("biz_item", v)}
-              placeholder="예: 방송 프로그램 제작업"
+              placeholder="예: 농자재 판매 / 비료 유통 / 온라인 판매"
             />
             <InputField
               label="대표 카테고리"
@@ -726,6 +1056,86 @@ export default function VendorApplyPage() {
               onChange={(v) => updateForm("category_primary", v)}
               placeholder="예: 농자재 / 비료 / 농기계 / 종자"
             />
+          </div>
+
+          <div className="rounded-3xl border border-neutral-200 p-6">
+            <div className="mb-4">
+              <div className="text-lg font-semibold">
+                희망 관 / 카테고리 / 노출 선호
+              </div>
+              <div className="mt-1 text-sm text-neutral-500">
+                온라인 K-Agri Expo에서 어떤 방식으로 보여지길 원하는지 선택하는 항목입니다.
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <SelectField
+                label="희망 관 1순위 *"
+                value={form.preferred_hall_1}
+                onChange={(v) => {
+                  updateForm("preferred_hall_1", v as HallCode);
+                  if (v === form.preferred_hall_2) {
+                    updateForm("preferred_hall_2", "");
+                  }
+                }}
+                options={HALL_OPTIONS}
+              />
+
+              <SelectField
+                label="희망 관 2순위"
+                value={form.preferred_hall_2}
+                onChange={(v) => updateForm("preferred_hall_2", v as HallCode | "")}
+                options={[
+                  { value: "", label: "선택 안 함" },
+                  ...HALL_OPTIONS.filter(
+                    (item) => item.value !== form.preferred_hall_1
+                  ),
+                ]}
+              />
+
+              <SelectField
+                label="희망 카테고리 *"
+                value={form.preferred_category}
+                onChange={(v) =>
+                  updateForm("preferred_category", v as CategoryCode)
+                }
+                options={CATEGORY_OPTIONS}
+              />
+            </div>
+
+            <div className="mt-6">
+              <div className="mb-3 text-sm font-medium">희망 노출 구조 *</div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                {PLACEMENT_OPTIONS.map((item) => (
+                  <ChoiceCard
+                    key={item.value}
+                    selected={form.placement_preference === item.value}
+                    title={item.title}
+                    desc={item.desc}
+                    onClick={() =>
+                      updateForm("placement_preference", item.value)
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div className="mb-3 text-sm font-medium">홍보 선호 방식 *</div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                {PROMOTION_OPTIONS.map((item) => (
+                  <ChoiceCard
+                    key={item.value}
+                    selected={form.promotion_preference === item.value}
+                    title={item.title}
+                    desc={item.desc}
+                    onClick={() =>
+                      updateForm("promotion_preference", item.value)
+                    }
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
           <TextAreaField
@@ -741,7 +1151,7 @@ export default function VendorApplyPage() {
             value={form.company_intro}
             onChange={(v) => updateForm("company_intro", v)}
             rows={5}
-            placeholder="회사/브랜드/주력 제품 소개를 입력해주세요."
+            placeholder="비어 있으면 '회사 소개 미입력'으로 저장됩니다."
           />
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -807,18 +1217,34 @@ export default function VendorApplyPage() {
                 ["사업자등록번호", form.business_number || "-"],
                 ["개업연월일", form.open_date || "-"],
                 ["업태", form.biz_type || "-"],
-                ["종목", form.biz_item || "-"],
+                ["종목", form.biz_item || form.biz_type || "-"],
                 ["사업장 주소", form.business_address || "-"],
               ]}
             />
           </div>
 
           <SummaryCard
+            title="희망 배정 정보"
+            rows={[
+              ["희망 관 1순위", hallLabel(form.preferred_hall_1)],
+              [
+                "희망 관 2순위",
+                form.preferred_hall_2
+                  ? hallLabel(form.preferred_hall_2)
+                  : "선택 안 함",
+              ],
+              ["희망 카테고리", categoryLabel(form.preferred_category)],
+              ["희망 노출 구조", placementLabel(form.placement_preference)],
+              ["홍보 선호 방식", promotionLabel(form.promotion_preference)],
+            ]}
+          />
+
+          <SummaryCard
             title="담당자 / 운영 정보"
             rows={[
               ["담당자 이메일", form.email || "-"],
               ["담당자 연락처", form.phone || "-"],
-              ["세금계산서 이메일", form.tax_email || "-"],
+              ["세금계산서 이메일", form.tax_email || form.email || "-"],
               ["사업자등록증 파일", form.source_file_name || "-"],
               ["스토리지 버킷", businessLicenseBucket || "-"],
               ["스토리지 경로", businessLicensePath || "-"],
@@ -833,16 +1259,15 @@ export default function VendorApplyPage() {
               <>무료 체험 신청은 제출 후 운영 검토를 거쳐 진행됩니다.</>
             ) : (
               <>
-                유료 부스는 신청 제출 후 아래 계좌로 입금 확인이 되면 승인
-                절차가 진행됩니다.
+                유료 부스는 신청 제출 후 아래 계좌로 입금 확인이 되면 승인 절차가 진행됩니다.
                 <br />
-                <strong>기업은행 466-072683-04-011</strong>
+                <strong>{OPERATIONS.bankAccount}</strong>
               </>
             )}
           </div>
 
           {submitMessage && (
-            <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+            <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-700 whitespace-pre-wrap">
               {submitMessage}
             </div>
           )}
@@ -924,6 +1349,68 @@ function TextAreaField({
   );
 }
 
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <label className="block">
+      <div className="mb-2 text-sm font-medium">{label}</div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-2xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+      >
+        {options.map((option) => (
+          <option key={`${label}-${option.value}`} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ChoiceCard({
+  selected,
+  title,
+  desc,
+  onClick,
+}: {
+  selected: boolean;
+  title: string;
+  desc: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-2xl border p-4 text-left transition ${
+        selected
+          ? "border-black bg-black text-white"
+          : "border-neutral-200 bg-white hover:border-neutral-400"
+      }`}
+    >
+      <div className="text-sm font-semibold">{title}</div>
+      <div
+        className={`mt-1 text-xs ${
+          selected ? "text-neutral-200" : "text-neutral-500"
+        }`}
+      >
+        {desc}
+      </div>
+    </button>
+  );
+}
+
 function SummaryCard({
   title,
   rows,
@@ -935,9 +1422,9 @@ function SummaryCard({
     <div className="rounded-3xl border border-neutral-200 p-6">
       <div className="mb-4 text-lg font-semibold">{title}</div>
       <div className="space-y-3">
-        {rows.map(([k, v]) => (
+        {rows.map(([k, v], idx) => (
           <div
-            key={`${k}-${v}`}
+            key={`${k}-${idx}`}
             className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-3 text-sm"
           >
             <div className="text-neutral-500">{k}</div>

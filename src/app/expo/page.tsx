@@ -1,5 +1,5 @@
 import React from "react";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAutoHeroData } from "@/lib/expo/hero-auto";
 import { getMonthlyConsultQuestions } from "@/lib/expo/consult-queries";
 import { getExpoHotIssues } from "@/lib/expo/hot-issues";
@@ -148,12 +148,105 @@ const S: Record<string, React.CSSProperties> = {
   },
 };
 
+type ExpoHomeSlotRow = {
+  id: string;
+  section_key?: string | null;
+  slot_type?: string | null;
+  slot_order?: number | null;
+  booth_id?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
+  badge?: string | null;
+  meta_1?: string | null;
+  meta_2?: string | null;
+  is_active?: boolean | null;
+};
+
+type BoothLite = {
+  id: string;
+  name?: string | null;
+  title?: string | null;
+  slug?: string | null;
+  intro?: string | null;
+  company_name?: string | null;
+  website_url?: string | null;
+  youtube_url?: string | null;
+  brochure_url?: string | null;
+  category_primary?: string | null;
+  hall_code?: string | null;
+};
+
+function normalizeSlotSection(slot: ExpoHomeSlotRow): string {
+  if (slot.section_key) return String(slot.section_key);
+
+  switch (slot.slot_type) {
+    case "hero":
+      return "hero";
+    case "live":
+    case "live_show":
+      return "live_show";
+    case "new":
+    case "new_products":
+      return "new_products";
+    case "featured":
+      return "featured";
+    case "event":
+      return "event";
+    default:
+      return "new_products";
+  }
+}
+
+function mapExpoSlotToHomeSlot(
+  slot: ExpoHomeSlotRow,
+  boothMap: Record<string, BoothLite>
+): HomeSlot {
+  const booth = slot.booth_id ? boothMap[slot.booth_id] : undefined;
+
+  const boothName =
+    booth?.name ||
+    booth?.title ||
+    booth?.company_name ||
+    slot.title ||
+    "신규 입점 업체";
+
+  const boothIntro =
+    booth?.intro ||
+    slot.subtitle ||
+    slot.description ||
+    "지금 확인하세요";
+
+  const linkUrl =
+    slot.link_url ||
+    (booth?.slug
+      ? `/expo/booth/${booth.slug}`
+      : booth?.id
+      ? `/expo/booth/${booth.id}`
+      : "#");
+
+  return {
+    ...(slot as unknown as HomeSlot),
+    section_key: normalizeSlotSection(slot),
+    title: slot.title || boothName,
+    subtitle: slot.subtitle || boothIntro,
+    description: slot.description || boothIntro,
+    image_url: slot.image_url || null,
+    link_url: linkUrl,
+    badge: slot.badge || "NEW",
+    meta_1: slot.meta_1 || booth?.category_primary || null,
+    meta_2: slot.meta_2 || booth?.hall_code || null,
+  };
+}
+
 export default async function ExpoIndexPage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   const [
-    { data: slotRows },
-    { data: cmsRows },
+    { data: slotRows, error: slotError },
+    { data: cmsRows, error: cmsError },
     autoHeroData,
     monthlyQuestions,
     hotIssues,
@@ -165,7 +258,6 @@ export default async function ExpoIndexPage() {
       .from("expo_home_slots")
       .select("*")
       .eq("is_active", true)
-      .order("section_key", { ascending: true })
       .order("slot_order", { ascending: true }),
     supabase.from("cms_settings").select("*").eq("id", 1).limit(1),
     getAutoHeroData(),
@@ -176,13 +268,67 @@ export default async function ExpoIndexPage() {
     getHomeDeals(),
   ]);
 
-  const slots = (slotRows ?? []) as HomeSlot[];
-  const grouped = groupSlots(slots);
+  if (slotError) {
+    console.error("[expo/page] expo_home_slots query error:", slotError);
+  }
+
+  if (cmsError) {
+    console.error("[expo/page] cms_settings query error:", cmsError);
+  }
+
+  const rawSlotRows = (slotRows ?? []) as ExpoHomeSlotRow[];
+
+  const boothIds = Array.from(
+    new Set(
+      rawSlotRows
+        .map((row) => row.booth_id)
+        .filter((id): id is string => !!id)
+    )
+  );
+
+  let boothMap: Record<string, BoothLite> = {};
+
+  if (boothIds.length > 0) {
+    const { data: boothRows, error: boothError } = await supabase
+      .from("booths")
+      .select(`
+        id,
+        name,
+        title,
+        slug,
+        intro,
+        company_name,
+        website_url,
+        youtube_url,
+        brochure_url,
+        category_primary,
+        hall_code
+      `)
+      .in("id", boothIds);
+
+    if (boothError) {
+      console.error("[expo/page] booths query error:", boothError);
+    } else {
+      boothMap = Object.fromEntries(
+        (boothRows ?? []).map((booth: any) => [booth.id, booth])
+      );
+    }
+  }
+
+  const mappedSlots = rawSlotRows.map((slot) =>
+    mapExpoSlotToHomeSlot(slot, boothMap)
+  );
+
+  const grouped = groupSlots(mappedSlots);
   const cms = ((cmsRows ?? [])[0] || null) as CmsSettings | null;
 
   const hero = grouped.hero?.[0] ?? null;
   const liveShow = grouped.live_show?.[0] ?? null;
-  const newProducts = grouped.new_products ?? [];
+
+  const autoNewProducts =
+    grouped.new_products?.length
+      ? grouped.new_products
+      : grouped.featured ?? [];
 
   const heroMode =
     typeof (cms as any)?.hero_mode === "string"
@@ -243,7 +389,7 @@ export default async function ExpoIndexPage() {
 
       <ExpoProblemSection contents={problemContents as any} />
 
-      <ExpoNewProductsSection items={newProducts} />
+      <ExpoNewProductsSection items={autoNewProducts} />
 
       <ExpoFooter />
     </main>

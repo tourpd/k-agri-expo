@@ -2,421 +2,906 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-type ApplicationRow = {
-  application_id: string;
-  company_name: string;
-  representative_name: string;
-  email: string;
-  phone: string;
-  tax_email: string;
-  business_number: string;
-  booth_type: string;
-  duration_key: string;
-  duration_months: number;
-  amount_krw: number;
-  product_code: string;
-  category_primary: string;
-  company_intro: string;
-  website_url: string;
-  youtube_url: string;
-  brochure_url: string;
-  status: string;
-  admin_note: string | null;
-  rejection_reason: string | null;
-  payment_confirmed: boolean;
-  payment_confirmed_at: string | null;
-  payment_confirmed_by_email: string | null;
-  approved_at: string | null;
-  approved_by_email: string | null;
-  rejected_at: string | null;
-  rejected_by_email: string | null;
-  provision_status: string | null;
-  provision_result: unknown;
-  provisioned_vendor_id: string | null;
-  provisioned_booth_id: string | null;
-  created_at: string;
-  updated_at: string;
+/* =========================
+   타입 정의
+========================= */
+
+type ApplicationStatus = "pending" | "under_review" | "approved" | "rejected";
+type PaymentStatus = "not_required" | "waiting" | "confirmed";
+type BoothProgressStatus =
+  | "not_started"
+  | "assigned"
+  | "building"
+  | "completed"
+  | "failed";
+
+type VendorApplicationItem = {
+  application_id?: string; // DB 실제 PK
+  id?: string; // 과거 호환용 fallback
+
+  application_code?: string;
+  order_code?: string;
+
+  company_name?: string;
+  representative_name?: string;
+  ceo_name?: string;
+  contact_name?: string;
+  contact_email?: string;
+  email?: string;
+  contact_phone?: string;
+  phone?: string;
+  business_number?: string;
+
+  amount_krw?: number;
+  amount?: number;
+
+  preferred_hall_1?: string;
+  preferred_hall_2?: string;
+  preferred_category?: string;
+  placement_preference?: string;
+  promotion_preference?: string;
+
+  booth_type?: string;
+  duration_months?: number | null;
+
+  application_status?: ApplicationStatus;
+  payment_status?: PaymentStatus;
+  booth_progress_status?: BoothProgressStatus;
+
+  assigned_hall?: string;
+  assigned_slot_code?: string;
+  assigned_booth_id?: string;
+
+  company_intro?: string;
+  intro?: string;
+  business_address?: string;
+  address?: string;
+  biz_type?: string;
+  business_type?: string;
+  biz_item?: string;
+  business_item?: string;
+
+  source_file_name?: string;
+  source_file_mime?: string;
+  rejection_reason?: string;
+
+  created_at?: string | null;
+  reviewed_at?: string | null;
+  approved_at?: string | null;
+  rejected_at?: string | null;
+  payment_confirmed_at?: string | null;
+  updated_at?: string | null;
 };
 
 type ListResponse = {
-  success: boolean;
-  items?: ApplicationRow[];
+  ok: boolean;
+  items: VendorApplicationItem[];
   error?: string;
 };
 
-function formatKrw(value: number) {
-  return `${value.toLocaleString("ko-KR")}원`;
+/* =========================
+   헬퍼
+========================= */
+
+const HALL_LABELS: Record<string, string> = {
+  agri_inputs: "농자재관",
+  machinery: "농기계관",
+  seeds_seedlings: "종자·묘종관",
+  smart_farm: "스마트팜관",
+  eco_friendly: "친환경관",
+  future_insect: "미래 곤충관",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  fertilizer: "비료·영양제",
+  pesticide: "병해충·방제자재",
+  soil_conditioner: "토양개량·활력제",
+  seed: "종자",
+  seedling: "묘종",
+  machinery: "농기계",
+  facility: "시설·하우스 자재",
+  smart_farm: "스마트농업·센서·AI",
+  eco_friendly: "친환경·유기농자재",
+  insect_food: "식용곤충·곤충소재 식품",
+  insect_bio: "곤충기반 바이오소재",
+  other: "기타",
+};
+
+function getRowId(item?: VendorApplicationItem | null) {
+  return item?.application_id || item?.id || "";
 }
 
-function formatDate(value?: string | null) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
+function formatAmount(v?: number | null) {
+  return `${Number(v || 0).toLocaleString()}원`;
+}
+
+function formatDate(v?: string | null) {
+  if (!v) return "-";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return v;
   return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(d);
 }
 
-function getBoothLabel(v: string) {
-  if (v === "free") return "무료 체험";
-  if (v === "basic") return "일반 부스";
-  if (v === "premium") return "프리미엄 부스";
-  return v || "-";
+function hallLabel(v?: string | null) {
+  if (!v) return "-";
+  return HALL_LABELS[v] || v;
 }
 
-function getDurationLabel(v: string) {
-  if (v === "1m") return "1개월";
-  if (v === "3m") return "3개월";
-  return v || "-";
+function categoryLabel(v?: string | null) {
+  if (!v) return "-";
+  return CATEGORY_LABELS[v] || v;
 }
 
-function getStatusMeta(status: string) {
-  if (status === "approved") {
-    return { label: "승인 완료", className: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+function statusLabel(v?: string) {
+  switch (v) {
+    case "pending":
+      return "대기";
+    case "under_review":
+      return "검토중";
+    case "approved":
+      return "승인";
+    case "rejected":
+      return "반려";
+    case "not_required":
+      return "입금불필요";
+    case "waiting":
+      return "입금대기";
+    case "confirmed":
+      return "입금확인";
+    case "not_started":
+      return "미시작";
+    case "assigned":
+      return "배정완료";
+    case "building":
+      return "구성중";
+    case "completed":
+      return "완료";
+    case "failed":
+      return "실패";
+    default:
+      return v || "-";
   }
-  if (status === "rejected") {
-    return { label: "반려", className: "bg-red-100 text-red-800 border-red-200" };
-  }
-  return { label: "검토 중", className: "bg-amber-100 text-amber-800 border-amber-200" };
 }
 
-export default function AdminVendorApplicationsPage() {
-  const [items, setItems] = useState<ApplicationRow[]>([]);
-  const [selected, setSelected] = useState<ApplicationRow | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [paymentFilter, setPaymentFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [adminNote, setAdminNote] = useState("");
+function badgeClass(type: "application" | "payment" | "booth", value?: string) {
+  if (type === "application") {
+    if (value === "pending") return "bg-amber-100 text-amber-800";
+    if (value === "under_review") return "bg-blue-100 text-blue-800";
+    if (value === "approved") return "bg-emerald-100 text-emerald-800";
+    if (value === "rejected") return "bg-red-100 text-red-800";
+  }
+
+  if (type === "payment") {
+    if (value === "not_required") return "bg-neutral-100 text-neutral-700";
+    if (value === "waiting") return "bg-amber-100 text-amber-800";
+    if (value === "confirmed") return "bg-emerald-100 text-emerald-800";
+  }
+
+  if (type === "booth") {
+    if (value === "not_started") return "bg-neutral-100 text-neutral-700";
+    if (value === "assigned") return "bg-blue-100 text-blue-800";
+    if (value === "building") return "bg-violet-100 text-violet-800";
+    if (value === "completed") return "bg-emerald-100 text-emerald-800";
+    if (value === "failed") return "bg-red-100 text-red-800";
+  }
+
+  return "bg-neutral-100 text-neutral-700";
+}
+
+/* =========================
+   페이지
+========================= */
+
+export default function Page() {
+  const [items, setItems] = useState<VendorApplicationItem[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [selectedItem, setSelectedItem] = useState<VendorApplicationItem | null>(null);
+
+  const [licenseUrl, setLicenseUrl] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+  const [assignedHall, setAssignedHall] = useState("");
+  const [assignedSlotCode, setAssignedSlotCode] = useState("");
+
+  const [approveModal, setApproveModal] = useState(false);
+  const [rejectModal, setRejectModal] = useState(false);
+  const [boothModal, setBoothModal] = useState(false);
+
+  const [acting, setActing] = useState(false);
+  const [loadingList, setLoadingList] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const [notice, setNotice] = useState("");
+  const [errorNotice, setErrorNotice] = useState("");
 
   async function fetchList() {
-    setLoading(true);
-    setErrorMessage("");
+    setLoadingList(true);
+    setErrorNotice("");
 
     try {
-      const qs = new URLSearchParams();
-      if (statusFilter !== "all") qs.set("status", statusFilter);
-      if (paymentFilter !== "all") qs.set("payment", paymentFilter);
-      if (search.trim()) qs.set("q", search.trim());
-
-      const res = await fetch(`/api/admin/vendor-applications?${qs.toString()}`, {
+      const res = await fetch("/api/admin/vendor-applications", {
         cache: "no-store",
       });
       const json: ListResponse = await res.json();
 
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || "목록 조회에 실패했습니다.");
+      if (!json?.ok) {
+        throw new Error(json?.error || "목록 조회 실패");
       }
 
-      const next = json.items || [];
-      setItems(next);
+      const nextItems = json.items || [];
+      setItems(nextItems);
 
-      if (selected) {
-        const found = next.find((v) => v.application_id === selected.application_id) || null;
-        setSelected(found);
-        setAdminNote(found?.admin_note || "");
-        setRejectionReason(found?.rejection_reason || "");
+      if (!selectedId && nextItems.length > 0) {
+        setSelectedId(getRowId(nextItems[0]));
+      } else if (selectedId) {
+        const stillExists = nextItems.some((x) => getRowId(x) === selectedId);
+        if (!stillExists) {
+          setSelectedId(nextItems.length > 0 ? getRowId(nextItems[0]) : "");
+        }
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "목록 조회 실패");
+      setErrorNotice(error instanceof Error ? error.message : "목록 조회 실패");
     } finally {
-      setLoading(false);
+      setLoadingList(false);
+    }
+  }
+
+  async function fetchDetail(applicationId: string) {
+    if (!applicationId) {
+      setSelectedItem(null);
+      return;
+    }
+
+    setLoadingDetail(true);
+    setErrorNotice("");
+
+    try {
+      const res = await fetch(`/api/admin/vendor-applications/${applicationId}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+
+      if (!json?.ok) {
+        throw new Error(json?.error || "상세 조회 실패");
+      }
+
+      const item: VendorApplicationItem = json.item;
+      setSelectedItem(item);
+      setRejectionReason(item?.rejection_reason || "");
+      setAssignedHall(item?.assigned_hall || item?.preferred_hall_1 || "");
+      setAssignedSlotCode(item?.assigned_slot_code || "");
+    } catch (error) {
+      setErrorNotice(error instanceof Error ? error.message : "상세 조회 실패");
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
+
+  async function fetchLicense(applicationId: string) {
+    if (!applicationId) {
+      setLicenseUrl("");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/admin/vendor-applications/${applicationId}/business-license`,
+        { cache: "no-store" }
+      );
+      const json = await res.json();
+
+      if (json?.ok && json?.signedUrl) {
+        setLicenseUrl(json.signedUrl);
+      } else {
+        setLicenseUrl("");
+      }
+    } catch {
+      setLicenseUrl("");
     }
   }
 
   useEffect(() => {
     fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, paymentFilter]);
+  }, []);
 
-  async function runAction(action: string) {
-    if (!selected) return;
+  useEffect(() => {
+    if (!selectedId) return;
+    fetchDetail(selectedId);
+    fetchLicense(selectedId);
+  }, [selectedId]);
 
-    setActionLoading(action);
+  async function runAction(
+    action: string,
+    extra?: Record<string, unknown>,
+    successMessage?: string
+  ) {
+    if (!selectedId) return;
+
+    setActing(true);
+    setNotice("");
+    setErrorNotice("");
 
     try {
-      const res = await fetch(`/api/admin/vendor-applications/${selected.application_id}`, {
+      const res = await fetch(`/api/admin/vendor-applications/${selectedId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action,
-          admin_note: adminNote,
-          rejection_reason: rejectionReason,
-        }),
+        body: JSON.stringify({ action, ...(extra || {}) }),
       });
 
       const json = await res.json();
 
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || "처리에 실패했습니다.");
+      if (!json?.ok) {
+        throw new Error(json?.error || "처리에 실패했습니다.");
       }
 
+      setNotice(successMessage || json?.message || "정상 처리되었습니다.");
+
+      await fetchDetail(selectedId);
       await fetchList();
-      alert("처리되었습니다.");
+      await fetchLicense(selectedId);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "처리 중 오류");
+      setErrorNotice(error instanceof Error ? error.message : "에러가 발생했습니다.");
     } finally {
-      setActionLoading(null);
+      setActing(false);
     }
   }
 
-  const countText = useMemo(() => `조회 ${items.length}건`, [items.length]);
+  const canApprove = useMemo(() => {
+    if (!selectedItem) return false;
+    if (selectedItem.application_status === "approved") return false;
+
+    const amount =
+      typeof selectedItem.amount_krw === "number"
+        ? selectedItem.amount_krw
+        : typeof selectedItem.amount === "number"
+        ? selectedItem.amount
+        : 0;
+
+    if (amount === 0) return true;
+    return selectedItem.payment_status === "confirmed";
+  }, [selectedItem]);
+
+  const canPromoteNewProduct = useMemo(() => {
+    if (!selectedItem) return false;
+    if (!selectedItem.assigned_booth_id) return false;
+    if (selectedItem.promotion_preference === "new_product") return false;
+    return true;
+  }, [selectedItem]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <section className="rounded-3xl bg-slate-950 p-8 text-white shadow-2xl">
-          <div className="text-sm font-black text-slate-300">ADMIN</div>
-          <h1 className="mt-3 text-4xl font-black">벤더 입점 운영 시스템</h1>
-          <p className="mt-4 text-base leading-8 text-slate-200">
-            신청 검토, 입금 확인, 승인/반려, 운영 메모를 여기서 처리합니다.
-          </p>
-        </section>
+    <div className="min-h-screen bg-neutral-50 p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">입점 승인센터 A안</h1>
+        <p className="mt-1 text-sm text-neutral-600">
+          업체 신청 검토, 입금 확인, 승인/반려, 부스 생성, 신제품 승격을 한 화면에서 관리합니다.
+        </p>
+      </div>
 
-        <section className="rounded-3xl bg-white p-6 shadow-lg">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div className="flex flex-wrap gap-2">
-              {["all", "pending", "approved", "rejected"].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setStatusFilter(v)}
-                  className={`rounded-2xl px-4 py-2 text-sm font-black ${
-                    statusFilter === v ? "bg-slate-950 text-white" : "border border-slate-300 bg-white"
-                  }`}
-                >
-                  {v === "all" ? "전체" : v === "pending" ? "검토중" : v === "approved" ? "승인" : "반려"}
-                </button>
-              ))}
-
-              {["all", "paid", "unpaid"].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setPaymentFilter(v)}
-                  className={`rounded-2xl px-4 py-2 text-sm font-black ${
-                    paymentFilter === v ? "bg-emerald-700 text-white" : "border border-slate-300 bg-white"
-                  }`}
-                >
-                  {v === "all" ? "전체결제" : v === "paid" ? "입금확인" : "미입금"}
-                </button>
-              ))}
+      {(notice || errorNotice) && (
+        <div className="mb-4 space-y-2">
+          {notice && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              {notice}
             </div>
-
-            <div className="flex w-full max-w-xl gap-2">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="회사명 / 대표자명 / 연락처 / 사업자번호 검색"
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-950"
-              />
-              <button
-                onClick={fetchList}
-                className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white"
-              >
-                검색
-              </button>
+          )}
+          {errorNotice && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorNotice}
             </div>
-          </div>
+          )}
+        </div>
+      )}
 
-          <div className="mt-5 flex items-center justify-between text-sm">
-            <div className="font-bold text-slate-700">{countText}</div>
+      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <section className="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <div className="text-lg font-semibold">신청 목록</div>
+              <div className="mt-1 text-sm text-neutral-500">
+                신청 업체를 선택해 상세를 확인하세요.
+              </div>
+            </div>
             <button
+              type="button"
               onClick={fetchList}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 font-bold"
+              disabled={loadingList}
+              className="rounded-2xl border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-50 disabled:opacity-50"
             >
-              새로고침
+              {loadingList ? "새로고침 중..." : "새로고침"}
             </button>
           </div>
 
-          {errorMessage && (
-            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-              {errorMessage}
+          <div className="max-h-[75vh] space-y-3 overflow-y-auto pr-1">
+            {items.map((item) => {
+              const rowId = getRowId(item);
+              const selected = rowId === selectedId;
+
+              return (
+                <button
+                  key={rowId || item.application_code || item.order_code}
+                  type="button"
+                  onClick={() => setSelectedId(rowId)}
+                  className={`w-full rounded-3xl border p-4 text-left transition ${
+                    selected
+                      ? "border-black bg-black text-white"
+                      : "border-neutral-200 bg-white hover:border-neutral-400"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-bold">{item.company_name || "-"}</div>
+                      <div className={`mt-1 text-xs ${selected ? "text-neutral-300" : "text-neutral-500"}`}>
+                        {item.application_code || item.order_code || rowId || "-"}
+                      </div>
+                    </div>
+                    <div className="text-sm font-semibold">
+                      {formatAmount(item.amount_krw || item.amount || 0)}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass("application", item.application_status)}`}>
+                      {statusLabel(item.application_status)}
+                    </span>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass("payment", item.payment_status)}`}>
+                      {statusLabel(item.payment_status)}
+                    </span>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass("booth", item.booth_progress_status)}`}>
+                      {statusLabel(item.booth_progress_status)}
+                    </span>
+                  </div>
+
+                  <div className={`mt-3 space-y-1 text-sm ${selected ? "text-neutral-200" : "text-neutral-600"}`}>
+                    <div>대표자: {item.representative_name || item.ceo_name || "-"}</div>
+                    <div>희망관: {hallLabel(item.preferred_hall_1)}</div>
+                    <div>카테고리: {categoryLabel(item.preferred_category)}</div>
+                    <div>배정슬롯: {item.assigned_slot_code || "-"}</div>
+                  </div>
+                </button>
+              );
+            })}
+
+            {!loadingList && items.length === 0 && (
+              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
+                조회된 신청이 없습니다.
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+          {!selectedItem && (
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 text-sm text-neutral-600">
+              {loadingDetail ? "상세 정보를 불러오는 중입니다..." : "좌측에서 업체를 선택해주세요."}
             </div>
           )}
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="rounded-3xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-200 px-5 py-4 text-lg font-black">신청 목록</div>
-              <div className="max-h-[760px] overflow-y-auto">
-                {loading ? (
-                  <div className="p-6 text-sm text-slate-500">불러오는 중...</div>
-                ) : items.length === 0 ? (
-                  <div className="p-6 text-sm text-slate-500">신청이 없습니다.</div>
-                ) : (
-                  <div className="divide-y divide-slate-100">
-                    {items.map((item) => {
-                      const meta = getStatusMeta(item.status);
-                      const active = selected?.application_id === item.application_id;
-                      return (
-                        <button
-                          key={item.application_id}
-                          onClick={() => {
-                            setSelected(item);
-                            setAdminNote(item.admin_note || "");
-                            setRejectionReason(item.rejection_reason || "");
-                          }}
-                          className={`block w-full px-5 py-4 text-left ${active ? "bg-slate-50" : "hover:bg-slate-50"}`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="text-lg font-black">{item.company_name || "-"}</div>
-                              <div className="mt-1 text-sm text-slate-500">
-                                {item.representative_name || "-"} · {item.phone || "-"}
-                              </div>
-                              <div className="mt-2 text-sm text-slate-700">
-                                {getBoothLabel(item.booth_type)} · {getDurationLabel(item.duration_key)} · {formatKrw(item.amount_krw || 0)}
-                              </div>
-                              <div className="mt-1 text-xs text-slate-400">
-                                신청일 {formatDate(item.created_at)}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <div className={`rounded-full border px-3 py-1 text-xs font-black ${meta.className}`}>
-                                {meta.label}
-                              </div>
-                              <div className={`rounded-full px-3 py-1 text-xs font-black ${item.payment_confirmed ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-                                {item.amount_krw > 0 ? (item.payment_confirmed ? "입금확인" : "미입금") : "무료"}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+          {selectedItem && (
+            <div className="space-y-6">
+              <div className="border-b border-neutral-200 pb-5">
+                <h2 className="text-2xl font-bold">{selectedItem.company_name || "-"}</h2>
+                <div className="mt-2 text-sm text-neutral-500">
+                  신청코드: {selectedItem.application_code || selectedItem.order_code || getRowId(selectedItem) || "-"}
+                </div>
+                <div className="mt-1 text-sm text-neutral-500">
+                  신청일: {formatDate(selectedItem.created_at)}
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${badgeClass("application", selectedItem.application_status)}`}>
+                    신청상태 · {statusLabel(selectedItem.application_status)}
+                  </span>
+                  <span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${badgeClass("payment", selectedItem.payment_status)}`}>
+                    입금상태 · {statusLabel(selectedItem.payment_status)}
+                  </span>
+                  <span className={`rounded-full px-3 py-1.5 text-sm font-semibold ${badgeClass("booth", selectedItem.booth_progress_status)}`}>
+                    부스진행 · {statusLabel(selectedItem.booth_progress_status)}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-200 px-5 py-4 text-lg font-black">상세 / 운영 처리</div>
-              {!selected ? (
-                <div className="p-6 text-sm text-slate-500">왼쪽 신청을 선택해 주세요.</div>
-              ) : (
-                <div className="space-y-5 p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="text-xl font-black">{selected.company_name || "-"}</div>
-                      <div className="mt-1 text-sm text-slate-500">신청번호 {selected.application_id}</div>
+              <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_420px]">
+                <div className="space-y-6">
+                  <InfoCard
+                    title="기본 정보"
+                    rows={[
+                      ["회사명", selectedItem.company_name || "-"],
+                      ["대표자명", selectedItem.representative_name || selectedItem.ceo_name || "-"],
+                      ["담당자명", selectedItem.contact_name || "-"],
+                      ["담당자 이메일", selectedItem.contact_email || selectedItem.email || "-"],
+                      ["담당자 연락처", selectedItem.contact_phone || selectedItem.phone || "-"],
+                      ["사업자등록번호", selectedItem.business_number || "-"],
+                      ["사업장 주소", selectedItem.business_address || selectedItem.address || "-"],
+                      ["업태", selectedItem.biz_type || selectedItem.business_type || "-"],
+                      ["종목", selectedItem.biz_item || selectedItem.business_item || "-"],
+                    ]}
+                  />
+
+                  <InfoCard
+                    title="신청 / 희망 정보"
+                    rows={[
+                      ["부스 유형", selectedItem.booth_type || "-"],
+                      ["기간", selectedItem.duration_months ? `${selectedItem.duration_months}개월` : "-"],
+                      ["금액", formatAmount(selectedItem.amount_krw || selectedItem.amount || 0)],
+                      ["희망 관 1순위", hallLabel(selectedItem.preferred_hall_1)],
+                      ["희망 관 2순위", hallLabel(selectedItem.preferred_hall_2)],
+                      ["희망 카테고리", categoryLabel(selectedItem.preferred_category)],
+                      ["위치 성향", selectedItem.placement_preference || "-"],
+                      ["홍보 선호", selectedItem.promotion_preference || "-"],
+                    ]}
+                  />
+
+                  <InfoCard
+                    title="배정 상태"
+                    rows={[
+                      ["배정 관", hallLabel(selectedItem.assigned_hall)],
+                      ["배정 슬롯", selectedItem.assigned_slot_code || "-"],
+                      ["배정 부스 ID", selectedItem.assigned_booth_id || "-"],
+                      ["반려 사유", selectedItem.rejection_reason || "-"],
+                    ]}
+                  />
+
+                  <div className="rounded-3xl border border-neutral-200 p-5">
+                    <div className="mb-4 text-lg font-semibold">운영 액션</div>
+
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      <ActionButton
+                        label="검토 시작"
+                        onClick={() => runAction("start_review", {}, "검토 시작 처리되었습니다.")}
+                        disabled={acting}
+                      />
+
+                      <ActionButton
+                        label="입금 확인"
+                        onClick={() => runAction("confirm_payment", {}, "입금 확인 처리되었습니다.")}
+                        disabled={acting}
+                        variant="secondary"
+                      />
+
+                      <ActionButton
+                        label="승인"
+                        onClick={() => setApproveModal(true)}
+                        disabled={acting || !canApprove}
+                      />
+
+                      <ActionButton
+                        label="반려사유 저장"
+                        onClick={() =>
+                          runAction(
+                            "save_rejection_reason",
+                            { rejection_reason: rejectionReason },
+                            "반려사유가 저장되었습니다."
+                          )
+                        }
+                        disabled={acting}
+                        variant="secondary"
+                      />
+
+                      <ActionButton
+                        label="반려"
+                        onClick={() => setRejectModal(true)}
+                        disabled={acting}
+                        variant="danger"
+                      />
+
+                      <ActionButton
+                        label="부스 생성"
+                        onClick={() => setBoothModal(true)}
+                        disabled={acting || selectedItem.application_status !== "approved"}
+                        variant="secondary"
+                      />
+
+                      <ActionButton
+                        label="슬롯 배정 저장"
+                        onClick={() =>
+                          runAction(
+                            "assign_slot",
+                            {
+                              assigned_hall: assignedHall,
+                              assigned_slot_code: assignedSlotCode,
+                            },
+                            "슬롯 배정이 저장되었습니다."
+                          )
+                        }
+                        disabled={acting || !assignedHall || !assignedSlotCode}
+                        variant="secondary"
+                      />
+
+                      <ActionButton
+                        label="🔥 이달의 신제품 승격"
+                        onClick={() =>
+                          runAction(
+                            "promote_new_product",
+                            {},
+                            "이달의 신제품으로 승격되었습니다."
+                          )
+                        }
+                        disabled={acting || !canPromoteNewProduct}
+                      />
                     </div>
-                    <div className={`rounded-full border px-3 py-1 text-xs font-black ${getStatusMeta(selected.status).className}`}>
-                      {getStatusMeta(selected.status).label}
+
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                      <label className="block">
+                        <div className="mb-2 text-sm font-medium">배정 관</div>
+                        <select
+                          value={assignedHall}
+                          onChange={(e) => setAssignedHall(e.target.value)}
+                          className="w-full rounded-2xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+                        >
+                          <option value="">선택</option>
+                          {Object.entries(HALL_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <div className="mb-2 text-sm font-medium">배정 슬롯 코드</div>
+                        <input
+                          value={assignedSlotCode}
+                          onChange={(e) => setAssignedSlotCode(e.target.value)}
+                          placeholder="예: A-03"
+                          className="w-full rounded-2xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="mb-2 block text-sm font-medium">반려 사유</label>
+                      <textarea
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-2xl border border-neutral-300 px-4 py-3 outline-none focus:border-black"
+                        placeholder="예: 제출 자료 보완이 필요합니다."
+                      />
                     </div>
                   </div>
 
-                  <DetailTable rows={[
-                    ["대표자명", selected.representative_name || "-"],
-                    ["연락처", selected.phone || "-"],
-                    ["이메일", selected.email || "-"],
-                    ["세금계산서 이메일", selected.tax_email || "-"],
-                    ["사업자번호", selected.business_number || "-"],
-                    ["부스", getBoothLabel(selected.booth_type)],
-                    ["기간", getDurationLabel(selected.duration_key)],
-                    ["금액", formatKrw(selected.amount_krw || 0)],
-                    ["상품코드", selected.product_code || "-"],
-                    ["카테고리", selected.category_primary || "-"],
-                    ["신청일", formatDate(selected.created_at)],
-                    ["최종변경", formatDate(selected.updated_at)],
-                    ["입금확인", selected.amount_krw > 0 ? (selected.payment_confirmed ? "예" : "아니오") : "무료"],
-                    ["입금확인시각", formatDate(selected.payment_confirmed_at)],
-                    ["입금확인자", selected.payment_confirmed_by_email || "-"],
-                    ["승인시각", formatDate(selected.approved_at)],
-                    ["승인자", selected.approved_by_email || "-"],
-                    ["반려시각", formatDate(selected.rejected_at)],
-                    ["반려자", selected.rejected_by_email || "-"],
-                    ["프로비저닝", selected.provision_status || "-"],
-                  ]} />
+                  <InfoCard
+                    title="진행 기록"
+                    rows={[
+                      ["검토 시작일", formatDate(selectedItem.reviewed_at)],
+                      ["입금 확인일", formatDate(selectedItem.payment_confirmed_at)],
+                      ["승인일", formatDate(selectedItem.approved_at)],
+                      ["반려일", formatDate(selectedItem.rejected_at)],
+                      ["최근 수정일", formatDate(selectedItem.updated_at)],
+                    ]}
+                  />
+                </div>
 
-                  <LongField title="회사 소개" value={selected.company_intro || "-"} />
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-neutral-200 p-5">
+                    <div className="mb-4 text-lg font-semibold">사업자등록증</div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      value={adminNote}
-                      onChange={(e) => setAdminNote(e.target.value)}
-                      placeholder="운영 메모"
-                      className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-950"
-                    />
-                    <button
-                      onClick={() => runAction("save_note")}
-                      disabled={actionLoading !== null}
-                      className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black"
-                    >
-                      메모 저장
-                    </button>
+                    <div className="mb-3 text-sm text-neutral-500">
+                      파일명: {selectedItem.source_file_name || "-"}
+                    </div>
+
+                    {licenseUrl ? (
+                      <div className="space-y-3">
+                        <a
+                          href={licenseUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex rounded-2xl border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+                        >
+                          새 창에서 열기
+                        </a>
+
+                        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50">
+                          {selectedItem.source_file_mime === "application/pdf" ? (
+                            <iframe
+                              src={licenseUrl}
+                              title="사업자등록증 PDF"
+                              className="h-[720px] w-full"
+                            />
+                          ) : (
+                            <img
+                              src={licenseUrl}
+                              alt="사업자등록증"
+                              className="h-auto w-full"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
+                        등록된 사업자등록증이 없습니다.
+                      </div>
+                    )}
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <button
-                      onClick={() => runAction(selected.payment_confirmed ? "unconfirm_payment" : "confirm_payment")}
-                      disabled={actionLoading !== null || selected.amount_krw === 0}
-                      className="rounded-2xl bg-blue-600 px-5 py-3 font-black text-white disabled:opacity-50"
-                    >
-                      {selected.amount_krw === 0 ? "무료 신청" : selected.payment_confirmed ? "입금확인 취소" : "입금확인 처리"}
-                    </button>
-
-                    <button
-                      onClick={() => runAction("approve")}
-                      disabled={actionLoading !== null}
-                      className="rounded-2xl bg-emerald-600 px-5 py-3 font-black text-white disabled:opacity-50"
-                    >
-                      승인 처리
-                    </button>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                    <input
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="반려 사유"
-                      className="rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-950"
-                    />
-                    <button
-                      onClick={() => runAction("reject")}
-                      disabled={actionLoading !== null}
-                      className="rounded-2xl bg-red-600 px-5 py-3 font-black text-white disabled:opacity-50"
-                    >
-                      반려 처리
-                    </button>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-                    <div><b>유료 신청 승인 규칙:</b> 입금확인 전에는 승인 불가</div>
-                    <div><b>무료 신청 승인 규칙:</b> 바로 승인 가능</div>
-                    <div><b>프로비저닝:</b> 현재는 승인 이후 결과 기록만 남기고 후속 연결 단계로 분리</div>
+                  <div className="rounded-3xl border border-neutral-200 p-5">
+                    <div className="mb-4 text-lg font-semibold">회사 소개</div>
+                    <div className="whitespace-pre-wrap text-sm leading-7 text-neutral-700">
+                      {selectedItem.company_intro || selectedItem.intro || "소개 정보가 없습니다."}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </section>
       </div>
-    </main>
-  );
-}
 
-function DetailTable({ rows }: { rows: [string, string][] }) {
-  return (
-    <div className="rounded-2xl border border-slate-200">
-      {rows.map(([k, v], idx) => (
-        <div
-          key={`${k}-${idx}`}
-          className={`grid grid-cols-[130px_1fr] gap-4 px-4 py-3 text-sm ${idx !== rows.length - 1 ? "border-b border-slate-100" : ""}`}
-        >
-          <div className="font-bold text-slate-500">{k}</div>
-          <div className="break-words font-medium text-slate-900">{v}</div>
-        </div>
-      ))}
+      <ConfirmModal
+        open={approveModal}
+        title="승인하시겠습니까?"
+        description={`승인 후에는 승인 상태로 전환됩니다.\n유료 신청은 입금확인 후 승인해야 합니다.`}
+        confirmText="승인"
+        onCancel={() => setApproveModal(false)}
+        onConfirm={() => {
+          setApproveModal(false);
+          runAction("approve", {}, "승인 처리되었습니다.");
+        }}
+      />
+
+      <ConfirmModal
+        open={rejectModal}
+        title="반려 처리하시겠습니까?"
+        description={`이 작업은 되돌리기 어렵습니다.\n\n반려 사유:\n${rejectionReason || "(입력 없음)"}`}
+        confirmText="반려"
+        danger
+        onCancel={() => setRejectModal(false)}
+        onConfirm={() => {
+          setRejectModal(false);
+          runAction(
+            "reject",
+            { rejection_reason: rejectionReason },
+            "반려 처리되었습니다."
+          );
+        }}
+      />
+
+      <ConfirmModal
+        open={boothModal}
+        title="부스를 생성하시겠습니까?"
+        description={`승인된 업체에 대해 실제 부스를 생성합니다.\n\n배정 관: ${hallLabel(
+          assignedHall || selectedItem?.assigned_hall || selectedItem?.preferred_hall_1
+        )}\n배정 슬롯: ${assignedSlotCode || selectedItem?.assigned_slot_code || "-"}`}
+        confirmText="생성"
+        onCancel={() => setBoothModal(false)}
+        onConfirm={() => {
+          setBoothModal(false);
+          runAction(
+            "create_booth",
+            {
+              assigned_hall:
+                assignedHall ||
+                selectedItem?.assigned_hall ||
+                selectedItem?.preferred_hall_1,
+              assigned_slot_code:
+                assignedSlotCode || selectedItem?.assigned_slot_code || null,
+            },
+            "부스가 생성되었습니다."
+          );
+        }}
+      />
     </div>
   );
 }
 
-function LongField({ title, value }: { title: string; value: string }) {
+/* =========================
+   하위 컴포넌트
+========================= */
+
+function InfoCard({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: [string, string][];
+}) {
   return (
-    <div className="rounded-2xl border border-slate-200 p-4">
-      <div className="mb-2 text-sm font-bold text-slate-500">{title}</div>
-      <div className="whitespace-pre-wrap text-sm leading-7 text-slate-800">{value}</div>
+    <div className="rounded-3xl border border-neutral-200 p-5">
+      <div className="mb-4 text-lg font-semibold">{title}</div>
+      <div className="space-y-3">
+        {rows.map(([label, value], idx) => (
+          <div
+            key={`${label}-${idx}`}
+            className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-3 text-sm"
+          >
+            <div className="w-40 shrink-0 text-neutral-500">{label}</div>
+            <div className="flex-1 whitespace-pre-wrap break-words text-right font-medium text-neutral-900">
+              {value}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ActionButton({
+  label,
+  onClick,
+  disabled,
+  variant = "primary",
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: "primary" | "secondary" | "danger";
+}) {
+  const className =
+    variant === "primary"
+      ? "bg-black text-white hover:opacity-90"
+      : variant === "danger"
+      ? "bg-red-600 text-white hover:opacity-90"
+      : "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function ConfirmModal({
+  open,
+  title,
+  description,
+  confirmText = "확인",
+  cancelText = "취소",
+  onConfirm,
+  onCancel,
+  danger = false,
+}: {
+  open: boolean;
+  title: string;
+  description?: string;
+  confirmText?: string;
+  cancelText?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  danger?: boolean;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
+        <div className="text-lg font-bold">{title}</div>
+
+        {description && (
+          <div className="mt-3 whitespace-pre-line text-sm leading-6 text-neutral-600">
+            {description}
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-medium"
+          >
+            {cancelText}
+          </button>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold text-white ${
+              danger ? "bg-red-600" : "bg-black"
+            }`}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
