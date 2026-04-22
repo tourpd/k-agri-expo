@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { autoPlaceExpo } from "@/lib/expo-auto-placement";
 
 type VendorApplicationRow = {
@@ -166,7 +166,7 @@ function pickExpoPromoMeta(application: VendorApplicationRow) {
 }
 
 async function readApplication(applicationId: string) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const { data, error } = await supabase
     .from("vendor_applications_v2")
@@ -182,7 +182,7 @@ async function readApplication(applicationId: string) {
 }
 
 async function findExistingVendor(application: VendorApplicationRow) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   if (application.provisioned_vendor_id) {
     const { data } = await supabase
@@ -220,7 +220,7 @@ async function findExistingVendor(application: VendorApplicationRow) {
 }
 
 async function createVendor(application: VendorApplicationRow) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const payload = {
     company_name: pickCompanyName(application),
@@ -277,7 +277,7 @@ async function getOrCreateVendor(application: VendorApplicationRow) {
 }
 
 async function findExistingBooth(application: VendorApplicationRow) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   if (application.assigned_booth_id) {
     const { data } = await supabase
@@ -311,7 +311,7 @@ async function findExistingBooth(application: VendorApplicationRow) {
 }
 
 async function createBooth(application: VendorApplicationRow, vendorId: string) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const companyName = pickCompanyName(application);
   const hallCode = pickHall(application);
@@ -374,7 +374,7 @@ async function getOrCreateBooth(
   const existingBoothId = await findExistingBooth(application);
 
   if (existingBoothId) {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { data } = await supabase
       .from("booths")
       .select("id, hall_code")
@@ -401,7 +401,7 @@ async function assignRequestedSlot(
   boothId: string,
   application: VendorApplicationRow
 ) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const requestedSlot = nullableString(application.assigned_slot_code);
   if (!requestedSlot) return null;
@@ -440,7 +440,7 @@ async function assignRequestedSlot(
 }
 
 async function autoAssignFreeSlot(boothId: string, hallCode: string | null) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
   if (!hallCode) return null;
 
   const candidatesFromSlots = await supabase
@@ -510,7 +510,7 @@ async function syncApplicationProvisionResult(params: {
   hallId: string | null;
   slotCode: string | null;
 }) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const patch: Record<string, unknown> = {
     provisioned_vendor_id: params.vendorId,

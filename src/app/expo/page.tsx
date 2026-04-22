@@ -22,120 +22,385 @@ import type { CmsSettings, HomeSlot } from "@/types/expo-home";
 import { groupSlots } from "@/lib/expo/home-utils";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const RESPONSIVE_CSS = `
-@media (max-width: 1200px) {
+/* =========================
+   기본 공통
+========================= */
+.expo-home * {
+  box-sizing: border-box;
+}
+
+.expo-home img,
+.expo-home iframe,
+.expo-home video {
+  max-width: 100%;
+  height: auto;
+}
+
+.expo-home a,
+.expo-home button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.expo-home {
+  overflow-x: hidden;
+}
+
+.expo-home section {
+  scroll-margin-top: 84px;
+}
+
+/* =========================
+   Desktop / Tablet
+========================= */
+@media (max-width: 1280px) {
   .expo-new-grid,
-  .expo-problem-grid {
+  .expo-problem-grid,
+  .expo-solution-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
+/* =========================
+   Tablet
+========================= */
 @media (max-width: 1024px) {
+  .expo-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
   .expo-topbar {
+    padding: 14px 16px 8px !important;
     align-items: flex-start !important;
   }
 
-  .expo-new-grid,
-  .expo-problem-grid,
-  .expo-solution-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .expo-section {
-    padding: 18px 14px 0 !important;
-  }
-
-  .expo-topbar {
-    padding: 16px 14px 8px !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
+  .expo-topbar,
+  .expo-section-head {
+    gap: 12px !important;
   }
 
   .expo-header-right,
   .expo-top-actions {
-    width: 100% !important;
-    justify-content: flex-start !important;
-  }
-
-  .expo-top-actions {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    flex-wrap: wrap !important;
   }
 
   .expo-hero-wrap {
-    padding: 18px 14px 0 !important;
+    padding: 14px 16px 0 !important;
+  }
+
+  .expo-hero-card,
+  .expo-promo-card,
+  .expo-live-card,
+  .expo-ai-card,
+  .expo-problem-card,
+  .expo-new-card {
+    border-radius: 24px !important;
   }
 
   .expo-hero-card {
-    padding: 22px 18px !important;
-    border-radius: 24px !important;
+    padding: 22px 20px !important;
   }
 
   .expo-hero-buttons,
   .expo-promo-buttons {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-
-  .expo-hero-buttons a,
-  .expo-promo-buttons a {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    text-align: center !important;
-  }
-
-  .expo-hero-media {
-    min-height: 220px !important;
-    border-radius: 22px !important;
-  }
-
-  .expo-section-head {
-    align-items: flex-start !important;
-  }
-
-  .expo-new-grid,
-  .expo-problem-grid,
-  .expo-solution-grid,
-  .expo-ai-input-wrap {
-    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
   }
 
   .expo-logo-row {
     overflow-x: auto !important;
     flex-wrap: nowrap !important;
-    padding-bottom: 4px !important;
+    gap: 10px !important;
+    padding-bottom: 6px !important;
+    scrollbar-width: none;
+  }
+
+  .expo-logo-row::-webkit-scrollbar {
+    display: none;
   }
 
   .expo-logo-row a {
     flex: 0 0 auto !important;
   }
-
-  .expo-footer {
-    padding: 18px 14px 28px !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-  }
 }
 
-@media (max-width: 480px) {
-  .expo-hero-card {
-    padding: 18px 14px !important;
+/* =========================
+   Mobile main
+========================= */
+@media (max-width: 768px) {
+  .expo-section {
+    padding: 14px 12px 0 !important;
   }
 
-  .expo-promo-card {
-    padding: 20px 16px !important;
-    border-radius: 24px !important;
+  .expo-topbar {
+    padding: 12px 12px 8px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .expo-header-right {
+    width: 100% !important;
+  }
+
+  .expo-top-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    justify-content: stretch !important;
+  }
+
+  .expo-top-actions a:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .expo-top-actions a,
+  .expo-top-actions button {
+    width: 100% !important;
+    min-height: 42px !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  .expo-hero-wrap {
+    padding: 12px 12px 0 !important;
+  }
+
+  .expo-hero-card {
+    padding: 18px 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .expo-hero-card h1 {
+    font-size: clamp(34px, 9vw, 52px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .expo-hero-card h2,
+  .expo-hero-card .expo-hero-subtitle {
+    font-size: clamp(22px, 6vw, 30px) !important;
+    line-height: 1.2 !important;
+  }
+
+  .expo-hero-card p,
+  .expo-promo-card p,
+  .expo-live-card p,
+  .expo-ai-card p {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+  }
+
+  .expo-hero-buttons,
+  .expo-promo-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .expo-hero-buttons a,
+  .expo-promo-buttons a {
+    width: 100% !important;
+    min-height: 46px !important;
+    padding: 12px 10px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .expo-hero-media {
+    min-height: 180px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-section-head {
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .expo-section-head h2,
+  .expo-section-title {
+    font-size: clamp(28px, 7vw, 38px) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .expo-section-head p,
+  .expo-section-desc {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+  }
+
+  .expo-category-grid,
+  .expo-entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .expo-category-card,
+  .expo-entry-card {
+    min-height: 168px !important;
+    padding: 14px 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-category-card h3,
+  .expo-entry-card h3 {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+  }
+
+  .expo-category-card p,
+  .expo-entry-card p {
+    font-size: 12px !important;
+    line-height: 1.55 !important;
+  }
+
+  .expo-hotissues-wrap,
+  .expo-live-wrap,
+  .expo-deals-wrap,
+  .expo-ai-wrap,
+  .expo-problem-wrap,
+  .expo-new-wrap {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .expo-problem-grid,
+  .expo-new-grid,
+  .expo-solution-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
   }
 
   .expo-problem-card,
   .expo-ai-card,
   .expo-new-card {
-    padding: 18px 14px !important;
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-live-card,
+  .expo-promo-card {
+    padding: 18px 16px !important;
     border-radius: 22px !important;
+  }
+
+  .expo-live-main,
+  .expo-live-grid,
+  .expo-ai-input-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  .expo-live-video,
+  .expo-video-frame,
+  .expo-youtube-wrap {
+    min-height: 220px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-deal-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .expo-footer {
+    padding: 20px 12px 28px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+}
+
+/* =========================
+   Small mobile
+========================= */
+@media (max-width: 560px) {
+  .expo-hero-buttons,
+  .expo-promo-buttons {
+    grid-template-columns: 1fr !important;
+  }
+
+  .expo-category-grid,
+  .expo-entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .expo-category-card,
+  .expo-entry-card {
+    min-height: 156px !important;
+    padding: 12px 10px !important;
+  }
+
+  .expo-problem-grid,
+  .expo-new-grid,
+  .expo-solution-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================
+   Very small mobile
+========================= */
+@media (max-width: 390px) {
+  .expo-section {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .expo-hero-wrap {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .expo-hero-card {
+    padding: 16px 14px !important;
+  }
+
+  .expo-topbar {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .expo-category-grid,
+  .expo-entry-grid {
+    gap: 8px !important;
+  }
+
+  .expo-category-card,
+  .expo-entry-card {
+    min-height: 148px !important;
+    border-radius: 16px !important;
+  }
+
+  .expo-category-card h3,
+  .expo-entry-card h3 {
+    font-size: 14px !important;
+  }
+
+  .expo-category-card p,
+  .expo-entry-card p {
+    font-size: 11px !important;
+  }
+
+  .expo-live-card,
+  .expo-promo-card,
+  .expo-problem-card,
+  .expo-ai-card,
+  .expo-new-card {
+    border-radius: 18px !important;
   }
 }
 `;
@@ -166,7 +431,7 @@ type ExpoHomeSlotRow = {
 };
 
 type BoothLite = {
-  id: string;
+  booth_id: string;
   name?: string | null;
   title?: string | null;
   slug?: string | null;
@@ -177,6 +442,13 @@ type BoothLite = {
   brochure_url?: string | null;
   category_primary?: string | null;
   hall_code?: string | null;
+};
+
+type HomeSlotWithLink = HomeSlot & {
+  link_url?: string | null;
+  badge?: string | null;
+  meta_1?: string | null;
+  meta_2?: string | null;
 };
 
 function normalizeSlotSection(slot: ExpoHomeSlotRow): string {
@@ -200,10 +472,25 @@ function normalizeSlotSection(slot: ExpoHomeSlotRow): string {
   }
 }
 
+function buildBoothLink(booth?: BoothLite, slot?: ExpoHomeSlotRow): string {
+  const slotLink = typeof slot?.link_url === "string" ? slot.link_url.trim() : "";
+  if (slotLink) return slotLink;
+
+  if (booth?.booth_id) {
+    return `/expo/booths/${encodeURIComponent(booth.booth_id)}`;
+  }
+
+  if (booth?.slug) {
+    return `/expo/booths/${encodeURIComponent(booth.slug)}`;
+  }
+
+  return "#";
+}
+
 function mapExpoSlotToHomeSlot(
   slot: ExpoHomeSlotRow,
   boothMap: Record<string, BoothLite>
-): HomeSlot {
+): HomeSlotWithLink {
   const booth = slot.booth_id ? boothMap[slot.booth_id] : undefined;
 
   const boothName =
@@ -219,14 +506,6 @@ function mapExpoSlotToHomeSlot(
     slot.description ||
     "지금 확인하세요";
 
-  const linkUrl =
-    slot.link_url ||
-    (booth?.slug
-      ? `/expo/booth/${booth.slug}`
-      : booth?.id
-      ? `/expo/booth/${booth.id}`
-      : "#");
-
   return {
     ...(slot as unknown as HomeSlot),
     section_key: normalizeSlotSection(slot),
@@ -234,7 +513,7 @@ function mapExpoSlotToHomeSlot(
     subtitle: slot.subtitle || boothIntro,
     description: slot.description || boothIntro,
     image_url: slot.image_url || null,
-    link_url: linkUrl,
+    link_url: buildBoothLink(booth, slot),
     badge: slot.badge || "NEW",
     meta_1: slot.meta_1 || booth?.category_primary || null,
     meta_2: slot.meta_2 || booth?.hall_code || null,
@@ -292,7 +571,7 @@ export default async function ExpoIndexPage() {
     const { data: boothRows, error: boothError } = await supabase
       .from("booths")
       .select(`
-        id,
+        booth_id,
         name,
         title,
         slug,
@@ -304,29 +583,29 @@ export default async function ExpoIndexPage() {
         category_primary,
         hall_code
       `)
-      .in("id", boothIds);
+      .in("booth_id", boothIds);
 
     if (boothError) {
       console.error("[expo/page] booths query error:", boothError);
     } else {
       boothMap = Object.fromEntries(
-        (boothRows ?? []).map((booth: any) => [booth.id, booth])
+        ((boothRows ?? []) as BoothLite[]).map((booth) => [booth.booth_id, booth])
       );
     }
   }
 
-  const mappedSlots = rawSlotRows.map((slot) =>
+  const mappedSlots: HomeSlotWithLink[] = rawSlotRows.map((slot) =>
     mapExpoSlotToHomeSlot(slot, boothMap)
   );
 
-  const grouped = groupSlots(mappedSlots);
+  const grouped = groupSlots(mappedSlots as HomeSlot[]);
   const cms = ((cmsRows ?? [])[0] || null) as CmsSettings | null;
 
   const hero = grouped.hero?.[0] ?? null;
   const liveShow = grouped.live_show?.[0] ?? null;
 
   const autoNewProducts =
-    grouped.new_products?.length
+    grouped.new_products?.length > 0
       ? grouped.new_products
       : grouped.featured ?? [];
 
@@ -375,7 +654,7 @@ export default async function ExpoIndexPage() {
         heroDescription={heroDescription}
       />
 
-      <section className="expo-section" style={{ padding: "18px 20px 0" }}>
+      <section className="expo-section" style={{ padding: "16px 20px 0" }}>
         <ExpoCategoryEntrySection />
       </section>
 

@@ -2,15 +2,41 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const adminSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 const BUCKET = "booth-assets";
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function sanitizeFileName(name: string) {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[^\w.\-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return cleaned || "image";
+}
+
+function getSafeExtension(fileName: string, mimeType: string) {
+  const lower = fileName.toLowerCase();
+
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "jpg";
+  if (lower.endsWith(".png")) return "png";
+  if (lower.endsWith(".webp")) return "webp";
+  if (lower.endsWith(".gif")) return "gif";
+
+  if (mimeType === "image/jpeg") return "jpg";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/gif") return "gif";
+
+  return "bin";
 }
 
 export async function POST(req: Request) {
@@ -18,9 +44,10 @@ export async function POST(req: Request) {
     const supabase = await createSupabaseServerClient();
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { success: false, error: "업체 로그인이 필요합니다." },
         { status: 401 }
@@ -37,12 +64,29 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json(
+        { success: false, error: "이미지 파일만 업로드할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: "이미지 용량은 10MB 이하만 가능합니다." },
+        { status: 400 }
+      );
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const safeEmail = (user.email || "vendor").replace(/[^a-zA-Z0-9._-]/g, "_");
-    const fileName = `${Date.now()}-${sanitizeFileName(file.name)}`;
-    const filePath = `vendors/${safeEmail}/${fileName}`;
+    const ext = getSafeExtension(file.name, file.type);
+    const baseName = sanitizeFileName(file.name.replace(/\.[^.]+$/, ""));
+    const fileName = `${Date.now()}-${baseName}.${ext}`;
+
+    // bucket 내부 경로
+    const filePath = `vendors/${user.id}/${fileName}`;
 
     const { error: uploadError } = await adminSupabase.storage
       .from(BUCKET)
@@ -53,7 +97,10 @@ export async function POST(req: Request) {
 
     if (uploadError) {
       return NextResponse.json(
-        { success: false, error: uploadError.message },
+        {
+          success: false,
+          error: `Storage 업로드 실패: ${uploadError.message}`,
+        },
         { status: 500 }
       );
     }

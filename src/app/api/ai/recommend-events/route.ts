@@ -1,11 +1,11 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const { phone } = await req.json();
 
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const { data: farmer } = await supabase
     .from("farmer_profiles")

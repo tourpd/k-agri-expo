@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ function n(v: unknown) {
 
 export async function GET(_req: NextRequest, context: RouteContext) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { leadId } = await context.params;
 
     const { data, error } = await supabase
@@ -50,7 +50,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
 
 export async function POST(req: NextRequest, context: RouteContext) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { leadId } = await context.params;
     const body = await req.json();
 

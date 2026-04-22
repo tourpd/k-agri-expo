@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  createSupabaseAdminClient,
-  createSupabaseServerClient,
-} from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +13,21 @@ type VendorRow = {
   email: string | null;
 };
 
+type ResolveCurrentVendorIdError = {
+  ok: false;
+  error: string;
+  status: number;
+};
+
+type ResolveCurrentVendorIdSuccess = {
+  ok: true;
+  vendorId: string;
+};
+
+type ResolveCurrentVendorIdResult =
+  | ResolveCurrentVendorIdError
+  | ResolveCurrentVendorIdSuccess;
+
 function jsonError(message: string, status = 400) {
   return NextResponse.json({ success: false, error: message }, { status });
 }
@@ -23,7 +36,7 @@ function normalizeString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-async function resolveCurrentVendorId() {
+async function resolveCurrentVendorId(): Promise<ResolveCurrentVendorIdResult> {
   const supabase = await createSupabaseServerClient();
   const admin = createSupabaseAdminClient();
 
@@ -33,7 +46,7 @@ async function resolveCurrentVendorId() {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: "로그인이 필요합니다.", status: 401 as const };
+    return { ok: false, error: "로그인이 필요합니다.", status: 401 };
   }
 
   let vendor: VendorRow | null = null;
@@ -43,9 +56,9 @@ async function resolveCurrentVendorId() {
       .from("vendors")
       .select("id, user_id, email")
       .eq("user_id", user.id)
-      .maybeSingle<VendorRow>();
+      .maybeSingle();
 
-    if (!error && data) vendor = data;
+    if (!error && data) vendor = data as VendorRow;
   }
 
   if (!vendor && user.email) {
@@ -53,16 +66,20 @@ async function resolveCurrentVendorId() {
       .from("vendors")
       .select("id, user_id, email")
       .eq("email", user.email)
-      .maybeSingle<VendorRow>();
+      .maybeSingle();
 
-    if (!error && data) vendor = data;
+    if (!error && data) vendor = data as VendorRow;
   }
 
   if (!vendor) {
-    return { error: "연결된 업체 정보를 찾지 못했습니다.", status: 404 as const };
+    return {
+      ok: false,
+      error: "연결된 업체 정보를 찾지 못했습니다.",
+      status: 404,
+    };
   }
 
-  return { vendorId: vendor.id };
+  return { ok: true, vendorId: vendor.id };
 }
 
 /**
@@ -74,7 +91,7 @@ export async function PATCH(req: Request) {
     const admin = createSupabaseAdminClient();
     const resolved = await resolveCurrentVendorId();
 
-    if ("error" in resolved) {
+    if (!resolved.ok) {
       return jsonError(resolved.error, resolved.status);
     }
 

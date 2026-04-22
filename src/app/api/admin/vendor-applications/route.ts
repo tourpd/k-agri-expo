@@ -42,7 +42,7 @@ function getEnv(name: string) {
   return value;
 }
 
-function getSupabaseAdmin() {
+function createSupabaseAdminClient() {
   const supabaseUrl = getEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceRoleKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -154,7 +154,7 @@ function matchesBoothProgressStatus(row: any, expected: BoothProgressStatus) {
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { searchParams } = new URL(req.url);
 
     const q = safeTrim(searchParams.get("q"));

@@ -1,11 +1,11 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const nowIso = new Date().toISOString();
 
     const { data: events, error } = await supabase

@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     }
     if (!cropName) return jsonError("작물을 입력해주세요.");
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // booth 기준으로 vendor/hall/slot 자동 보강
     const { data: booth, error: boothError } = await supabase

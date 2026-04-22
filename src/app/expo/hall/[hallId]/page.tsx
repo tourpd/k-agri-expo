@@ -432,26 +432,28 @@ export default async function ExpoHallPage({
     if (boothId) boothMap.set(boothId, booth);
   }
 
-  const booths: MergedBoothRow[] = slots
-    .map((slot) => {
-      const slotBoothId = safe(slot.booth_id, "");
-      if (!slotBoothId) return null;
+  const booths = slots.reduce<MergedBoothRow[]>((acc, slot) => {
+  const slotBoothId = safe(slot.booth_id, "");
+  if (!slotBoothId) return acc;
 
-      const booth = boothMap.get(slotBoothId);
-      if (!booth) return null;
+  const booth = boothMap.get(slotBoothId);
+  if (!booth) return acc;
 
-      const resolvedBoothId = safe(booth.booth_id, slotBoothId);
-      if (!resolvedBoothId) return null;
+  const resolvedBoothId = safe(booth.booth_id, slotBoothId);
+  if (!resolvedBoothId) return acc;
 
-      return {
-        ...booth,
-        booth_id: resolvedBoothId,
-        slot_code: slot.slot_id ?? null,
-        source_hall_id: slot.hall_id ?? null,
-      };
-    })
-    .filter((booth): booth is MergedBoothRow => !!booth)
-    .filter((booth) => isVisibleBooth(booth));
+  const merged: MergedBoothRow = {
+    ...booth,
+    booth_id: resolvedBoothId,
+    slot_code: slot.slot_id ?? null,
+    source_hall_id: slot.hall_id ?? null,
+  };
+
+  if (!isVisibleBooth(merged)) return acc;
+
+  acc.push(merged);
+  return acc;
+}, []);
 
   const featuredPremium = sortBooths(
     booths.filter((b) => boothTypeLabel(b) === "premium" && !!b.is_featured)

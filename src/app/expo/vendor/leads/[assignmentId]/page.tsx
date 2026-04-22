@@ -1,18 +1,79 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  createSupabaseAdminClient,
-  createSupabaseServerClient,
-} from "@/lib/supabase/server";
+import type { CSSProperties } from "react";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function safe(v: any, fallback = "-") {
-  const s = typeof v === "string" ? v : "";
-  return s.trim() ? s : fallback;
+type AssignmentParams = {
+  assignmentId: string;
+};
+
+type VendorRow = {
+  id: string;
+  user_id: string | null;
+  email: string | null;
+  company_name: string | null;
+};
+
+type AssignmentRow = {
+  assignment_id: string;
+  lead_id: string;
+  vendor_id: string | null;
+  rank_no: number | null;
+  status: string | null;
+  match_score: number | null;
+  sponsor_score: number | null;
+  performance_score: number | null;
+  final_score: number | null;
+  created_at: string | null;
+  first_opened_at: string | null;
+  first_contacted_at: string | null;
+  quoted_at: string | null;
+  won_at: string | null;
+  memo: string | null;
+};
+
+type LeadRow = {
+  user_name: string | null;
+  phone: string | null;
+  region: string | null;
+  city: string | null;
+  crop: string | null;
+  category: string | null;
+  problem_name: string | null;
+  urgency_level: string | null;
+  purchase_intent: string | null;
+  question_text: string | null;
+  ai_summary: string | null;
+};
+
+type ConversionRow = {
+  conversion_id: string;
+  product_name: string | null;
+  quantity: string | null;
+  quoted_amount: number | null;
+  final_amount: number | null;
+  won_at: string | null;
+  memo: string | null;
+};
+
+type LogRow = {
+  log_id: string;
+  action_type: string | null;
+  created_at: string | null;
+  actor_type: string | null;
+  actor_id: string | null;
+  note: string | null;
+};
+
+function safe(v: unknown, fallback = "-") {
+  const s = typeof v === "string" ? v.trim() : "";
+  return s ? s : fallback;
 }
 
-function fmtMoney(v: any) {
+function fmtMoney(v: unknown) {
   const n = Number(v);
   if (!Number.isFinite(n)) return "-";
   return `${n.toLocaleString("ko-KR")}원`;
@@ -25,10 +86,38 @@ function fmtDate(v?: string | null) {
   return d.toLocaleString("ko-KR");
 }
 
+async function resolveCurrentVendor(userId: string, email?: string | null) {
+  const admin = createSupabaseAdminClient();
+
+  let vendor: VendorRow | null = null;
+
+  {
+    const { data } = await admin
+      .from("vendors")
+      .select("id, user_id, email, company_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    vendor = (data as VendorRow | null) ?? null;
+  }
+
+  if (!vendor && email) {
+    const { data } = await admin
+      .from("vendors")
+      .select("id, user_id, email, company_name")
+      .eq("email", email)
+      .maybeSingle();
+
+    vendor = (data as VendorRow | null) ?? null;
+  }
+
+  return vendor;
+}
+
 export default async function VendorLeadDetailPage({
   params,
 }: {
-  params: Promise<{ assignmentId: string }>;
+  params: Promise<AssignmentParams>;
 }) {
   const { assignmentId } = await params;
 
@@ -42,18 +131,13 @@ export default async function VendorLeadDetailPage({
   }
 
   const admin = createSupabaseAdminClient();
-
-  const { data: vendor } = await admin
-    .from("vendors")
-    .select("id, company_name")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const vendor = await resolveCurrentVendor(user.id, user.email);
 
   if (!vendor) {
     redirect("/expo/vendor/apply");
   }
 
-  const { data: assignment } = await admin
+  const { data: assignmentData } = await admin
     .from("expo_lead_assignments")
     .select(`
       assignment_id,
@@ -75,28 +159,48 @@ export default async function VendorLeadDetailPage({
     .eq("assignment_id", assignmentId)
     .maybeSingle();
 
+  const assignment = (assignmentData as AssignmentRow | null) ?? null;
+
   if (!assignment || assignment.vendor_id !== vendor.id) {
     redirect("/expo/vendor/leads");
   }
 
-  const { data: lead } = await admin
+  const { data: leadData } = await admin
     .from("expo_consult_leads")
-    .select("*")
+    .select(`
+      user_name,
+      phone,
+      region,
+      city,
+      crop,
+      category,
+      problem_name,
+      urgency_level,
+      purchase_intent,
+      question_text,
+      ai_summary
+    `)
     .eq("lead_id", assignment.lead_id)
     .maybeSingle();
 
-  const { data: logs } = await admin
+  const lead = (leadData as LeadRow | null) ?? null;
+
+  const { data: logsData } = await admin
     .from("expo_lead_logs")
-    .select("*")
+    .select("log_id, action_type, created_at, actor_type, actor_id, note")
     .eq("lead_id", assignment.lead_id)
     .order("created_at", { ascending: false });
 
-  const { data: conversions } = await admin
+  const logs = (logsData as LogRow[] | null) ?? [];
+
+  const { data: conversionsData } = await admin
     .from("expo_conversions")
-    .select("*")
+    .select("conversion_id, product_name, quantity, quoted_amount, final_amount, won_at, memo")
     .eq("lead_id", assignment.lead_id)
     .eq("vendor_id", vendor.id)
     .order("won_at", { ascending: false });
+
+  const conversions = (conversionsData as ConversionRow[] | null) ?? [];
 
   return (
     <main style={S.page}>
@@ -121,13 +225,16 @@ export default async function VendorLeadDetailPage({
           <div style={S.grid2}>
             <Info label="이름" value={safe(lead?.user_name)} />
             <Info label="연락처" value={safe(lead?.phone)} />
-            <Info label="지역" value={`${safe(lead?.region)} ${lead?.city ? `/ ${lead.city}` : ""}`} />
+            <Info
+              label="지역"
+              value={`${safe(lead?.region)}${lead?.city ? ` / ${lead.city}` : ""}`}
+            />
             <Info label="작물" value={safe(lead?.crop)} />
             <Info label="카테고리" value={safe(lead?.category)} />
             <Info label="문제명" value={safe(lead?.problem_name)} />
             <Info label="긴급도" value={safe(lead?.urgency_level)} />
             <Info label="구매의도" value={safe(lead?.purchase_intent)} />
-            <Info label="배정 순위" value={`${assignment.rank_no}순위`} />
+            <Info label="배정 순위" value={`${assignment.rank_no ?? "-"}순위`} />
             <Info label="배정 상태" value={safe(assignment.status)} />
           </div>
 
@@ -179,17 +286,18 @@ export default async function VendorLeadDetailPage({
         <section style={S.card}>
           <div style={S.sectionTitle}>매출 기록</div>
 
-          {!conversions || conversions.length === 0 ? (
+          {conversions.length === 0 ? (
             <div style={S.empty}>아직 판매 완료 기록이 없습니다.</div>
           ) : (
             <div style={S.list}>
-              {conversions.map((c: any) => (
+              {conversions.map((c) => (
                 <div key={c.conversion_id} style={S.logCard}>
                   <div style={S.logTitle}>
                     {safe(c.product_name, "제품명 미입력")} / 수량 {safe(c.quantity, "-")}
                   </div>
                   <div style={S.logMeta}>
-                    견적 {fmtMoney(c.quoted_amount)} · 최종 {fmtMoney(c.final_amount)} · {fmtDate(c.won_at)}
+                    견적 {fmtMoney(c.quoted_amount)} · 최종 {fmtMoney(c.final_amount)} ·{" "}
+                    {fmtDate(c.won_at)}
                   </div>
                   <div style={S.logNote}>{safe(c.memo, "메모 없음")}</div>
                 </div>
@@ -201,11 +309,11 @@ export default async function VendorLeadDetailPage({
         <section style={S.card}>
           <div style={S.sectionTitle}>리드 로그</div>
 
-          {!logs || logs.length === 0 ? (
+          {logs.length === 0 ? (
             <div style={S.empty}>로그가 없습니다.</div>
           ) : (
             <div style={S.list}>
-              {logs.map((log: any) => (
+              {logs.map((log) => (
                 <div key={log.log_id} style={S.logCard}>
                   <div style={S.logTitle}>
                     {safe(log.action_type)} / {fmtDate(log.created_at)}
@@ -243,7 +351,7 @@ function StatusButton({
   label: string;
 }) {
   return (
-    <form action={`/api/expo/vendor-leads/update`} method="post">
+    <form action="/api/expo/vendor-leads/update" method="post">
       <input type="hidden" name="assignment_id" value={assignmentId} />
       <input type="hidden" name="status" value={status} />
       <button type="submit" style={S.primaryBtn}>
@@ -281,7 +389,7 @@ function ConversionForm({ assignmentId }: { assignmentId: string }) {
   );
 }
 
-const S: Record<string, React.CSSProperties> = {
+const S: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
     background: "#f8fafc",

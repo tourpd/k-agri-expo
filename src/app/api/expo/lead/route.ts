@@ -1,154 +1,276 @@
 import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type LeadBody = {
   booth_id?: string | null;
+  product_id?: string | null;
   deal_id?: string | null;
+
   name?: string | null;
   phone?: string | null;
   email?: string | null;
   message?: string | null;
+
   source?: string | null;
   campaign?: string | null;
   video_code?: string | null;
   landing_type?: string | null;
   session_id?: string | null;
+
+  region?: string | null;
+  crop?: string | null;
+  company_name?: string | null;
+  lead_type?: string | null;
 };
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  };
+}
+
+function jsonError(message: string, status = 400) {
+  return NextResponse.json(
+    {
+      ok: false,
+      success: false,
+      error: message,
+    },
+    {
+      status,
+      headers: noStoreHeaders(),
+    }
+  );
+}
+
+function jsonSuccess(data: Record<string, unknown>) {
+  return NextResponse.json(
+    {
+      ok: true,
+      success: true,
+      ...data,
+    },
+    {
+      headers: noStoreHeaders(),
+    }
+  );
+}
 
 function clean(v: unknown) {
   return typeof v === "string" ? v.trim() : "";
 }
 
+function cleanNullable(v: unknown) {
+  const s = clean(v);
+  return s || null;
+}
+
+function normalizePhone(v: unknown) {
+  const raw = clean(v);
+  if (!raw) return null;
+  const digits = raw.replace(/[^\d]/g, "");
+  return digits || null;
+}
+
+function hasMeaningfulLeadInfo(input: {
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  message: string | null;
+  region: string | null;
+  crop: string | null;
+  company_name: string | null;
+}) {
+  return !!(
+    input.name ||
+    input.phone ||
+    input.email ||
+    input.message ||
+    input.region ||
+    input.crop ||
+    input.company_name
+  );
+}
+
+function normalizeLeadType(v: unknown) {
+  const s = clean(v).toLowerCase();
+  if (s === "buyer") return "buyer";
+  if (s === "vendor") return "vendor";
+  return "farmer";
+}
+
+function buildDedupKey(input: {
+  booth_id: string | null;
+  product_id: string | null;
+  deal_id: string | null;
+  session_id: string | null;
+  phone: string | null;
+  email: string | null;
+}) {
+  return [
+    input.booth_id || "-",
+    input.product_id || input.deal_id || "-",
+    input.session_id || "-",
+    input.phone || "-",
+    input.email || "-",
+  ].join("::");
+}
+
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as LeadBody;
+    const body = (await req.json().catch(() => ({}))) as LeadBody;
 
-    const booth_id = clean(body.booth_id) || null;
-    const deal_id = clean(body.deal_id) || null;
-    const name = clean(body.name) || null;
-    const phone = clean(body.phone) || null;
-    const email = clean(body.email) || null;
-    const message = clean(body.message) || null;
-    const source = clean(body.source) || "direct";
-    const campaign = clean(body.campaign) || null;
-    const video_code = clean(body.video_code) || null;
-    const landing_type = clean(body.landing_type) || "unknown";
-    const session_id = clean(body.session_id) || null;
+    const booth_id = cleanNullable(body.booth_id);
+    const product_id = cleanNullable(body.product_id ?? body.deal_id);
+    const deal_id = cleanNullable(body.deal_id);
 
-    if (!booth_id && !deal_id) {
-      return NextResponse.json(
-        { ok: false, error: "booth_id or deal_id is required." },
-        { status: 400 }
-      );
+    const name = cleanNullable(body.name);
+    const phone = normalizePhone(body.phone);
+    const email = cleanNullable(body.email);
+    const message = cleanNullable(body.message);
+
+    const source = clean(body.source) || "expo";
+    const campaign = cleanNullable(body.campaign);
+    const video_code = cleanNullable(body.video_code);
+    const landing_type = clean(body.landing_type) || "booth";
+    const session_id = cleanNullable(body.session_id);
+
+    const region = cleanNullable(body.region);
+    const crop = cleanNullable(body.crop);
+    const company_name = cleanNullable(body.company_name);
+    const lead_type = normalizeLeadType(body.lead_type);
+
+    if (!booth_id && !product_id) {
+      return jsonError("booth_id 또는 product_id(deal_id 포함) 중 하나는 필요합니다.", 400);
     }
 
-    const supabase = createSupabaseAdminClient();
-
-    // 1) session_id가 있으면 기존 익명/반익명 리드 재사용 시도
-    if (session_id) {
-      let existingQuery = supabase
-        .from("deal_leads")
-        .select("id, booth_id, deal_id, name, phone, email, message, source, campaign, video_code, landing_type, session_id, status")
-        .eq("session_id", session_id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (booth_id) {
-        existingQuery = existingQuery.eq("booth_id", booth_id);
-      }
-
-      if (deal_id) {
-        existingQuery = existingQuery.eq("deal_id", deal_id);
-      }
-
-      const { data: existingRows, error: existingError } = await existingQuery;
-
-      if (existingError) {
-        return NextResponse.json(
-          { ok: false, error: existingError.message },
-          { status: 500 }
-        );
-      }
-
-      const existing = existingRows?.[0];
-
-      if (existing?.id) {
-        const nextData = {
-          booth_id: booth_id ?? existing.booth_id ?? null,
-          deal_id: deal_id ?? existing.deal_id ?? null,
-          name: name ?? existing.name ?? null,
-          phone: phone ?? existing.phone ?? null,
-          email: email ?? existing.email ?? null,
-          message: message ?? existing.message ?? null,
-          source: source ?? existing.source ?? "direct",
-          campaign: campaign ?? existing.campaign ?? null,
-          video_code: video_code ?? existing.video_code ?? null,
-          landing_type: landing_type ?? existing.landing_type ?? "unknown",
-          session_id,
-        };
-
-        const { data: updated, error: updateError } = await supabase
-          .from("deal_leads")
-          .update(nextData)
-          .eq("id", existing.id)
-          .select("*")
-          .single();
-
-        if (updateError) {
-          return NextResponse.json(
-            { ok: false, error: updateError.message },
-            { status: 500 }
-          );
-        }
-
-        return NextResponse.json({
-          ok: true,
-          mode: "updated",
-          item: updated,
-        });
-      }
-    }
-
-    // 2) 없으면 신규 생성
-    const insertData = {
-      booth_id,
-      deal_id,
+    const meaningfulLead = hasMeaningfulLeadInfo({
       name,
       phone,
       email,
       message,
-      source,
-      campaign,
-      video_code,
-      landing_type,
+      region,
+      crop,
+      company_name,
+    });
+
+    if (!meaningfulLead) {
+      return jsonSuccess({
+        mode: "skipped",
+        reason: "no_meaningful_lead_info",
+      });
+    }
+
+    const admin = createSupabaseAdminClient();
+
+    const dedup_key = buildDedupKey({
+      booth_id,
+      product_id,
+      deal_id,
       session_id,
+      phone,
+      email,
+    });
+
+    // 최근 동일 문의 중복 방지
+    let existingId: string | null = null;
+
+    if (session_id || phone || email) {
+      let query = admin
+        .from("expo_leads")
+        .select("id, created_at")
+        .eq("booth_id", booth_id)
+        .eq("source", source)
+        .eq("landing_type", landing_type)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (product_id) {
+        query = query.eq("product_id", product_id);
+      }
+
+      const { data: recentRows, error: recentError } = await query;
+
+      if (recentError) {
+        console.error("[api/expo/lead] recent lookup error:", recentError);
+      } else if (Array.isArray(recentRows) && recentRows.length > 0) {
+        existingId = String(recentRows[0]?.id ?? "");
+      }
+    }
+
+    const payload = {
+      lead_type,
       status: "new",
+      booth_id,
+      product_id,
+      name,
+      phone,
+      email,
+      region,
+      crop,
+      company_name,
+      inquiry_text: message || "",
+      source,
+      source_detail: JSON.stringify({
+        campaign,
+        video_code,
+        landing_type,
+        session_id,
+        deal_id,
+        dedup_key,
+      }),
+      priority_score: 0,
+      updated_at: new Date().toISOString(),
     };
 
-    const { data: inserted, error: insertError } = await supabase
-      .from("deal_leads")
-      .insert(insertData)
+    if (existingId) {
+      const { data: updated, error: updateError } = await admin
+        .from("expo_leads")
+        .update(payload)
+        .eq("id", existingId)
+        .select("*")
+        .single();
+
+      if (updateError) {
+        console.error("[api/expo/lead] update error:", updateError);
+        return jsonError(updateError.message || "문의 업데이트에 실패했습니다.", 500);
+      }
+
+      return jsonSuccess({
+        mode: "updated",
+        item: updated,
+      });
+    }
+
+    const insertPayload = {
+      ...payload,
+      created_at: new Date().toISOString(),
+    };
+
+    const { data: inserted, error: insertError } = await admin
+      .from("expo_leads")
+      .insert(insertPayload)
       .select("*")
       .single();
 
     if (insertError) {
-      return NextResponse.json(
-        { ok: false, error: insertError.message },
-        { status: 500 }
-      );
+      console.error("[api/expo/lead] insert error:", insertError);
+      return jsonError(insertError.message || "문의 저장에 실패했습니다.", 500);
     }
 
-    return NextResponse.json({
-      ok: true,
+    return jsonSuccess({
       mode: "inserted",
       item: inserted,
     });
-  } catch (e: any) {
-    return NextResponse.json(
-      { ok: false, error: e?.message || "lead capture failed" },
-      { status: 500 }
+  } catch (e) {
+    console.error("[api/expo/lead] exception:", e);
+
+    return jsonError(
+      e instanceof Error ? e.message : "lead capture failed",
+      500
     );
   }
 }

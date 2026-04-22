@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       return jsonError("로그인이 필요합니다.", 401);
     }
 
-    const admin = getSupabaseAdmin();
+    const admin = createSupabaseAdminClient();
     const { searchParams } = new URL(req.url);
     const boothId = normalizeString(searchParams.get("booth_id"));
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       return jsonError("로그인이 필요합니다.", 401);
     }
 
-    const admin = getSupabaseAdmin();
+    const admin = createSupabaseAdminClient();
     const body = await req.json();
     const boothId = normalizeString(body.booth_id);
 
