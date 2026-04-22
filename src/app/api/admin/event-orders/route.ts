@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     const eventId = clean(url.searchParams.get("event_id"));
     const q = clean(url.searchParams.get("q"));
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     let query = supabase
       .from("expo_event_orders")

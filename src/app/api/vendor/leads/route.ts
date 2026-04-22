@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     const status = clean(url.searchParams.get("status"));
     const q = clean(url.searchParams.get("q"));
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     let query = supabase
       .from("booth_leads")

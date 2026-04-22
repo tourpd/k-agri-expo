@@ -35,6 +35,7 @@ type BoothRow = {
   is_public?: boolean | null;
   is_active?: boolean | null;
   is_published?: boolean | null;
+  email?: string | null;
 };
 
 type SlotRow = {
@@ -45,6 +46,12 @@ type SlotRow = {
   y?: number | null;
   w?: number | null;
   h?: number | null;
+};
+
+type MergedBoothRow = BoothRow & {
+  booth_id: string;
+  slot_code: string | null;
+  source_hall_id: string | null;
 };
 
 function getHallMeta(hallId: string): HallMeta | null {
@@ -183,7 +190,6 @@ export default async function Page({
   const supabase = await createSupabaseServerClient();
   const aliasIn = buildInList(hallMeta.dbAliases);
 
-  // 1) 슬롯 먼저 읽기
   const { data: slotsData, error: slotsError } = await supabase
     .from("hall_booth_slots")
     .select("*")
@@ -196,7 +202,7 @@ export default async function Page({
     notFound();
   }
 
-  const slots = ((slotsData ?? []).filter(Boolean) as SlotRow[]).map((slot) => ({
+  const slots: SlotRow[] = ((slotsData ?? []).filter(Boolean) as SlotRow[]).map((slot) => ({
     ...slot,
     hall_id: normalizeHallId(slot.hall_id),
   }));
@@ -209,7 +215,6 @@ export default async function Page({
     )
   );
 
-  // 2) 슬롯에 연결된 booth_id 기준으로 우선 조회
   let boothRows: BoothRow[] = [];
 
   if (slotBoothIds.length > 0) {
@@ -225,7 +230,6 @@ export default async function Page({
     }
   }
 
-  // 3) 부족하면 hall_id / hall_code fallback 조회
   if (boothRows.length === 0) {
     const { data: boothsData, error: boothsError } = await supabase
       .from("booths")
@@ -245,52 +249,42 @@ export default async function Page({
     if (boothId) boothMap.set(boothId, booth);
   }
 
-  // 4) 슬롯 + 부스 병합
-  const mergedVisibleBooths = slots
-    .map((slot) => {
-      const slotBoothId = safe(slot.booth_id, "");
-      if (!slotBoothId) return null;
+  const booths = slots.reduce<MergedBoothRow[]>((acc, slot) => {
+    const slotBoothId = safe(slot.booth_id, "");
+    if (!slotBoothId) return acc;
 
-      const booth = boothMap.get(slotBoothId);
-      if (!booth) return null;
-      if (!isVisibleBooth(booth)) return null;
+    const booth = boothMap.get(slotBoothId);
+    if (!booth) return acc;
+    if (!isVisibleBooth(booth)) return acc;
 
-      return {
-        ...booth,
-        booth_id: slotBoothId,
-        slot_code: slot.slot_id ?? null,
-        source_hall_id: slot.hall_id ?? null,
-      };
-    })
-    .filter(
-      (
-        v
-      ): v is BoothRow & {
-        slot_code?: string | null;
-        source_hall_id?: string | null;
-      } => !!v
-    );
+    acc.push({
+      ...booth,
+      booth_id: slotBoothId,
+      slot_code: slot.slot_id ?? null,
+      source_hall_id: slot.hall_id ?? null,
+    });
 
-  // 5) sponsor strip도 실제 노출 가능한 부스 기준
-  const sponsorBooths = mergedVisibleBooths
+    return acc;
+  }, []);
+
+  const sponsorBooths = booths
     .filter((b) =>
-      hallMeta.sponsorKey ? Boolean((b as any)?.[hallMeta.sponsorKey]) : false
+      hallMeta.sponsorKey ? Boolean((b as Record<string, unknown>)[hallMeta.sponsorKey]) : false
     )
     .sort((a, b) => {
-      const aOrder = Number(a?.sponsor_sort_order ?? 999);
-      const bOrder = Number(b?.sponsor_sort_order ?? 999);
+      const aOrder = Number(a.sponsor_sort_order ?? 999);
+      const bOrder = Number(b.sponsor_sort_order ?? 999);
       return aOrder - bOrder;
     })
     .slice(0, 5)
     .map((b) => ({
       booth_id: resolveBoothId(b),
       name: resolveBoothName(b),
-      intro: b?.intro ?? null,
-      region: b?.region ?? null,
-      category_primary: b?.category_primary ?? null,
+      intro: b.intro ?? null,
+      region: b.region ?? null,
+      category_primary: b.category_primary ?? null,
     }));
 
-  // 6) 지도용 슬롯 데이터
   const mappedSlots = slots.map((s) => {
     const slotBoothId = safe(s.booth_id, "");
     const booth = slotBoothId ? boothMap.get(slotBoothId) : null;
@@ -300,8 +294,8 @@ export default async function Page({
       ...s,
       hall_id: normalizeHallId(s.hall_id),
       booth_id: slotBoothId || null,
-      slot_id: s?.slot_id ?? null,
-      slot_code: normalizeSlotCode(s?.slot_id),
+      slot_id: s.slot_id ?? null,
+      slot_code: normalizeSlotCode(s.slot_id),
       booth_name: resolveBoothName(booth),
       category: booth?.category_primary ?? null,
       booth_intro: booth?.intro ?? booth?.description ?? null,

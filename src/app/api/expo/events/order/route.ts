@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       return jsonError("농민 정보가 올바르지 않습니다.", 401);
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 이벤트 조회
     const { data: event, error: eventError } = await supabase

@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     if (!orderId) return jsonError("order_id가 필요합니다.");
     if (!action) return jsonError("action이 필요합니다.");
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     const { data: order, error: orderError } = await supabase
       .from("expo_event_orders")

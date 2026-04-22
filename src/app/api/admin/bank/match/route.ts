@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -16,7 +16,7 @@ export async function POST() {
   try {
     await requireAdminUser();
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 1) 미매칭 입금 가져오기
     const { data: txs, error: txError } = await supabase

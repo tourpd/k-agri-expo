@@ -1,15 +1,14 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import {
-  createSupabaseAdminClient,
-  createSupabaseServerClient,
-} from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function safe(v: any, fallback = "-") {
+function safe(v: unknown, fallback = "-") {
   const s = typeof v === "string" ? v : "";
-  return s.trim() ? s : fallback;
+  return s.trim() ? s.trim() : fallback;
 }
 
 function fmtDate(v?: string | null) {
@@ -18,6 +17,25 @@ function fmtDate(v?: string | null) {
   if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleString("ko-KR");
 }
+
+type LeadRow = {
+  lead_id: string;
+  created_at: string | null;
+  user_name: string | null;
+  phone: string | null;
+  region: string | null;
+  city: string | null;
+  crop: string | null;
+  category: string | null;
+  problem_name: string | null;
+  urgency_level: string | null;
+  purchase_intent: string | null;
+  question_text: string | null;
+  status: string | null;
+  assigned_vendor_count: number | null;
+  conversion_status: string | null;
+  conversion_amount: number | null;
+};
 
 export default async function AdminLeadsPage() {
   const supabase = await createSupabaseServerClient();
@@ -31,7 +49,7 @@ export default async function AdminLeadsPage() {
 
   const admin = createSupabaseAdminClient();
 
-  const { data: leads } = await admin
+  const { data: leads, error } = await admin
     .from("expo_consult_leads")
     .select(`
       lead_id,
@@ -54,7 +72,31 @@ export default async function AdminLeadsPage() {
     .order("created_at", { ascending: false })
     .limit(200);
 
-  const rows = leads ?? [];
+  if (error) {
+    return (
+      <main style={S.page}>
+        <div style={S.wrap}>
+          <div style={S.top}>
+            <div>
+              <div style={S.kicker}>ADMIN LEADS</div>
+              <h1 style={S.title}>상담 리드 대시보드</h1>
+              <div style={S.desc}>리드 조회 중 오류가 발생했습니다.</div>
+            </div>
+          </div>
+
+          <div style={S.empty}>오류: {error.message}</div>
+
+          <div style={S.bottomLinks}>
+            <Link href="/expo/admin" style={S.ghostBtn}>
+              ← 관리자 홈
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const rows: LeadRow[] = (leads ?? []) as LeadRow[];
 
   return (
     <main style={S.page}>
@@ -91,7 +133,7 @@ export default async function AdminLeadsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row: any) => (
+                {rows.map((row) => (
                   <tr key={row.lead_id}>
                     <td style={S.td}>{fmtDate(row.created_at)}</td>
                     <td style={S.td}>{safe(row.user_name)}</td>
@@ -109,7 +151,11 @@ export default async function AdminLeadsPage() {
                     <td style={S.td}>{safe(row.status)}</td>
                     <td style={S.td}>
                       {row.conversion_status === "won"
-                        ? `완료 / ${row.conversion_amount ? Number(row.conversion_amount).toLocaleString("ko-KR") + "원" : "-"}`
+                        ? `완료 / ${
+                            row.conversion_amount != null
+                              ? `${Number(row.conversion_amount).toLocaleString("ko-KR")}원`
+                              : "-"
+                          }`
                         : safe(row.conversion_status, "-")}
                     </td>
                   </tr>
@@ -129,7 +175,7 @@ export default async function AdminLeadsPage() {
   );
 }
 
-const S: Record<string, React.CSSProperties> = {
+const S: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
     background: "#f8fafc",

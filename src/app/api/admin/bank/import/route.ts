@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return Response.json({ success: false, error: "items가 비어 있습니다." }, { status: 400 });
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const rows = items.map((item: any) => ({
       amount_krw: Number(item.amount_krw || 0),
       depositor_name: String(item.depositor_name || ""),

@@ -1,143 +1,217 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+/**
+ * 보조/레거시 호환용 쿠키 이름
+ * 현재 주 인증은 Supabase auth 세션입니다.
+ */
 export const VENDOR_COOKIE_NAME = "kagri_vendor_session";
 
 export type VendorSession = {
   email: string;
   role?: string;
-  user_id?: string;
+  user_id: string;
   issuedAt?: number;
   version?: string;
 };
 
-export async function getVendorSession(): Promise<VendorSession | null> {
+type VendorLookupRow = {
+  user_id?: string | null;
+  company_name?: string | null;
+};
+
+type BoothLookupRow = {
+  vendor_user_id?: string | null;
+};
+
+type SupabaseAuthUser = {
+  id: string;
+  email?: string | null;
+};
+
+function normalizeEmail(email: string | null | undefined): string {
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
+}
+
+async function getSupabaseUser(): Promise<SupabaseAuthUser | null> {
   try {
-    const cookieStore = await cookies();
+    const supabase = await createSupabaseServerClient();
 
-    const allCookies = cookieStore.getAll();
-    console.log("[vendor-auth] cookies:", allCookies);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-    const raw = cookieStore.get(VENDOR_COOKIE_NAME)?.value;
-
-    console.log("[vendor-auth] raw cookie:", raw);
-
-    if (!raw) {
-      console.log("[vendor-auth] ❌ no vendor cookie");
+    if (error) {
+      console.error("[vendor-auth] auth.getUser error:", error);
       return null;
     }
 
-    const decoded = Buffer.from(raw, "base64url").toString("utf-8");
-    console.log("[vendor-auth] decoded:", decoded);
-
-    const parsed = JSON.parse(decoded);
-    console.log("[vendor-auth] parsed:", parsed);
-
-    const email =
-      typeof parsed?.email === "string"
-        ? parsed.email.trim().toLowerCase()
-        : "";
-
-    const user_id =
-      typeof parsed?.user_id === "string"
-        ? parsed.user_id.trim()
-        : "";
-
-    console.log("[vendor-auth] extracted email:", email);
-    console.log("[vendor-auth] extracted user_id:", user_id);
-
-    if (!email || !user_id) {
-      console.log("[vendor-auth] ❌ invalid session (missing email or user_id)");
+    if (!user?.id) {
+      console.log("[vendor-auth] no authenticated supabase user");
       return null;
     }
 
-    const session = {
-      email,
-      role: typeof parsed?.role === "string" ? parsed.role : undefined,
-      user_id,
-      issuedAt:
-        typeof parsed?.issuedAt === "number" ? parsed.issuedAt : undefined,
-      version:
-        typeof parsed?.version === "string" ? parsed.version : undefined,
+    const resolvedUser: SupabaseAuthUser = {
+      id: user.id,
+      email: user.email ?? null,
     };
 
-    console.log("[vendor-auth] ✅ session resolved:", session);
+    console.log("[vendor-auth] supabase user resolved:", {
+      id: resolvedUser.id,
+      email: resolvedUser.email ?? null,
+    });
 
-    return session;
+    return resolvedUser;
   } catch (error) {
-    console.error("[vendor-auth] getVendorSession decode error:", error);
+    console.error("[vendor-auth] getSupabaseUser exception:", error);
     return null;
   }
 }
 
-export async function isVendorAuthenticated() {
-  const session = await getVendorSession();
+function toVendorSession(user: SupabaseAuthUser): VendorSession | null {
+  const email = normalizeEmail(user.email);
 
-  console.log("[vendor-auth] isVendorAuthenticated session:", session);
+  if (!user.id || !email) {
+    console.log("[vendor-auth] invalid user for vendor session", {
+      hasUserId: !!user.id,
+      hasEmail: !!email,
+    });
+    return null;
+  }
 
-  if (!session?.user_id) {
-    console.log("[vendor-auth] ❌ no user_id");
+  return {
+    email,
+    user_id: user.id,
+    role: "vendor",
+    issuedAt: Math.floor(Date.now() / 1000),
+    version: "supabase-session-v3",
+  };
+}
+
+async function lookupVendorAccessByUserId(userId: string): Promise<boolean> {
+  if (!userId) {
+    console.log("[vendor-auth] lookupVendorAccessByUserId: empty userId");
     return false;
   }
 
   try {
     const supabase = createSupabaseAdminClient();
 
-    const { data: vendor } = await supabase
+    const vendorResult = await supabase
       .from("vendors")
       .select("user_id, company_name")
-      .eq("user_id", session.user_id)
+      .eq("user_id", userId)
       .limit(1)
       .maybeSingle();
 
-    console.log("[vendor-auth] vendor lookup:", vendor);
+    if (vendorResult.error) {
+      console.error("[vendor-auth] vendors lookup error:", vendorResult.error);
+    }
 
-    if (vendor) {
-      console.log("[vendor-auth] ✅ vendor exists");
+    const vendor = (vendorResult.data ?? null) as VendorLookupRow | null;
+
+    if (vendor?.user_id) {
+      console.log("[vendor-auth] vendor access granted by vendors table:", {
+        userId,
+        companyName: vendor.company_name ?? null,
+      });
       return true;
     }
 
-    const { data: boothVendor } = await supabase
+    const boothResult = await supabase
       .from("booths")
       .select("vendor_user_id")
-      .eq("vendor_user_id", session.user_id)
+      .eq("vendor_user_id", userId)
       .limit(1)
       .maybeSingle();
 
-    console.log("[vendor-auth] booth lookup:", boothVendor);
+    if (boothResult.error) {
+      console.error("[vendor-auth] booths lookup error:", boothResult.error);
+    }
 
-    const result = !!boothVendor;
+    const boothVendor = (boothResult.data ?? null) as BoothLookupRow | null;
+    const hasBoothAccess = !!boothVendor?.vendor_user_id;
 
-    console.log("[vendor-auth] booth auth result:", result);
+    console.log("[vendor-auth] booth-based vendor access:", {
+      userId,
+      hasBoothAccess,
+    });
 
-    return result;
+    return hasBoothAccess;
   } catch (error) {
-    console.error("[vendor-auth] isVendorAuthenticated error:", error);
+    console.error("[vendor-auth] lookupVendorAccessByUserId exception:", error);
     return false;
   }
 }
 
-export async function requireVendorUser() {
+export async function getVendorSession(): Promise<VendorSession | null> {
+  try {
+    const user = await getSupabaseUser();
+
+    if (!user) {
+      console.log("[vendor-auth] getVendorSession: no supabase user");
+      return null;
+    }
+
+    const session = toVendorSession(user);
+
+    if (!session) {
+      console.log("[vendor-auth] getVendorSession: failed to build session");
+      return null;
+    }
+
+    console.log("[vendor-auth] vendor session resolved:", {
+      user_id: session.user_id,
+      email: session.email,
+      version: session.version,
+    });
+
+    return session;
+  } catch (error) {
+    console.error("[vendor-auth] getVendorSession error:", error);
+    return null;
+  }
+}
+
+export async function isVendorAuthenticated(): Promise<boolean> {
   const session = await getVendorSession();
 
-  console.log("[vendor-auth] requireVendorUser session:", session);
+  if (!session?.user_id) {
+    console.log("[vendor-auth] isVendorAuthenticated: no session");
+    return false;
+  }
+
+  const ok = await lookupVendorAccessByUserId(session.user_id);
+
+  console.log("[vendor-auth] isVendorAuthenticated result:", {
+    userId: session.user_id,
+    ok,
+  });
+
+  return ok;
+}
+
+export async function requireVendorUser(): Promise<VendorSession> {
+  const session = await getVendorSession();
 
   if (!session?.user_id) {
-    console.log("[vendor-auth] ❌ redirect → /vendor/login (no session)");
+    console.log("[vendor-auth] requireVendorUser: redirect -> /vendor/login (no session)");
     redirect("/vendor/login");
   }
 
-  const ok = await isVendorAuthenticated();
-
-  console.log("[vendor-auth] auth check result:", ok);
+  const ok = await lookupVendorAccessByUserId(session.user_id);
 
   if (!ok) {
-    console.log("[vendor-auth] ❌ redirect → /vendor/login (not authenticated)");
+    console.log("[vendor-auth] requireVendorUser: redirect -> /vendor/login (not vendor)");
     redirect("/vendor/login");
   }
 
-  console.log("[vendor-auth] ✅ user allowed");
+  console.log("[vendor-auth] requireVendorUser: access granted", {
+    userId: session.user_id,
+    email: session.email,
+  });
 
   return session;
 }

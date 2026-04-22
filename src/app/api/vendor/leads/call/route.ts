@@ -1,6 +1,6 @@
 // src/app/api/vendor/leads/call/route.ts
 import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { calcLeadScore, calcPriorityRank } from "@/lib/leadScore";
 
 export const dynamic = "force-dynamic";

@@ -96,7 +96,7 @@ function getEnv(name: string) {
   return value;
 }
 
-function getSupabaseAdmin() {
+function createSupabaseAdminClient() {
   return createClient(
     getEnv("NEXT_PUBLIC_SUPABASE_URL"),
     getEnv("SUPABASE_SERVICE_ROLE_KEY"),
@@ -164,7 +164,7 @@ function buildStoragePublicUrl(bucket: string, path: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const body = (await req.json()) as RequestBody;
 
     const planCode =

@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -28,7 +28,7 @@ export async function GET(req: Request) {
 
     const { start, end, label } = monthRange(monthOffset);
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     const { data: leads, error } = await supabase
       .from("booth_leads")

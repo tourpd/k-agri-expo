@@ -1,5 +1,5 @@
 import PDFDocument from "pdfkit";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       return Response.json({ error: "settlement_id 필요" }, { status: 400 });
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     const { data, error } = await supabase
       .from("vendor_settlements")

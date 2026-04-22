@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type ExpoSlotType = "new" | "featured" | "hero";
 
@@ -48,7 +48,7 @@ function pickSubtitle(slotType: ExpoSlotType, value?: string | null) {
 }
 
 async function getNextOrder(slotType: ExpoSlotType) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const { count, error } = await supabase
     .from("expo_home_slots")
@@ -66,7 +66,7 @@ export async function autoPlaceExpo(
   boothId: string,
   options?: AutoPlaceExpoOptions
 ) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   if (!boothId) {
     throw new Error("boothId가 필요합니다.");
@@ -154,7 +154,7 @@ export async function autoPlaceExpo(
 }
 
 export async function removeExpoPlacement(boothId: string) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   if (!boothId) {
     throw new Error("boothId가 필요합니다.");

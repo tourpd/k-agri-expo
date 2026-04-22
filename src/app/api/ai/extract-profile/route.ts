@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     if (!phone) return jsonError("phone 필요");
     if (!extracted) return jsonError("extracted_data 필요");
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 🔥 기존 farmer 조회
     const { data: existing } = await supabase

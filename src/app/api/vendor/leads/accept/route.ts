@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       return jsonError("lead_id가 필요합니다.");
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 1) 리드 조회
     const { data: lead, error: leadError } = await supabase

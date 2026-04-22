@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     if (!vendorId) return jsonError("vendor_id 필요");
     if (!start || !end) return jsonError("기간 필요");
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 👉 해당 기간 매출 가져오기
     const { data: orders, error } = await supabase

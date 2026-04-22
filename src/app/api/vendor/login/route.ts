@@ -1,9 +1,26 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { VENDOR_COOKIE_NAME } from "@/lib/vendor-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+type VendorLookupRow = {
+  user_id?: string | null;
+};
+
+type BoothLookupRow = {
+  vendor_user_id?: string | null;
+};
+
+function buildNoStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
+  };
+}
 
 function jsonError(message: string, status = 400) {
   return NextResponse.json(
@@ -11,8 +28,97 @@ function jsonError(message: string, status = 400) {
       success: false,
       error: message,
     },
-    { status }
+    {
+      status,
+      headers: buildNoStoreHeaders(),
+    }
   );
+}
+
+function clearLegacyVendorCookie(res: NextResponse) {
+  res.cookies.set(VENDOR_COOKIE_NAME, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+}
+
+function setLegacyVendorCookie(
+  res: NextResponse,
+  payload: {
+    email: string;
+    role: string;
+    user_id: string;
+    issuedAt: number;
+    version: string;
+  }
+) {
+  const sessionToken = Buffer.from(
+    JSON.stringify(payload),
+    "utf-8"
+  ).toString("base64url");
+
+  res.cookies.set(VENDOR_COOKIE_NAME, sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 12,
+  });
+}
+
+async function hasVendorAccess(userId: string): Promise<boolean> {
+  if (!userId) return false;
+
+  try {
+    const admin = createSupabaseAdminClient();
+
+    const vendorResult = await admin
+      .from("vendors")
+      .select("user_id")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (vendorResult.error) {
+      console.error("[api/vendor/login] vendors lookup error:", vendorResult.error);
+    }
+
+    const vendor = (vendorResult.data ?? null) as VendorLookupRow | null;
+
+    if (vendor?.user_id) {
+      console.log("[api/vendor/login] vendor access granted by vendors table:", {
+        userId,
+      });
+      return true;
+    }
+
+    const boothResult = await admin
+      .from("booths")
+      .select("vendor_user_id")
+      .eq("vendor_user_id", userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (boothResult.error) {
+      console.error("[api/vendor/login] booths lookup error:", boothResult.error);
+    }
+
+    const boothVendor = (boothResult.data ?? null) as BoothLookupRow | null;
+    const ok = !!boothVendor?.vendor_user_id;
+
+    console.log("[api/vendor/login] vendor access by booths table:", {
+      userId,
+      ok,
+    });
+
+    return ok;
+  } catch (error) {
+    console.error("[api/vendor/login] hasVendorAccess exception:", error);
+    return false;
+  }
 }
 
 export async function POST(req: Request) {
@@ -34,90 +140,129 @@ export async function POST(req: Request) {
       return jsonError("비밀번호를 입력해주세요.", 400);
     }
 
-    const supabase = createSupabaseAdminClient();
+    /**
+     * 중요
+     * - 로그인은 반드시 SSR 서버 클라이언트로 수행
+     * - 그래야 Supabase auth 세션 쿠키가 서버 응답에 반영됩니다.
+     */
+    const supabase = await createSupabaseServerClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error || !data.user) {
-      return jsonError(error?.message ?? "업체 로그인에 실패했습니다.", 401);
+    const user = data?.user ?? null;
+    const session = data?.session ?? null;
+
+    if (error || !user?.id || !session) {
+      console.error("[api/vendor/login] signInWithPassword failed:", error);
+
+      const res = jsonError(
+        error?.message ?? "업체 로그인에 실패했습니다.",
+        401
+      );
+
+      clearLegacyVendorCookie(res);
+      return res;
     }
 
-    const userId = data.user.id;
-    const userEmail = (data.user.email ?? "").trim().toLowerCase();
+    const userId = user.id;
+    const userEmail = String(user.email ?? "").trim().toLowerCase();
 
-    let isVendor = false;
+    if (!userEmail) {
+      console.error("[api/vendor/login] signed-in user has no email:", {
+        userId,
+      });
 
-    try {
-      const { data: vendor } = await supabase
-        .from("vendors")
-        .select("user_id")
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (vendor) {
-        isVendor = true;
-      } else {
-        const { data: boothVendor } = await supabase
-          .from("booths")
-          .select("vendor_user_id")
-          .eq("vendor_user_id", userId)
-          .limit(1)
-          .maybeSingle();
-
-        if (boothVendor) {
-          isVendor = true;
-        }
+      try {
+        await supabase.auth.signOut();
+      } catch (signOutError) {
+        console.error("[api/vendor/login] signOut after missing email error:", signOutError);
       }
-    } catch (checkError) {
-      console.error("[api/vendor/login] vendor role check error:", checkError);
+
+      const res = jsonError("로그인 계정 정보가 올바르지 않습니다.", 401);
+      clearLegacyVendorCookie(res);
+      return res;
     }
 
+    console.log("[api/vendor/login] sign-in success:", {
+      userId,
+      email: userEmail,
+    });
+
+    const isVendor = await hasVendorAccess(userId);
+
+    /**
+     * 로그인은 성공했지만 vendor 권한이 없으면
+     * - Supabase 세션 제거
+     * - legacy vendor 쿠키 제거
+     */
     if (!isVendor) {
-      return jsonError("업체 권한이 없는 계정입니다.", 403);
+      try {
+        const { error: signOutError } = await supabase.auth.signOut();
+
+        if (signOutError) {
+          console.error(
+            "[api/vendor/login] signOut after non-vendor error:",
+            signOutError
+          );
+        }
+      } catch (signOutException) {
+        console.error(
+          "[api/vendor/login] signOut after non-vendor exception:",
+          signOutException
+        );
+      }
+
+      const res = jsonError("업체 권한이 없는 계정입니다.", 403);
+      clearLegacyVendorCookie(res);
+      return res;
     }
 
-    const sessionPayload = {
+    /**
+     * 보조용 vendor 쿠키
+     * - 주 인증은 Supabase 세션
+     * - 기존 코드 호환/디버깅용으로만 유지
+     */
+    const res = NextResponse.json(
+      {
+        success: true,
+        role: "vendor",
+        email: userEmail,
+        user_id: userId,
+        redirectTo: "/vendor",
+      },
+      {
+        headers: buildNoStoreHeaders(),
+      }
+    );
+
+    setLegacyVendorCookie(res, {
       email: userEmail,
       role: "vendor",
       user_id: userId,
       issuedAt: Date.now(),
-      version: "AUTH_BASECAMP_v1",
-    };
-
-    const sessionToken = Buffer.from(
-      JSON.stringify(sessionPayload),
-      "utf-8"
-    ).toString("base64url");
-
-    const res = NextResponse.json({
-      success: true,
-      role: "vendor",
-      email: userEmail,
-      user_id: userId,
-      redirectTo: "/vendor",
+      version: "AUTH_SUPABASE_v3",
     });
 
-    res.cookies.set(VENDOR_COOKIE_NAME, sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 12,
+    console.log("[api/vendor/login] vendor login completed:", {
+      userId,
+      email: userEmail,
     });
 
     return res;
   } catch (error) {
     console.error("[api/vendor/login] error:", error);
 
-    return jsonError(
+    const res = jsonError(
       error instanceof Error
         ? error.message
         : "업체 로그인 중 오류가 발생했습니다.",
       500
     );
+
+    clearLegacyVendorCookie(res);
+    return res;
   }
 }

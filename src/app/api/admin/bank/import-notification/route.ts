@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       return jsonError("금액 추출 실패", 400);
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 🔥 3. 중복 방지 (금액 + 시간 기준)
     const { data: existing } = await supabase

@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     if (!name) return jsonError("이름을 입력해주세요.");
     if (phone.length < 10) return jsonError("전화번호를 정확히 입력해주세요.");
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     const { data: existing } = await supabase
       .from("farmer_sessions")

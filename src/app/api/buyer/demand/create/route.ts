@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { analyzeInquiry } from "@/lib/leads/analyze-inquiry";
 import { sendAdminHotLeadAlert } from "@/lib/leads/send-admin-hot-lead-alert";
 
@@ -169,7 +169,7 @@ function computeMatchScore(params: {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const body = (await req.json()) as DemandBody;
 
     const buyerUserId = n(body.buyer_user_id);

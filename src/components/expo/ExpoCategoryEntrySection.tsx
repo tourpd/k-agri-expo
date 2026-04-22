@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 
 const CATEGORIES = [
@@ -43,23 +44,37 @@ export default function ExpoCategoryEntrySection() {
   return (
     <section style={wrap}>
       <div style={eyebrow}>CATEGORY ENTRY</div>
-      <h2 style={title}>원하는 분야부터 들어가세요</h2>
-      <p style={desc}>
-        농민이 찾는 방식대로 카테고리를 먼저 고르고, 그 안에서 프리미엄 부스와 제품을
-        우선 확인하게 구성합니다.
+
+      <h2 style={title} className="expo-section-title">
+        원하는 분야부터 들어가세요
+      </h2>
+
+      <p style={desc} className="expo-section-desc">
+        농민이 찾는 방식대로 카테고리를 먼저 고르고,
+        그 안에서 필요한 부스와 제품을 빠르게 확인할 수 있게 구성했습니다.
       </p>
 
-      <div style={grid}>
+      <div style={grid} className="expo-category-grid expo-entry-grid">
         {CATEGORIES.map((item) => (
           <Link
             key={item.hallId}
             href={`/expo/hall/${item.hallId}`}
             style={card}
+            className="expo-category-card expo-entry-card"
           >
-            <div style={icon}>{item.icon}</div>
-            <div style={cardTitle}>{item.title}</div>
-            <div style={cardDesc}>{item.desc}</div>
-            <div style={cta}>카테고리 보기 →</div>
+            <div style={cardTop}>
+              <div style={iconWrap}>
+                <span style={icon}>{item.icon}</span>
+              </div>
+
+              <div style={cardTitle}>{item.title}</div>
+              <div style={cardDesc}>{item.desc}</div>
+            </div>
+
+            <div style={ctaRow}>
+              <span style={cta}>카테고리 보기</span>
+              <span style={arrow}>→</span>
+            </div>
           </Link>
         ))}
       </div>
@@ -68,77 +83,111 @@ export default function ExpoCategoryEntrySection() {
 }
 
 const wrap: React.CSSProperties = {
-  marginTop: 10,
+  marginTop: 8,
 };
 
 const eyebrow: React.CSSProperties = {
-  fontSize: 14,
+  fontSize: 12,
   fontWeight: 950,
   color: "#16a34a",
-  letterSpacing: 0.4,
+  letterSpacing: 0.6,
 };
 
 const title: React.CSSProperties = {
-  marginTop: 14,
-  fontSize: 58,
-  lineHeight: 1.08,
+  marginTop: 10,
+  fontSize: 40,
+  lineHeight: 1.12,
   fontWeight: 950,
   color: "#0f172a",
+  letterSpacing: -1,
+  wordBreak: "keep-all",
 };
 
 const desc: React.CSSProperties = {
-  marginTop: 24,
-  fontSize: 22,
-  lineHeight: 1.8,
+  marginTop: 12,
+  fontSize: 15,
+  lineHeight: 1.75,
   color: "#64748b",
-  maxWidth: 1080,
+  maxWidth: 780,
+  wordBreak: "keep-all",
 };
 
 const grid: React.CSSProperties = {
-  marginTop: 30,
+  marginTop: 20,
   display: "grid",
   gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-  gap: 18,
+  gap: 12,
 };
 
 const card: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  minHeight: 300,
-  padding: "28px 26px",
-  borderRadius: 28,
+  minHeight: 200,
+  padding: "16px 14px",
+  borderRadius: 20,
   border: "1px solid #e5e7eb",
-  background: "#fff",
+  background: "#ffffff",
   textDecoration: "none",
   color: "#0f172a",
-  boxShadow: "0 12px 28px rgba(15,23,42,0.04)",
+  boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+};
+
+const cardTop: React.CSSProperties = {
+  display: "block",
+};
+
+const iconWrap: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: 14,
+  background: "#f8fafc",
+  border: "1px solid #e2e8f0",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 const icon: React.CSSProperties = {
-  fontSize: 38,
+  fontSize: 24,
   lineHeight: 1,
 };
 
 const cardTitle: React.CSSProperties = {
-  marginTop: 26,
-  fontSize: 28,
-  lineHeight: 1.25,
+  marginTop: 14,
+  fontSize: 18,
+  lineHeight: 1.3,
   fontWeight: 950,
   color: "#0f172a",
+  wordBreak: "keep-all",
 };
 
 const cardDesc: React.CSSProperties = {
-  marginTop: 18,
-  fontSize: 16,
-  lineHeight: 1.8,
+  marginTop: 8,
+  fontSize: 13,
+  lineHeight: 1.6,
   color: "#64748b",
-  minHeight: 58,
+  wordBreak: "keep-all",
+};
+
+const ctaRow: React.CSSProperties = {
+  marginTop: 16,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 8,
 };
 
 const cta: React.CSSProperties = {
-  marginTop: 28,
-  fontSize: 16,
+  fontSize: 13,
   fontWeight: 950,
   color: "#0f172a",
+  lineHeight: 1.2,
+};
+
+const arrow: React.CSSProperties = {
+  fontSize: 14,
+  fontWeight: 950,
+  color: "#0f172a",
+  lineHeight: 1,
 };
