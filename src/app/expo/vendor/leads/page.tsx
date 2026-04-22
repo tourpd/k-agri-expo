@@ -1,16 +1,65 @@
+import React from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  createSupabaseAdminClient,
-  createSupabaseServerClient,
-} from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+type LeadRow = {
+  lead_id?: string | null;
+  user_name?: string | null;
+  phone?: string | null;
+  region?: string | null;
+  city?: string | null;
+  crop?: string | null;
+  category?: string | null;
+  problem_name?: string | null;
+  urgency_level?: string | null;
+  purchase_intent?: string | null;
+  question_text?: string | null;
+  ai_summary?: string | null;
+  conversion_status?: string | null;
+};
+
+type AssignmentRow = {
+  assignment_id: string;
+  created_at?: string | null;
+  rank_no?: number | null;
+  status?: string | null;
+  final_score?: number | null;
+  lead?: LeadRow | LeadRow[] | null;
+};
+
+type VendorRow = {
+  id: string;
+  company_name?: string | null;
+};
+
+function safe(v: unknown, fallback = "-") {
+  const s = typeof v === "string" ? v.trim() : "";
+  return s ? s : fallback;
+}
+
+function normalizeLead(lead: AssignmentRow["lead"]): LeadRow | null {
+  if (!lead) return null;
+  if (Array.isArray(lead)) return lead[0] ?? null;
+  return lead;
+}
+
 function badgeStyle(status: string): React.CSSProperties {
-  if (status === "won") return { ...S.badge, background: "#dcfce7", color: "#166534" };
-  if (status === "quoted") return { ...S.badge, background: "#fef3c7", color: "#92400e" };
-  if (status === "contacted") return { ...S.badge, background: "#dbeafe", color: "#1d4ed8" };
+  if (status === "won") {
+    return { ...S.badge, background: "#dcfce7", color: "#166534" };
+  }
+  if (status === "quoted") {
+    return { ...S.badge, background: "#fef3c7", color: "#92400e" };
+  }
+  if (status === "contacted") {
+    return { ...S.badge, background: "#dbeafe", color: "#1d4ed8" };
+  }
+  if (status === "opened") {
+    return { ...S.badge, background: "#e0f2fe", color: "#0369a1" };
+  }
   return { ...S.badge, background: "#f3f4f6", color: "#374151" };
 }
 
@@ -26,17 +75,19 @@ export default async function VendorLeadsPage() {
 
   const admin = createSupabaseAdminClient();
 
-  const { data: vendor } = await admin
+  const { data: vendorData } = await admin
     .from("vendors")
     .select("id, company_name")
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const vendor = (vendorData as VendorRow | null) ?? null;
+
   if (!vendor) {
     redirect("/expo/vendor/apply");
   }
 
-  const { data: rows } = await admin
+  const { data: rowsData } = await admin
     .from("expo_lead_assignments")
     .select(`
       assignment_id,
@@ -63,7 +114,16 @@ export default async function VendorLeadsPage() {
     .eq("vendor_id", vendor.id)
     .order("created_at", { ascending: false });
 
-  const items = rows ?? [];
+  const rawItems = (rowsData ?? []) as AssignmentRow[];
+
+  const items: Array<
+    Omit<AssignmentRow, "lead"> & {
+      lead: LeadRow | null;
+    }
+  > = rawItems.map((row) => ({
+    ...row,
+    lead: normalizeLead(row.lead),
+  }));
 
   return (
     <main style={S.page}>
@@ -72,7 +132,9 @@ export default async function VendorLeadsPage() {
           <div>
             <div style={S.kicker}>VENDOR LEADS</div>
             <h1 style={S.title}>배정된 상담 리드</h1>
-            <div style={S.desc}>{vendor.company_name || "업체"}에 배정된 상담 목록입니다.</div>
+            <div style={S.desc}>
+              {safe(vendor.company_name, "업체")}에 배정된 상담 목록입니다.
+            </div>
           </div>
         </div>
 
@@ -80,35 +142,37 @@ export default async function VendorLeadsPage() {
           <div style={S.empty}>현재 배정된 리드가 없습니다.</div>
         ) : (
           <div style={S.list}>
-            {items.map((row: any) => {
+            {items.map((row) => {
               const lead = row.lead;
+              const status = safe(row.status, "assigned");
+
               return (
                 <article key={row.assignment_id} style={S.card}>
                   <div style={S.cardTop}>
                     <div>
                       <div style={S.name}>
-                        {lead?.user_name || "이름 미입력"} · {lead?.crop || "작물 미입력"}
+                        {safe(lead?.user_name, "이름 미입력")} ·{" "}
+                        {safe(lead?.crop, "작물 미입력")}
                       </div>
+
                       <div style={S.meta}>
-                        {lead?.region || "지역 미입력"}
+                        {safe(lead?.region, "지역 미입력")}
                         {lead?.city ? ` · ${lead.city}` : ""}
                         {lead?.category ? ` · ${lead.category}` : ""}
                         {lead?.problem_name ? ` · ${lead.problem_name}` : ""}
                       </div>
                     </div>
 
-                    <div style={badgeStyle(row.status || "assigned")}>
-                      {row.status || "assigned"}
-                    </div>
+                    <div style={badgeStyle(status)}>{status}</div>
                   </div>
 
-                  <div style={S.question}>{lead?.question_text || "-"}</div>
+                  <div style={S.question}>{safe(lead?.question_text, "-")}</div>
 
                   <div style={S.meta2}>
-                    <span>긴급도: {lead?.urgency_level || "-"}</span>
-                    <span>구매의도: {lead?.purchase_intent || "-"}</span>
-                    <span>배정순위: {row.rank_no}순위</span>
-                    <span>점수: {row.final_score}</span>
+                    <span>긴급도: {safe(lead?.urgency_level, "-")}</span>
+                    <span>구매의도: {safe(lead?.purchase_intent, "-")}</span>
+                    <span>배정순위: {row.rank_no ?? "-"}순위</span>
+                    <span>점수: {row.final_score ?? "-"}</span>
                   </div>
 
                   <div style={S.actionRow}>

@@ -1,5 +1,5 @@
 import path from "path";
-import { createWorker, type Worker } from "tesseract.js";
+import { createWorker, type Worker, PSM } from "tesseract.js";
 import sharp from "sharp";
 
 export const runtime = "nodejs";
@@ -69,7 +69,7 @@ function looksLikeCompanyName(value: string) {
   if (!v) return false;
   if (v.length < 2) return false;
   if (/등록번호|대표자|개업연월일|소재지|업태|종목|발급사유/.test(v)) return false;
-  return /(주식회사|$begin:math:text$주$end:math:text$|회사|티브이|TV|농수산)/i.test(v) || v.length >= 4;
+  return /(주식회사|회사|티브이|TV|농수산)/i.test(v) || v.length >= 4;
 }
 
 function looksLikePersonName(value: string) {
@@ -90,7 +90,7 @@ function looksLikePersonName(value: string) {
 function stripLabelPrefixes(value: string) {
   return cleanLine(
     value
-      .replace(/법인명\s*$begin:math:text$\\s\*단체명\\s\*$end:math:text$\s*[:：]?\s*/g, "")
+      .replace(/법인명\s*단체명\s*[:：]?\s*/g, "")
       .replace(/법인명\s*[:：]?\s*/g, "")
       .replace(/단체명\s*[:：]?\s*/g, "")
       .replace(/상호\s*[:：]?\s*/g, "")
@@ -164,7 +164,7 @@ function pickCompanyName(lines: string[]) {
   }
 
   const fallback = lines.find((line) =>
-    /(주식회사|$begin:math:text$주$end:math:text$|한국농수산|티브이|TV)/i.test(cleanLine(line))
+    /(주식회사|한국농수산|티브이|TV)/i.test(cleanLine(line))
   );
 
   return fallback ? stripLabelPrefixes(fallback) : "";
@@ -402,7 +402,7 @@ async function createOcrWorker(): Promise<Worker> {
 
   try {
     await worker.setParameters({
-      tessedit_pageseg_mode: "6",
+      tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
       preserve_interword_spaces: "1",
     });
   } catch {}
@@ -506,4 +506,4 @@ export async function POST(req: Request) {
       } catch {}
     }
   }
-} 
+}

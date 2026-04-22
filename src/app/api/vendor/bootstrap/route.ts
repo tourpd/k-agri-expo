@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
-import {
-  createSupabaseServerClient,
-  createSupabaseAdminClient,
-} from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+function safeText(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
 
-    const company_name = String(body?.company_name ?? "").trim();
-    const contact_name = String(body?.contact_name ?? "").trim();
-    const email = String(body?.email ?? "").trim();
+    const company_name = safeText(body?.company_name);
+    const contact_name = safeText(body?.contact_name);
+    const email = safeText(body?.email);
 
     if (!company_name || !email) {
       return NextResponse.json(
@@ -37,6 +39,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const now = new Date().toISOString();
+
     const { error: profileError } = await admin.from("profiles").upsert(
       {
         id: user.id,
@@ -45,6 +49,7 @@ export async function POST(req: Request) {
         role: "vendor",
         display_name: contact_name || company_name,
         company_name,
+        updated_at: now,
       },
       {
         onConflict: "user_id",
@@ -66,7 +71,7 @@ export async function POST(req: Request) {
         contact_name: contact_name || company_name,
         status: "none",
         verify_status: "none",
-        created_at: new Date().toISOString(),
+        updated_at: now,
       },
       {
         onConflict: "user_id",

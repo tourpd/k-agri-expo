@@ -1,11 +1,11 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 24시간 지난 미입금 pending 주문
     const threshold = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString();

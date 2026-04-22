@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     if (!email) return jsonError("이메일을 입력해주세요.");
     if (!password) return jsonError("비밀번호를 입력해주세요.");
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     // 🔥 벤더 조회
     const { data: vendor, error } = await supabase

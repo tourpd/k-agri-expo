@@ -1,5 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+type OwnedBoothResult = {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  boothId: string | null;
+  error: string | null;
+  status: number;
+};
+
 function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -16,18 +23,9 @@ function normalizeSortOrder(value: unknown, fallback = 1) {
   return Math.floor(num);
 }
 
-type VendorRef = {
-  vendor_id: string;
-  user_id?: string | null;
-};
-
-type BoothRef = {
-  booth_id: string;
-  vendor_id?: string | null;
-  vendor_user_id?: string | null;
-};
-
-async function getOwnedBoothByRequest(req: Request) {
+async function getOwnedBoothId(
+  requestedBoothId?: string
+): Promise<OwnedBoothResult> {
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -38,41 +36,9 @@ async function getOwnedBoothByRequest(req: Request) {
   if (userError || !user) {
     return {
       supabase,
-      user: null,
-      vendor: null,
-      booth: null,
-      body: null,
+      boothId: null,
       error: "로그인이 필요합니다.",
       status: 401,
-    };
-  }
-
-  let body: any = {};
-  try {
-    body = await req.json();
-  } catch (jsonError: any) {
-    return {
-      supabase,
-      user,
-      vendor: null,
-      booth: null,
-      body: null,
-      error: "잘못된 요청 형식입니다.",
-      status: 400,
-    };
-  }
-
-  const boothId = normalizeText(body?.booth_id);
-
-  if (!boothId) {
-    return {
-      supabase,
-      user,
-      vendor: null,
-      booth: null,
-      body,
-      error: "booth_id가 필요합니다.",
-      status: 400,
     };
   }
 
@@ -84,10 +50,7 @@ async function getOwnedBoothByRequest(req: Request) {
   if (roleError) {
     return {
       supabase,
-      user,
-      vendor: null,
-      booth: null,
-      body,
+      boothId: null,
       error: roleError.message || "권한 확인 중 오류가 발생했습니다.",
       status: 400,
     };
@@ -100,10 +63,7 @@ async function getOwnedBoothByRequest(req: Request) {
   if (!isVendor) {
     return {
       supabase,
-      user,
-      vendor: null,
-      booth: null,
-      body,
+      boothId: null,
       error: "vendor 권한이 없습니다.",
       status: 403,
     };
@@ -119,95 +79,153 @@ async function getOwnedBoothByRequest(req: Request) {
   if (vendorRes.error) {
     return {
       supabase,
-      user,
-      vendor: null,
-      booth: null,
-      body,
+      boothId: null,
       error: vendorRes.error.message || "vendor 조회 중 오류가 발생했습니다.",
       status: 400,
     };
   }
 
-  const vendor = (vendorRes.data?.[0] ?? null) as VendorRef | null;
+  const vendor = vendorRes.data?.[0] ?? null;
 
   if (!vendor?.vendor_id) {
     return {
       supabase,
-      user,
-      vendor: null,
-      booth: null,
-      body,
+      boothId: null,
       error: "vendor가 없습니다.",
       status: 404,
     };
   }
 
-  const boothRes = await supabase
-    .from("booths")
-    .select("booth_id,vendor_id,vendor_user_id")
-    .eq("booth_id", boothId)
-    .limit(1);
+  if (requestedBoothId) {
+    const boothByIdRes = await supabase
+      .from("booths")
+      .select("booth_id,vendor_id,vendor_user_id")
+      .eq("booth_id", requestedBoothId)
+      .limit(1);
 
-  if (boothRes.error) {
+    if (boothByIdRes.error) {
+      return {
+        supabase,
+        boothId: null,
+        error: boothByIdRes.error.message || "부스 조회 중 오류가 발생했습니다.",
+        status: 400,
+      };
+    }
+
+    const boothById = boothByIdRes.data?.[0] ?? null;
+
+    if (!boothById?.booth_id) {
+      return {
+        supabase,
+        boothId: null,
+        error: "요청한 부스를 찾을 수 없습니다.",
+        status: 404,
+      };
+    }
+
+    const ownedByVendorId = boothById.vendor_id === vendor.vendor_id;
+    const ownedByUserId = boothById.vendor_user_id === user.id;
+
+    if (!ownedByVendorId && !ownedByUserId) {
+      return {
+        supabase,
+        boothId: null,
+        error: "이 부스를 수정할 권한이 없습니다.",
+        status: 403,
+      };
+    }
+
     return {
       supabase,
-      user,
-      vendor,
-      booth: null,
-      body,
-      error: boothRes.error.message || "부스 조회 중 오류가 발생했습니다.",
+      boothId: boothById.booth_id,
+      error: null,
+      status: 200,
+    };
+  }
+
+  const boothByVendorRes = await supabase
+    .from("booths")
+    .select("booth_id,vendor_id,vendor_user_id")
+    .eq("vendor_id", vendor.vendor_id)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (boothByVendorRes.error) {
+    return {
+      supabase,
+      boothId: null,
+      error: boothByVendorRes.error.message || "부스 조회 중 오류가 발생했습니다.",
       status: 400,
     };
   }
 
-  const booth = (boothRes.data?.[0] ?? null) as BoothRef | null;
-
-  if (!booth?.booth_id) {
+  const boothByVendor = boothByVendorRes.data?.[0] ?? null;
+  if (boothByVendor?.booth_id) {
     return {
       supabase,
-      user,
-      vendor,
-      booth: null,
-      body,
-      error: "부스를 찾을 수 없습니다.",
-      status: 404,
+      boothId: boothByVendor.booth_id,
+      error: null,
+      status: 200,
     };
   }
 
-  const ownedByVendorId = booth.vendor_id === vendor.vendor_id;
-  const ownedByUserId = booth.vendor_user_id === user.id;
+  const boothByUserRes = await supabase
+    .from("booths")
+    .select("booth_id,vendor_id,vendor_user_id")
+    .eq("vendor_user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-  if (!ownedByVendorId && !ownedByUserId) {
+  if (boothByUserRes.error) {
     return {
       supabase,
-      user,
-      vendor,
-      booth: null,
-      body,
-      error: "이 부스를 수정할 권한이 없습니다.",
-      status: 403,
+      boothId: null,
+      error: boothByUserRes.error.message || "부스 조회 중 오류가 발생했습니다.",
+      status: 400,
+    };
+  }
+
+  const boothByUser = boothByUserRes.data?.[0] ?? null;
+  if (boothByUser?.booth_id) {
+    return {
+      supabase,
+      boothId: boothByUser.booth_id,
+      error: null,
+      status: 200,
     };
   }
 
   return {
     supabase,
-    user,
-    vendor,
-    booth,
-    body,
-    error: null,
-    status: 200,
+    boothId: null,
+    error: "부스를 찾을 수 없습니다.",
+    status: 404,
   };
 }
 
 export async function POST(req: Request) {
   try {
-    const { supabase, booth, body, error, status } = await getOwnedBoothByRequest(req);
+    let body: Record<string, unknown> = {};
 
-    if (error || !booth || !body) {
+    try {
+      body = (await req.json()) as Record<string, unknown>;
+    } catch {
+      return Response.json(
+        { ok: false, error: "잘못된 요청 형식입니다." },
+        { status: 400 }
+      );
+    }
+
+    const requestedBoothId = normalizeText(body?.booth_id);
+
+    const { supabase, boothId, error, status } = await getOwnedBoothId(
+      requestedBoothId || undefined
+    );
+
+    if (error || !boothId) {
       return Response.json(
         { ok: false, error: error || "권한이 없습니다." },
-        { status: status || 401 }
+        { status }
       );
     }
 
@@ -221,9 +239,18 @@ export async function POST(req: Request) {
     const isActive = body?.is_active !== false;
 
     const imageUrl = normalizeOptionalUrl(body?.image_url);
+    const imageFileUrl = normalizeOptionalUrl(body?.image_file_url);
     const youtubeUrl = normalizeOptionalUrl(body?.youtube_url);
     const catalogUrl = normalizeOptionalUrl(body?.catalog_url);
+    const catalogFileUrl = normalizeOptionalUrl(body?.catalog_file_url);
     const catalogFilename = normalizeText(body?.catalog_filename);
+
+    const headlineText = normalizeText(body?.headline_text);
+    const urgencyText = normalizeText(body?.urgency_text);
+    const ctaText = normalizeText(body?.cta_text);
+    const point1 = normalizeText(body?.point_1);
+    const point2 = normalizeText(body?.point_2);
+    const point3 = normalizeText(body?.point_3);
 
     if (!name) {
       return Response.json(
@@ -232,38 +259,49 @@ export async function POST(req: Request) {
       );
     }
 
-    const payload = {
-      booth_id: booth.booth_id,
+    const updatePayload = {
       name,
       description,
       price_text: priceText,
       sort_order: sortOrder,
       is_active: isActive,
+
       image_url: imageUrl,
+      image_file_url: imageFileUrl,
+
       youtube_url: youtubeUrl,
+
       catalog_url: catalogUrl,
+      catalog_file_url: catalogFileUrl,
       catalog_filename: catalogFilename,
+
+      headline_text: headlineText,
+      urgency_text: urgencyText,
+      cta_text: ctaText,
+      point_1: point1,
+      point_2: point2,
+      point_3: point3,
     };
 
     if (productId) {
-      const ownedRes = await supabase
+      const { data: ownedRows, error: ownedError } = await supabase
         .from("products")
         .select("product_id,booth_id")
         .eq("product_id", productId)
-        .eq("booth_id", booth.booth_id)
+        .eq("booth_id", boothId)
         .limit(1);
 
-      if (ownedRes.error) {
+      if (ownedError) {
         return Response.json(
           {
             ok: false,
-            error: ownedRes.error.message || "제품 확인 중 오류가 발생했습니다.",
+            error: ownedError.message || "제품 확인 중 오류가 발생했습니다.",
           },
           { status: 400 }
         );
       }
 
-      const owned = ownedRes.data?.[0] ?? null;
+      const owned = ownedRows?.[0] ?? null;
 
       if (!owned) {
         return Response.json(
@@ -274,9 +312,9 @@ export async function POST(req: Request) {
 
       const updateRes = await supabase
         .from("products")
-        .update(payload)
+        .update(updatePayload)
         .eq("product_id", productId)
-        .eq("booth_id", booth.booth_id);
+        .eq("booth_id", boothId);
 
       if (updateRes.error) {
         return Response.json(
@@ -292,7 +330,7 @@ export async function POST(req: Request) {
         .from("products")
         .select("*")
         .eq("product_id", productId)
-        .eq("booth_id", booth.booth_id)
+        .eq("booth_id", boothId)
         .limit(1);
 
       if (refetchRes.error) {
@@ -300,24 +338,24 @@ export async function POST(req: Request) {
           ok: true,
           mode: "updated",
           product_id: productId,
-          booth_id: booth.booth_id,
         });
       }
-
-      const updated = refetchRes.data?.[0] ?? null;
 
       return Response.json({
         ok: true,
         mode: "updated",
-        product: updated,
-        product_id: productId,
-        booth_id: booth.booth_id,
+        product: refetchRes.data?.[0] ?? null,
       });
     }
 
+    const insertPayload = {
+      booth_id: boothId,
+      ...updatePayload,
+    };
+
     const insertRes = await supabase
       .from("products")
-      .insert(payload);
+      .insert(insertPayload);
 
     if (insertRes.error) {
       return Response.json(
@@ -329,29 +367,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const createdRes = await supabase
+    const refetchCreatedRes = await supabase
       .from("products")
       .select("*")
-      .eq("booth_id", booth.booth_id)
+      .eq("booth_id", boothId)
       .eq("name", name)
       .order("created_at", { ascending: false })
       .limit(1);
 
-    if (createdRes.error) {
+    if (refetchCreatedRes.error) {
       return Response.json({
         ok: true,
         mode: "created",
-        booth_id: booth.booth_id,
       });
     }
-
-    const created = createdRes.data?.[0] ?? null;
 
     return Response.json({
       ok: true,
       mode: "created",
-      product: created,
-      booth_id: booth.booth_id,
+      product: refetchCreatedRes.data?.[0] ?? null,
     });
   } catch (e: any) {
     return Response.json(
@@ -363,12 +397,27 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const { supabase, booth, body, error, status } = await getOwnedBoothByRequest(req);
+    let body: Record<string, unknown> = {};
 
-    if (error || !booth || !body) {
+    try {
+      body = (await req.json()) as Record<string, unknown>;
+    } catch {
+      return Response.json(
+        { ok: false, error: "잘못된 요청 형식입니다." },
+        { status: 400 }
+      );
+    }
+
+    const requestedBoothId = normalizeText(body?.booth_id);
+
+    const { supabase, boothId, error, status } = await getOwnedBoothId(
+      requestedBoothId || undefined
+    );
+
+    if (error || !boothId) {
       return Response.json(
         { ok: false, error: error || "권한이 없습니다." },
-        { status: status || 401 }
+        { status }
       );
     }
 
@@ -382,24 +431,24 @@ export async function DELETE(req: Request) {
       );
     }
 
-    const ownedRes = await supabase
+    const { data: ownedRows, error: ownedError } = await supabase
       .from("products")
       .select("product_id,booth_id")
       .eq("product_id", productId)
-      .eq("booth_id", booth.booth_id)
+      .eq("booth_id", boothId)
       .limit(1);
 
-    if (ownedRes.error) {
+    if (ownedError) {
       return Response.json(
         {
           ok: false,
-          error: ownedRes.error.message || "제품 확인 중 오류가 발생했습니다.",
+          error: ownedError.message || "제품 확인 중 오류가 발생했습니다.",
         },
         { status: 400 }
       );
     }
 
-    const owned = ownedRes.data?.[0] ?? null;
+    const owned = ownedRows?.[0] ?? null;
 
     if (!owned) {
       return Response.json(
@@ -412,7 +461,7 @@ export async function DELETE(req: Request) {
       .from("products")
       .delete()
       .eq("product_id", productId)
-      .eq("booth_id", booth.booth_id);
+      .eq("booth_id", boothId);
 
     if (deleteRes.error) {
       return Response.json(
@@ -427,7 +476,6 @@ export async function DELETE(req: Request) {
     return Response.json({
       ok: true,
       deleted_product_id: productId,
-      booth_id: booth.booth_id,
     });
   } catch (e: any) {
     return Response.json(

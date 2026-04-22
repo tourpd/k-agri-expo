@@ -3,35 +3,129 @@ import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+type ExpoVisitorRow = {
+  id?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  region?: string | null;
+  main_crop?: string | null;
+};
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  };
+}
+
+function jsonError(message: string, status = 400, extra?: Record<string, unknown>) {
+  return NextResponse.json(
+    {
+      ok: false,
+      success: false,
+      error: message,
+      ...(extra || {}),
+    },
+    {
+      status,
+      headers: noStoreHeaders(),
+    }
+  );
+}
+
+function jsonSuccess(data: Record<string, unknown>) {
+  return NextResponse.json(
+    {
+      ok: true,
+      success: true,
+      ...data,
+    },
+    {
+      headers: noStoreHeaders(),
+    }
+  );
+}
+
+function safeString(v: unknown, fallback = "") {
+  return typeof v === "string" && v.trim() ? v.trim() : fallback;
+}
+
+function normalizeVisitorRow(row: ExpoVisitorRow) {
+  const id = safeString(row.id, "");
+  const name = safeString(row.name, "");
+  const phone = safeString(row.phone, "");
+  const region = safeString(row.region, "");
+  const mainCrop = safeString(row.main_crop, "");
+
+  return {
+    id,
+    name,
+    phone,
+    region,
+    main_crop: mainCrop,
+  };
+}
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const visitor_key = cookieStore.get("visitor_key")?.value;
+  try {
+    const cookieStore = await cookies();
+    const visitorKey = cookieStore.get("visitor_key")?.value?.trim() || "";
 
-  if (!visitor_key) {
-    return NextResponse.json({ ok: false, error: "NO_VISITOR" }, { status: 401 });
+    if (!visitorKey) {
+      return jsonError("NO_VISITOR", 401);
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("expo_visitors")
+      .select("id, name, phone, region, main_crop")
+      .eq("visitor_key", visitorKey)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[api/expo/me] expo_visitors select error:", error);
+      return jsonError(error.message || "VISITOR_LOOKUP_FAILED", 500);
+    }
+
+    if (!data || !data.id) {
+      return jsonError("VISITOR_NOT_FOUND", 401);
+    }
+
+    const visitor = normalizeVisitorRow(data as ExpoVisitorRow);
+
+    try {
+      const { error: updateError } = await supabase
+        .from("expo_visitors")
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq("id", visitor.id);
+
+      if (updateError) {
+        console.error("[api/expo/me] last_seen_at update error:", updateError);
+      }
+    } catch (updateError) {
+      console.error("[api/expo/me] last_seen_at update exception:", updateError);
+    }
+
+    return jsonSuccess({
+      visitor,
+      profile: {
+        id: visitor.id,
+        name: visitor.name,
+        farmer_name: visitor.name,
+        phone: visitor.phone,
+        region: visitor.region,
+        crop: visitor.main_crop,
+        main_crop: visitor.main_crop,
+      },
+    });
+  } catch (error) {
+    console.error("[api/expo/me] exception:", error);
+
+    return jsonError(
+      error instanceof Error ? error.message : "INTERNAL_SERVER_ERROR",
+      500
+    );
   }
-
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("expo_visitors")
-    .select("id,name,phone,region,main_crop")
-    .eq("visitor_key", visitor_key)
-    .maybeSingle();
-
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  }
-  if (!data) {
-    return NextResponse.json({ ok: false, error: "VISITOR_NOT_FOUND" }, { status: 401 });
-  }
-
-  // last_seen_at 갱신(실패해도 무시)
-  await supabase
-    .from("expo_visitors")
-    .update({ last_seen_at: new Date().toISOString() })
-    .eq("id", data.id);
-
-  return NextResponse.json({ ok: true, visitor: data });
 }

@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type BoothType = "free" | "basic" | "premium";
 
@@ -66,7 +66,7 @@ function generateFallbackSlots() {
 }
 
 async function getOccupiedSlots(hallId: string) {
-  const supabase = getSupabaseAdmin();
+  const supabase = createSupabaseAdminClient();
 
   const { data, error } = await supabase
     .from("booths")

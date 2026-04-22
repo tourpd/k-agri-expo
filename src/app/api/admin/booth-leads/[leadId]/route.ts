@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -31,7 +31,7 @@ export async function PATCH(
     const finalAmount = Number(body.final_amount_krw || 0);
     const commissionRate = Number(body.commission_rate || 0);
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
 
     const { data: existing, error: existingError } = await supabase
       .from("booth_leads")

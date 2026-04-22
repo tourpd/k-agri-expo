@@ -1,44 +1,64 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabaseBrowser } from "@/lib/supabase/client";
+import {
+  createClient,
+  type RealtimePostgresChangesPayload,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 
 type ChatMessage = {
-  id: string | number;
+  id: string;
   room_id: string;
-  sender: string;
+  user_id: string | null;
   message: string;
+  created_at: string;
 };
 
-export default function ExpoChat({ roomId }: { roomId: string }) {
-  const supabase = useMemo(() => supabaseBrowser(), []);
+function createBrowserSupabaseClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  if (!url) {
+    throw new Error("Missing env: NEXT_PUBLIC_SUPABASE_URL");
+  }
+
+  if (!anonKey) {
+    throw new Error("Missing env: NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  }
+
+  return createClient(url, anonKey);
+}
+
+export default function ExpoChat({ roomId }: { roomId: string }) {
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
 
   useEffect(() => {
-    let active = true;
+    let mounted = true;
 
     async function loadMessages() {
       const { data, error } = await supabase
         .from("expo_chat_messages")
         .select("*")
         .eq("room_id", roomId)
-        .order("id", { ascending: true });
+        .order("created_at", { ascending: true });
 
-      if (!active) return;
+      if (!mounted) return;
+
       if (error) {
-        console.error("채팅 불러오기 실패:", error.message);
+        console.error("[ExpoChat] loadMessages error:", error);
         return;
       }
 
-      setMessages((data || []) as ChatMessage[]);
+      setMessages((data ?? []) as ChatMessage[]);
     }
 
-    loadMessages();
+    void loadMessages();
 
     const channel = supabase
-      .channel(`chat:${roomId}`)
+      .channel(`expo-chat-${roomId}`)
       .on(
         "postgres_changes",
         {
@@ -47,7 +67,7 @@ export default function ExpoChat({ roomId }: { roomId: string }) {
           table: "expo_chat_messages",
           filter: `room_id=eq.${roomId}`,
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<ChatMessage>) => {
           const newMessage = payload.new as ChatMessage;
           setMessages((prev) => [...prev, newMessage]);
         }
@@ -55,23 +75,22 @@ export default function ExpoChat({ roomId }: { roomId: string }) {
       .subscribe();
 
     return () => {
-      active = false;
-      supabase.removeChannel(channel);
+      mounted = false;
+      void supabase.removeChannel(channel);
     };
   }, [roomId, supabase]);
 
-  async function send() {
+  async function handleSend() {
     const message = text.trim();
     if (!message) return;
 
     const { error } = await supabase.from("expo_chat_messages").insert({
       room_id: roomId,
-      sender: "farmer",
       message,
     });
 
     if (error) {
-      console.error("채팅 전송 실패:", error.message);
+      console.error("[ExpoChat] send error:", error);
       return;
     }
 
@@ -80,52 +99,22 @@ export default function ExpoChat({ roomId }: { roomId: string }) {
 
   return (
     <div>
-      <div
-        style={{
-          height: 200,
-          overflow: "auto",
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          padding: 12,
-          background: "#fff",
-        }}
-      >
-        {messages.length === 0 ? (
-          <div style={{ color: "#666", fontSize: 13 }}>아직 메시지가 없습니다.</div>
-        ) : (
-          messages.map((m) => (
-            <div key={m.id} style={{ marginBottom: 8 }}>
-              <b>{m.sender}</b> : {m.message}
-            </div>
-          ))
-        )}
+      <div>
+        {messages.map((msg) => (
+          <div key={msg.id}>
+            <strong>{msg.user_id ?? "익명"}</strong>: {msg.message}
+          </div>
+        ))}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="메시지를 입력하세요"
-          style={{
-            flex: 1,
-            padding: "10px 12px",
-            border: "1px solid #ddd",
-            borderRadius: 12,
-          }}
+          style={{ flex: 1 }}
         />
-
-        <button
-          onClick={send}
-          style={{
-            padding: "10px 14px",
-            borderRadius: 12,
-            border: "1px solid #111",
-            background: "#111",
-            color: "#fff",
-            fontWeight: 900,
-            cursor: "pointer",
-          }}
-        >
+        <button type="button" onClick={handleSend}>
           보내기
         </button>
       </div>

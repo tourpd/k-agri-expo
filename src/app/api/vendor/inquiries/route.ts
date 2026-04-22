@@ -1,10 +1,52 @@
 import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function noStoreHeaders() {
+  return {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  };
+}
+
+function jsonError(message: string, status = 400) {
+  return NextResponse.json(
+    {
+      ok: false,
+      success: false,
+      error: message,
+    },
+    {
+      status,
+      headers: noStoreHeaders(),
+    }
+  );
+}
+
+function jsonSuccess(data: Record<string, unknown>) {
+  return NextResponse.json(
+    {
+      ok: true,
+      success: true,
+      ...data,
+    },
+    {
+      headers: noStoreHeaders(),
+    }
+  );
+}
 
 function clean(v: string | null) {
   return (v ?? "").trim();
+}
+
+function escapeLike(value: string) {
+  return value.replace(/[\\%_,]/g, (match) => `\\${match}`);
+}
+
+function isAllowedStatus(status: string) {
+  return ["all", "new", "contacted", "closed"].includes(status);
 }
 
 export async function GET(req: Request) {
@@ -14,6 +56,10 @@ export async function GET(req: Request) {
     const boothId = clean(url.searchParams.get("booth_id"));
     const status = clean(url.searchParams.get("status"));
     const q = clean(url.searchParams.get("q"));
+
+    if (status && !isAllowedStatus(status)) {
+      return jsonError("invalid status. allowed: all, new, contacted, closed", 400);
+    }
 
     const supabase = createSupabaseAdminClient();
 
@@ -26,10 +72,21 @@ export async function GET(req: Request) {
         farmer_name,
         phone,
         email,
+        region,
+        crop,
+        quantity_text,
+        inquiry_type,
         message,
         status,
         source,
+        source_type,
         memo,
+        vendor_memo,
+        recommended_product_ids,
+        recommended_reason,
+        contacted_at,
+        closed_at,
+        updated_at,
         created_at
         `
       )
@@ -45,14 +102,23 @@ export async function GET(req: Request) {
     }
 
     if (q) {
+      const escaped = escapeLike(q);
+
       query = query.or(
         [
-          `farmer_name.ilike.%${q}%`,
-          `phone.ilike.%${q}%`,
-          `email.ilike.%${q}%`,
-          `message.ilike.%${q}%`,
-          `memo.ilike.%${q}%`,
-          `source.ilike.%${q}%`,
+          `farmer_name.ilike.%${escaped}%`,
+          `phone.ilike.%${escaped}%`,
+          `email.ilike.%${escaped}%`,
+          `region.ilike.%${escaped}%`,
+          `crop.ilike.%${escaped}%`,
+          `quantity_text.ilike.%${escaped}%`,
+          `inquiry_type.ilike.%${escaped}%`,
+          `message.ilike.%${escaped}%`,
+          `memo.ilike.%${escaped}%`,
+          `vendor_memo.ilike.%${escaped}%`,
+          `recommended_reason.ilike.%${escaped}%`,
+          `source.ilike.%${escaped}%`,
+          `source_type.ilike.%${escaped}%`,
         ].join(",")
       );
     }
@@ -60,20 +126,19 @@ export async function GET(req: Request) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json(
-        { ok: false, error: error.message },
-        { status: 500 }
-      );
+      console.error("[api/vendor/inquiries] query error:", error);
+      return jsonError(error.message || "failed to load inquiries", 500);
     }
 
-    return NextResponse.json({
-      ok: true,
-      items: data ?? [],
+    return jsonSuccess({
+      items: Array.isArray(data) ? data : [],
     });
-  } catch (e: any) {
-    return NextResponse.json(
-      { ok: false, error: e?.message || "failed to load inquiries" },
-      { status: 500 }
+  } catch (error) {
+    console.error("[api/vendor/inquiries] exception:", error);
+
+    return jsonError(
+      error instanceof Error ? error.message : "failed to load inquiries",
+      500
     );
   }
 }

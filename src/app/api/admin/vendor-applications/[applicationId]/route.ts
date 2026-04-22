@@ -45,7 +45,7 @@ function getEnv(name: string) {
   return value;
 }
 
-function getSupabaseAdmin() {
+function createSupabaseAdminClient() {
   return createClient(
     getEnv("NEXT_PUBLIC_SUPABASE_URL"),
     getEnv("SUPABASE_SERVICE_ROLE_KEY"),
@@ -112,7 +112,7 @@ function resolveBoothName(booth: any, fallback: string) {
 }
 
 async function readApplicationOrThrow(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
   applicationId: string
 ) {
   const { data, error } = await supabase
@@ -129,7 +129,7 @@ async function readApplicationOrThrow(
 }
 
 async function updateApplication(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
   applicationId: string,
   patch: Record<string, unknown>
 ) {
@@ -151,7 +151,7 @@ async function updateApplication(
 }
 
 async function findOrCreateVendorFromApplication(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
   application: any
 ) {
   if (application.provisioned_vendor_id) {
@@ -231,7 +231,7 @@ async function findOrCreateVendorFromApplication(
 }
 
 async function createBoothFromApplication(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
   application: any,
   options?: {
     booth_name?: string | null;
@@ -374,7 +374,7 @@ async function createBoothFromApplication(
 }
 
 async function assignSlotIfPossible(
-  supabase: ReturnType<typeof getSupabaseAdmin>,
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
   params: { slotCode: string; boothId: string }
 ) {
   const trySlots = await supabase
@@ -407,7 +407,7 @@ export async function GET(
   context: { params: Promise<{ applicationId: string }> }
 ) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { applicationId } = await context.params;
 
     const { data, error } = await supabase
@@ -441,7 +441,7 @@ export async function PATCH(
   context: { params: Promise<{ applicationId: string }> }
 ) {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createSupabaseAdminClient();
     const { applicationId } = await context.params;
     const body = (await req.json()) as PatchBody;
 

@@ -1,6 +1,6 @@
 // src/app/expo/event/page.tsx
 import Link from "next/link";
-import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import EventEntryForm from "./EventEntryForm";
 import EventCounter from "@/components/EventCounter";
 

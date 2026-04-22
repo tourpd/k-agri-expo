@@ -1,11 +1,19 @@
 import { redirect } from "next/navigation";
 import DealsClient from "./ui";
-import {
-  createSupabaseAdminClient,
-  createSupabaseServerClient,
-} from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+type BoothRow = {
+  booth_id: string | null;
+};
+
+type VendorRow = {
+  id: string;
+  user_id: string | null;
+  email: string | null;
+};
 
 export default async function Page() {
   const supabase = await createSupabaseServerClient();
@@ -19,13 +27,43 @@ export default async function Page() {
 
   const admin = createSupabaseAdminClient();
 
-  const { data: booth } = await admin
+  let vendor: VendorRow | null = null;
+
+  {
+    const { data } = await admin
+      .from("vendors")
+      .select("id, user_id, email")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    vendor = (data as VendorRow | null) ?? null;
+  }
+
+  if (!vendor && user.email) {
+    const { data } = await admin
+      .from("vendors")
+      .select("id, user_id, email")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    vendor = (data as VendorRow | null) ?? null;
+  }
+
+  if (!vendor?.id) {
+    redirect("/expo/vendor/apply");
+  }
+
+  const { data: boothData } = await admin
     .from("booths")
-    .select("*")
-    .eq("owner_user_id", user.id)
+    .select("booth_id")
+    .eq("vendor_id", vendor.id)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
-  if (!booth) {
+  const booth = (boothData as BoothRow | null) ?? null;
+
+  if (!booth?.booth_id) {
     redirect("/expo/vendor/booth-editor");
   }
 

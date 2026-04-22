@@ -1,30 +1,78 @@
-// src/app/vendor/inquiries/page.tsx
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 type Inquiry = {
   inquiry_id: string;
   booth_id: string | null;
+
   farmer_name: string | null;
   phone: string | null;
-  email: string | null;
+  email?: string | null;
+
+  region?: string | null;
+  crop?: string | null;
+  quantity_text?: string | null;
+  inquiry_type?: string | null;
+
   message: string | null;
   status: string;
+
   source?: string | null;
+  source_type?: string | null;
+
   memo?: string | null;
   vendor_memo?: string | null;
+
   contacted_at?: string | null;
   closed_at?: string | null;
   updated_at?: string | null;
   created_at: string | null;
+
+  recommended_product_ids?: Array<string | number> | null;
+  recommended_reason?: string | null;
 };
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+type InquiryListResponse = {
+  ok?: boolean;
+  success?: boolean;
+  error?: string;
+  items?: Inquiry[];
+};
+
+type InquiryUpdateResponse = {
+  ok?: boolean;
+  success?: boolean;
+  error?: string;
+  notice?: string;
+  item?: Inquiry;
+};
+
 function getBoothIdFromUrl() {
   if (typeof window === "undefined") return "";
   return new URLSearchParams(window.location.search).get("booth_id") ?? "";
+}
+
+function safe(v: unknown, fallback = "") {
+  return typeof v === "string" && v.trim() ? v.trim() : fallback;
+}
+
+function getInquirySource(item: Inquiry) {
+  return safe(item.source, "") || safe(item.source_type, "") || "-";
+}
+
+function normalizeRecommendedIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (typeof item === "number" && Number.isFinite(item)) return String(item);
+      return "";
+    })
+    .filter(Boolean);
 }
 
 export default function VendorInquiriesPage() {
@@ -34,73 +82,75 @@ export default function VendorInquiriesPage() {
 
   const [boothId, setBoothId] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [q, setQ] = useState("");
+
+  const [qInput, setQInput] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
+
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    setBoothId(getBoothIdFromUrl());
+    const initialBoothId = getBoothIdFromUrl();
+    setBoothId(initialBoothId);
+    initializedRef.current = true;
   }, []);
 
-  async function load() {
+  const load = useCallback(async () => {
+    if (!initializedRef.current) return;
+
     setLoading(true);
     setErrorText("");
 
     try {
       const params = new URLSearchParams();
 
-      if (boothId) params.set("booth_id", boothId);
-      if (statusFilter && statusFilter !== "all") params.set("status", statusFilter);
-      if (q.trim()) params.set("q", q.trim());
+      const cleanedBoothId = boothId.trim();
+      const cleanedAppliedQuery = appliedQuery.trim();
 
-      const res = await fetch(`/api/vendor/inquiries?${params.toString()}`, {
+      if (cleanedBoothId) params.set("booth_id", cleanedBoothId);
+      if (statusFilter && statusFilter !== "all") params.set("status", statusFilter);
+      if (cleanedAppliedQuery) params.set("q", cleanedAppliedQuery);
+
+      const queryString = params.toString();
+      const url = queryString
+        ? `/api/vendor/inquiries?${queryString}`
+        : "/api/vendor/inquiries";
+
+      const res = await fetch(url, {
         cache: "no-store",
+        credentials: "include",
       });
 
-      const data = await res.json();
+      const data = (await res.json().catch(() => null)) as InquiryListResponse | null;
 
-      if (!res.ok || !data?.ok) {
+      if (!res.ok || !(data?.ok || data?.success)) {
         setErrorText(data?.error ?? "문의 목록을 불러오지 못했습니다.");
         setItems([]);
         return;
       }
 
-      setItems(data.items ?? []);
+      setItems(Array.isArray(data?.items) ? data.items : []);
     } catch {
       setErrorText("네트워크 오류가 발생했습니다.");
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }
+  }, [boothId, statusFilter, appliedQuery]);
 
   useEffect(() => {
-    if (boothId !== "") {
-      load();
-    }
-  }, [boothId, statusFilter]);
+    if (!initializedRef.current) return;
+    void load();
+  }, [load]);
 
-  const filteredItems = useMemo(() => {
-    const keyword = q.trim().toLowerCase();
-    if (!keyword) return items;
-
-    return items.filter((item) => {
-      const hay = [
-        item.farmer_name ?? "",
-        item.phone ?? "",
-        item.email ?? "",
-        item.message ?? "",
-        item.memo ?? "",
-        item.vendor_memo ?? "",
-        item.source ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return hay.includes(keyword);
-    });
-  }, [items, q]);
+  function handleSubmitFilters(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setAppliedQuery(qInput.trim());
+  }
 
   return (
     <main style={S.page}>
+      <style>{RESPONSIVE_CSS}</style>
+
       <div style={S.wrap}>
         <div style={S.header}>
           <div>
@@ -111,13 +161,13 @@ export default function VendorInquiriesPage() {
             </div>
           </div>
 
-          <button onClick={load} style={S.ghostBtn}>
+          <button type="button" onClick={() => void load()} style={S.ghostBtn}>
             새로고침
           </button>
         </div>
 
-        <section style={S.filterBox}>
-          <div style={S.filterGrid}>
+        <form onSubmit={handleSubmitFilters} style={S.filterBox}>
+          <div style={S.filterGrid} className="vendor-inquiries-filter-grid">
             <div>
               <div style={S.filterLabel}>부스 ID</div>
               <input
@@ -145,30 +195,30 @@ export default function VendorInquiriesPage() {
             <div>
               <div style={S.filterLabel}>검색</div>
               <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="이름 / 연락처 / 이메일 / 내용 / 메모 / source"
+                value={qInput}
+                onChange={(e) => setQInput(e.target.value)}
+                placeholder="이름 / 연락처 / 작물 / 문의내용 / 메모"
                 style={S.input}
               />
             </div>
           </div>
 
           <div style={S.filterActionRow}>
-            <button onClick={load} style={S.primaryBtn}>
+            <button type="submit" style={S.primaryBtn}>
               필터 적용
             </button>
           </div>
-        </section>
+        </form>
 
         {loading ? (
           <div style={S.emptyBox}>불러오는 중...</div>
         ) : errorText ? (
           <div style={S.errorBox}>{errorText}</div>
-        ) : filteredItems.length === 0 ? (
+        ) : items.length === 0 ? (
           <div style={S.emptyBox}>조건에 맞는 문의가 없습니다.</div>
         ) : (
           <div style={S.list}>
-            {filteredItems.map((item) => (
+            {items.map((item) => (
               <InquiryCard key={item.inquiry_id} item={item} onReload={load} />
             ))}
           </div>
@@ -186,21 +236,44 @@ function InquiryCard({
   onReload: () => Promise<void>;
 }) {
   const [status, setStatus] = useState(item.status || "new");
-  const [memo, setMemo] = useState(item.memo ?? item.vendor_memo ?? "");
+  const [memo, setMemo] = useState(item.vendor_memo ?? item.memo ?? "");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [errorText, setErrorText] = useState("");
 
   const initialRef = useRef({
     status: item.status || "new",
-    memo: item.memo ?? item.vendor_memo ?? "",
+    memo: item.vendor_memo ?? item.memo ?? "",
   });
 
   const mountedRef = useRef(false);
-  const timerRef = useRef<number | null>(null);
+  const saveTimerRef = useRef<number | null>(null);
+  const savedStateTimerRef = useRef<number | null>(null);
+
+  const recommendedIds = normalizeRecommendedIds(item.recommended_product_ids);
+  const recommendedReason = safe(item.recommended_reason, "");
+
+  useEffect(() => {
+    const nextStatus = item.status || "new";
+    const nextMemo = item.vendor_memo ?? item.memo ?? "";
+
+    setStatus(nextStatus);
+    setMemo(nextMemo);
+    initialRef.current = {
+      status: nextStatus,
+      memo: nextMemo,
+    };
+    setSaveState("idle");
+    setErrorText("");
+  }, [item.inquiry_id, item.status, item.memo, item.vendor_memo]);
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current);
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+      if (savedStateTimerRef.current) {
+        window.clearTimeout(savedStateTimerRef.current);
+      }
     };
   }, []);
 
@@ -210,15 +283,16 @@ function InquiryCard({
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({
         inquiry_id: item.inquiry_id,
         ...payload,
       }),
     });
 
-    const data = await res.json();
+    const data = (await res.json().catch(() => null)) as InquiryUpdateResponse | null;
 
-    if (!res.ok || !data?.ok) {
+    if (!res.ok || !(data?.ok || data?.success)) {
       throw new Error(data?.error ?? "저장 실패");
     }
   }
@@ -234,11 +308,14 @@ function InquiryCard({
 
     if (!changed) return;
 
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
+    if (saveTimerRef.current) {
+      window.clearTimeout(saveTimerRef.current);
+    }
+    if (savedStateTimerRef.current) {
+      window.clearTimeout(savedStateTimerRef.current);
     }
 
-    timerRef.current = window.setTimeout(async () => {
+    saveTimerRef.current = window.setTimeout(async () => {
       try {
         setSaveState("saving");
         setErrorText("");
@@ -248,21 +325,21 @@ function InquiryCard({
         initialRef.current = { status, memo };
         setSaveState("saved");
 
-        window.setTimeout(() => {
+        savedStateTimerRef.current = window.setTimeout(() => {
           setSaveState((prev) => (prev === "saved" ? "idle" : prev));
         }, 1200);
-      } catch (e: any) {
+      } catch (error) {
         setSaveState("error");
-        setErrorText(e?.message ?? "저장 실패");
+        setErrorText(error instanceof Error ? error.message : "저장 실패");
       }
     }, 700);
 
     return () => {
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current);
       }
     };
-  }, [status, memo]);
+  }, [status, memo, item.inquiry_id]);
 
   return (
     <section style={S.card}>
@@ -287,17 +364,45 @@ function InquiryCard({
       <div style={S.meta}>부스 ID: {item.booth_id || "-"}</div>
       <div style={S.meta}>연락처: {item.phone || "-"}</div>
       <div style={S.meta}>이메일: {item.email || "-"}</div>
-      <div style={S.meta}>유입경로: {item.source || "-"}</div>
+      <div style={S.meta}>지역: {item.region || "-"}</div>
+      <div style={S.meta}>작물: {item.crop || "-"}</div>
+      <div style={S.meta}>수량/면적: {item.quantity_text || "-"}</div>
+      <div style={S.meta}>문의유형: {item.inquiry_type || "-"}</div>
+      <div style={S.meta}>유입경로: {getInquirySource(item)}</div>
       <div style={S.meta}>접수일: {formatDate(item.created_at)}</div>
       <div style={S.meta}>응대일: {formatDate(item.contacted_at)}</div>
       <div style={S.meta}>종료일: {formatDate(item.closed_at)}</div>
 
       <div style={S.messageBox}>{item.message || "문의 내용 없음"}</div>
 
-      <div style={S.editorWrap}>
+      {recommendedIds.length > 0 || recommendedReason ? (
+        <div style={S.recoBox}>
+          <div style={S.recoTitle}>AI 추천 제품 결과</div>
+
+          {recommendedReason ? (
+            <div style={S.recoReason}>{recommendedReason}</div>
+          ) : null}
+
+          {recommendedIds.length > 0 ? (
+            <div style={S.recoList}>
+              {recommendedIds.map((id, idx) => (
+                <div key={`${id}-${idx}`} style={S.recoItem}>
+                  추천 제품 ID: {id}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div style={S.editorWrap} className="vendor-inquiries-editor-wrap">
         <div style={S.editorCol}>
           <div style={S.filterLabel}>상태</div>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} style={S.input}>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            style={S.input}
+          >
             <option value="new">new</option>
             <option value="contacted">contacted</option>
             <option value="closed">closed</option>
@@ -316,15 +421,15 @@ function InquiryCard({
       </div>
 
       <div style={S.actionRow}>
-        <button onClick={() => setStatus("contacted")} style={S.primaryBtn}>
+        <button type="button" onClick={() => setStatus("contacted")} style={S.primaryBtn}>
           응대중
         </button>
 
-        <button onClick={() => setStatus("closed")} style={S.ghostBtn}>
+        <button type="button" onClick={() => setStatus("closed")} style={S.ghostBtn}>
           종료
         </button>
 
-        <button onClick={() => onReload()} style={S.ghostBtn}>
+        <button type="button" onClick={() => void onReload()} style={S.ghostBtn}>
           목록 새로고침
         </button>
 
@@ -348,6 +453,17 @@ function formatDate(v?: string | null) {
     d.getMinutes()
   ).padStart(2, "0")}`;
 }
+
+const RESPONSIVE_CSS = `
+@media (max-width: 768px) {
+  .vendor-inquiries-filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .vendor-inquiries-editor-wrap {
+    flex-direction: column !important;
+  }
+}
+`;
 
 const S: Record<string, React.CSSProperties> = {
   page: {
@@ -483,6 +599,40 @@ const S: Record<string, React.CSSProperties> = {
     background: "#f8fafc",
     lineHeight: 1.8,
     color: "#334155",
+    whiteSpace: "pre-wrap",
+  },
+  recoBox: {
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 14,
+    background: "#f0fdf4",
+    border: "1px solid #bbf7d0",
+  },
+  recoTitle: {
+    fontSize: 14,
+    fontWeight: 950,
+    color: "#166534",
+  },
+  recoReason: {
+    marginTop: 8,
+    fontSize: 13,
+    color: "#166534",
+    lineHeight: 1.7,
+    whiteSpace: "pre-wrap",
+  },
+  recoList: {
+    marginTop: 10,
+    display: "grid",
+    gap: 8,
+  },
+  recoItem: {
+    padding: "8px 10px",
+    borderRadius: 10,
+    background: "#fff",
+    border: "1px solid #dcfce7",
+    fontSize: 13,
+    fontWeight: 800,
+    color: "#065f46",
   },
   editorWrap: {
     marginTop: 14,
