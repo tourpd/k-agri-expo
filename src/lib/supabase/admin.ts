@@ -2,19 +2,20 @@ import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-let adminClient: SupabaseClient | null = null;
-
 function getEnv(name: string) {
   const value = process.env[name]?.trim();
 
   if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
+    throw new Error(`[supabase-admin] Missing env: ${name}`);
   }
 
   return value;
 }
 
-function createAdminClientInstance(): SupabaseClient {
+/**
+ * 🔥 요청마다 새로 생성 (안정성 최우선)
+ */
+export function createSupabaseAdminClient(): SupabaseClient {
   const url = getEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = getEnv("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -33,41 +34,24 @@ function createAdminClientInstance(): SupabaseClient {
 }
 
 /**
- * 서버 전용 관리자 클라이언트 (싱글톤)
- */
-export function createSupabaseAdminClient(): SupabaseClient {
-  if (adminClient) {
-    return adminClient;
-  }
-
-  adminClient = createAdminClientInstance();
-  return adminClient;
-}
-
-/**
- * (선택) 기존 호환 alias — 필요 없으면 삭제해도 됨
- */
-export const getSupabaseAdmin = createSupabaseAdminClient;
-
-/**
- * 디버그용
+ * 디버그용 (실제 테이블로 바꿔서 쓰세요)
  */
 export async function debugSupabaseConnection() {
   try {
     const supabase = createSupabaseAdminClient();
 
     const { data, error } = await supabase
-      .from("hall_booth_slots")
+      .from("live_sessions") // 🔥 여기 수정
       .select("*")
       .limit(1);
 
     if (error) {
-      console.error("[supabase-admin] test query error:", error);
+      console.error("[supabase-admin] query error:", error);
       return;
     }
 
-    console.log("[supabase-admin] test query result:", data);
-  } catch (error) {
-    console.error("[supabase-admin] connection failed:", error);
+    console.log("[supabase-admin] ok:", data);
+  } catch (err) {
+    console.error("[supabase-admin] failed:", err);
   }
 }

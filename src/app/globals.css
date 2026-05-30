@@ -1,64 +1,231 @@
 @import "tailwindcss";
 
-/* ✅ 모바일 우선: 기본 글자 크게 */
+/* =========================
+   기본 설정
+========================= */
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #fff;
-  color: #111;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo",
-    "Noto Sans KR", sans-serif;
+  background: #020617;
+  color: #fff;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+
   font-size: 18px;
   line-height: 1.55;
 }
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+/* =========================
+   🔥 숫자 애니메이션 (강화)
+========================= */
+
+/* 돌아갈 때 (더 강하게) */
+@keyframes digitSpin {
+  0% {
+    transform: translateY(-40px) scale(1.2);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(20px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+  }
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* 멈출 때 "탁!" */
+@keyframes digitStop {
+  0% {
+    transform: scale(1.4);
+  }
+  40% {
+    transform: scale(0.85);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+/* 당첨 순간 "폭발" */
+@keyframes winnerImpact {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-input,
-textarea,
-select {
-  font-size: 18px;
+/* =========================
+   🎆 폭죽 (강화)
+========================= */
+@keyframes fall {
+  0% {
+    transform: translateY(-50px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(1080deg);
+    opacity: 0;
+  }
 }
 
-button {
-  min-height: 44px;
+/* =========================
+   ✨ 글로우 (방송용 강화)
+========================= */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 80px rgba(250, 204, 21, 1);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.3);
+  }
 }
 
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+/* 🔵 블루 글로우 (돌아가는 숫자) */
+@keyframes bluePulse {
+  0% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 80px rgba(59, 130, 246, 1);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
 }
+
+/* =========================
+   🎯 슬롯머신 UI
+========================= */
+
+/* 숫자 박스 */
+.draw-reel {
+  border-radius: 28px;
+  background: linear-gradient(
+    180deg,
+    #111827 0%,
+    #f8fafc 15%,
+    #ffffff 45%,
+    #dbeafe 50%,
+    #ffffff 55%,
+    #111827 100%
+  );
+  border: 4px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  transition: all 0.2s ease;
+}
+
+/* 돌아가는 상태 */
+.draw-reel.active {
+  animation: bluePulse 0.6s infinite;
+  transform: scale(1.1);
+}
+
+/* 확정 */
+.draw-reel.fixed {
+  animation: digitStop 0.45s ease;
+  border-color: #facc15;
+  box-shadow: 0 0 90px rgba(250, 204, 21, 0.9);
+}
+
+/* 최종 결과 */
+.draw-reel.final {
+  animation: winnerImpact 0.5s ease;
+}
+
+/* =========================
+   🔢 숫자 스타일
+========================= */
+.draw-digit {
+  font-weight: 950;
+  font-size: clamp(90px, 10vw, 160px);
+  color: #020617;
+}
+
+/* 돌아갈 때 */
+.draw-digit.spinning {
+  animation: digitSpin 0.15s linear infinite;
+  filter: blur(2px);
+}
+
+/* =========================
+   🚀 방송용 UI
+========================= */
+
+/* CTA 버튼 (진짜 방송용) */
+.draw-button {
+  background: linear-gradient(180deg, #ef4444, #b91c1c);
+  color: #fff;
+  border-radius: 22px;
+  font-weight: 900;
+  font-size: 34px;
+  padding: 24px 70px;
+  box-shadow: 0 20px 50px rgba(239, 68, 68, 0.5);
+  transition: all 0.2s ease;
+}
+
+.draw-button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 30px 70px rgba(239, 68, 68, 0.9);
+}
+
+/* 경고 */
+.draw-alert {
+  background: linear-gradient(180deg, #7f1d1d, #450a0a);
+  color: #fff;
+  border-radius: 18px;
+  padding: 16px;
+  font-weight: 900;
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+}
+
+/* 당첨 카드 */
+.draw-winner-box {
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 26px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 0 80px rgba(250, 204, 21, 0.3);
+  animation: winnerImpact 0.5s ease;
+}
+
+/* 성공 텍스트 */
+.draw-success {
+  color: #22c55e;
+  font-weight: 900;
+}
+
+/* 실패 텍스트 */
+.draw-fail {
+  color: #ef4444;
+  font-weight: 900;
+}
+
+/* =========================
+   📱 모바일 대응
+========================= */
 @media (max-width: 768px) {
-  html,
-  body {
-    font-size: 16px;
-    line-height: 1.5;
+  .draw-digit {
+    font-size: 80px;
   }
 
-  input,
-  textarea,
-  select {
-    font-size: 16px;
-  }
-
-  body {
-    overflow-x: hidden;
+  .draw-button {
+    font-size: 26px;
+    padding: 18px 40px;
   }
 }

@@ -1,187 +1,209 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import PhotoDoctorLeadButton from "@/components/PhotoDoctorLeadButton";
 
-type BoothItem = {
-  booth_id: string;
-  vendor_id?: string | null;
-  hall_id?: string | null;
-  slot_code?: string | null;
-  name: string;
-  category_primary?: string | null;
-  company_type?: string | null;
-  is_featured?: boolean | null;
-  score?: number;
+type RecommendItem = {
+  product_name: string;
+  button_link?: string | null;
+  recommend_label?: string | null;
+  recommend_reason?: string | null;
+  usage_summary?: string | null;
 };
 
 type Props = {
   cropName?: string | null;
   issueType?: string | null;
   diagnosisId?: string | null;
-  defaultFarmerName?: string;
-  defaultFarmerPhone?: string;
 };
+
+function makeHref(
+  item: RecommendItem,
+  cropText: string,
+  diagnosisText: string,
+  diagnosisId?: string | null
+) {
+  const base =
+    item.button_link ||
+    `/photodoctor/buy?product=${encodeURIComponent(item.product_name)}`;
+
+  if (base.startsWith("http")) return base;
+
+  const url = new URL(base, window.location.origin);
+
+  url.searchParams.set("source", "photodoctor");
+  if (cropText) url.searchParams.set("crop", cropText);
+  if (diagnosisText) url.searchParams.set("diagnosis", diagnosisText);
+  if (diagnosisId) url.searchParams.set("diagnosis_id", diagnosisId);
+
+  return `${url.pathname}${url.search}`;
+}
 
 export default function PhotoDoctorRecommendedBooths({
   cropName,
   issueType,
   diagnosisId,
-  defaultFarmerName = "",
-  defaultFarmerPhone = "",
 }: Props) {
-  const [items, setItems] = useState<BoothItem[]>([]);
+  const [items, setItems] = useState<RecommendItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  const diagnosisText = String(issueType || "").trim();
+  const cropText = String(cropName || "").trim();
 
   useEffect(() => {
     async function load() {
-      if (!cropName && !issueType) return;
+      if (!diagnosisText) return;
 
       setLoading(true);
-      setError("");
+      setItems([]);
 
       try {
         const res = await fetch("/api/photodoctor/recommend-booths", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            crop_name: cropName || "",
-            issue_type: issueType || "",
+            crop_name: cropText,
+            issue_type: diagnosisText,
+            diagnosis_text: diagnosisText,
+            diagnosis_id: diagnosisId || "",
+            limit: 3,
           }),
         });
 
         const json = await res.json();
 
-        if (!res.ok || !json?.success) {
-          throw new Error(json?.error || "추천 부스를 불러오지 못했습니다.");
+        if (json?.success && Array.isArray(json.items)) {
+          setItems(json.items.slice(0, 3));
         }
-
-        setItems(json.items || []);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "추천 부스를 불러오지 못했습니다."
-        );
+      } catch (error) {
+        console.error("포토닥터 추천 자재 조회 실패:", error);
       } finally {
         setLoading(false);
       }
     }
 
     load();
-  }, [cropName, issueType]);
+  }, [cropText, diagnosisText, diagnosisId]);
 
-  if (!cropName && !issueType) return null;
+  if (!diagnosisText) return null;
+  if (!loading && items.length === 0) return null;
 
   return (
-    <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      
-      {/* 상단 메시지 (행동 유도형으로 변경) */}
-      <div className="text-sm font-black text-emerald-700">
-        AI 추천
-      </div>
+    <section style={S.wrap}>
+      <div style={S.kicker}>포토닥터 진단 연계</div>
 
-      <h2 className="mt-2 text-2xl font-black text-slate-900">
-        지금 바로 상담 가능한 전문가 부스
-      </h2>
+      <div style={S.title}>🌱 추천 대응 자재</div>
 
-      <p className="mt-2 text-sm leading-6 text-slate-600">
-        {cropName ? `${cropName} 관련 문제 해결을 도와줄 부스를 추천합니다.` : ""}
+      <p style={S.desc}>
+        위 진단 결과를 기준으로 현장에서 확인해볼 수 있는 대응 자재입니다.
+        필요할 때만 눌러 확인하세요.
       </p>
 
-      {/* 로딩 */}
-      {loading && (
-        <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          전문가 부스를 찾는 중입니다...
-        </div>
-      )}
-
-      {/* 에러 */}
-      {error && (
-        <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* 없음 */}
-      {!loading && !error && items.length === 0 && (
-        <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          현재 연결 가능한 부스를 찾지 못했습니다.
-        </div>
-      )}
-
-      {/* 리스트 */}
-      {!loading && !error && items.length > 0 && (
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {items.map((booth) => (
-            <div
-              key={booth.booth_id}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+      {loading ? (
+        <div style={S.loading}>추천 대응 자재를 확인하는 중입니다...</div>
+      ) : (
+        <div style={S.buttonList}>
+          {items.map((item, idx) => (
+            <a
+              key={`${item.product_name}-${idx}`}
+              href={makeHref(item, cropText, diagnosisText, diagnosisId)}
+              style={S.button}
             >
-              {/* 상단 */}
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-lg font-black text-slate-900">
-                    {booth.name}
-                  </div>
+              <div>
+                <div style={S.productName}>{item.product_name}</div>
 
-                  <div className="mt-1 text-sm text-slate-500">
-                    {booth.category_primary || ""}
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-1">
-                  {booth.is_featured && (
-                    <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-black text-amber-800">
-                      추천
-                    </span>
-                  )}
-
-                  {booth.company_type === "premium" && (
-                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-black text-emerald-800">
-                      프리미엄
-                    </span>
-                  )}
+                <div style={S.productSub}>
+                  {item.recommend_label ||
+                    item.usage_summary ||
+                    "이 진단 결과와 연결된 대응 자재"}
                 </div>
               </div>
 
-              {/* 🔥 핵심: 추천 이유 */}
-              <div className="mt-3 text-sm text-slate-600">
-                ✔ 해당 작물 문제 상담 경험이 많은 업체입니다
-              </div>
-
-              {/* 버튼 */}
-              <div className="mt-5 flex gap-2">
-                <Link
-                  href={`/expo/booths/${booth.booth_id}`}
-                  className="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-center text-sm font-black text-slate-800"
-                >
-                  부스 보기
-                </Link>
-              </div>
-
-              {/* 🔥 핵심 CTA */}
-              <div className="mt-4">
-                <PhotoDoctorLeadButton
-                  boothId={booth.booth_id}
-                  vendorId={booth.vendor_id}
-                  hallId={booth.hall_id}
-                  slotCode={booth.slot_code}
-                  cropName={cropName || ""}
-                  issueType={issueType || ""}
-                  diagnosisId={diagnosisId || ""}
-                  defaultFarmerName={defaultFarmerName}
-                  defaultFarmerPhone={defaultFarmerPhone}
-                />
-              </div>
-            </div>
+              <span style={S.arrow}>›</span>
+            </a>
           ))}
         </div>
       )}
     </section>
   );
 }
+
+const S: Record<string, React.CSSProperties> = {
+  wrap: {
+    marginTop: 24,
+    padding: 20,
+    borderRadius: 18,
+    border: "1px solid #bbf7d0",
+    background: "#f0fdf4",
+  },
+
+  kicker: {
+    fontSize: 13,
+    fontWeight: 900,
+    color: "#15803d",
+    marginBottom: 6,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: 950,
+    color: "#166534",
+  },
+
+  desc: {
+    marginTop: 10,
+    fontSize: 15,
+    lineHeight: 1.7,
+    color: "#374151",
+    fontWeight: 700,
+  },
+
+  loading: {
+    marginTop: 16,
+    borderRadius: 14,
+    background: "#ffffff",
+    padding: 14,
+    color: "#4b5563",
+    fontWeight: 800,
+  },
+
+  buttonList: {
+    marginTop: 16,
+    display: "grid",
+    gap: 10,
+  },
+
+  button: {
+    minHeight: 60,
+    borderRadius: 14,
+    border: "1px solid #86efac",
+    background: "#ffffff",
+    color: "#14532d",
+    textDecoration: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    padding: "14px 16px",
+  },
+
+  productName: {
+    fontSize: 18,
+    fontWeight: 950,
+    color: "#14532d",
+  },
+
+  productSub: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 1.5,
+    color: "#4b5563",
+    fontWeight: 800,
+  },
+
+  arrow: {
+    fontSize: 32,
+    lineHeight: 1,
+    fontWeight: 900,
+    color: "#15803d",
+  },
+};

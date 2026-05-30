@@ -12,6 +12,15 @@ type LeadStage =
   | "won"
   | "lost";
 
+type SaleStatus =
+  | "new"
+  | "contacted"
+  | "quoted"
+  | "won"
+  | "lost"
+  | "closed"
+  | string;
+
 type LeadItem = {
   id: string;
   booth_id?: string | null;
@@ -23,6 +32,14 @@ type LeadItem = {
   contact_name?: string | null;
   phone?: string | null;
   email?: string | null;
+
+  farmer_name?: string | null;
+  farmer_phone?: string | null;
+  crop_name?: string | null;
+  issue_type?: string | null;
+  product_name?: string | null;
+  area_text?: string | null;
+  source_ref_id?: string | null;
 
   message?: string | null;
   translated_message?: string | null;
@@ -40,6 +57,9 @@ type LeadItem = {
   lead_stage?: LeadStage | string | null;
   status?: string | null;
   quote_status?: string | null;
+
+  vendor_target?: string | null;
+  sale_status?: SaleStatus | null;
 
   admin_memo?: string | null;
   first_contacted_at?: string | null;
@@ -104,6 +124,28 @@ function formatDate(value?: string | null) {
 
 function formatWon(value?: number | null) {
   return `${Number(value || 0).toLocaleString()}원`;
+}
+
+function formatRate(value?: number | null) {
+  if (value == null) return "-";
+  return `${Math.round(Number(value) * 100)}%`;
+}
+
+function displayName(item?: LeadItem | null) {
+  if (!item) return "-";
+  return item.contact_name || item.farmer_name || item.company_name || "이름 없음";
+}
+
+function displayPhone(item?: LeadItem | null) {
+  if (!item) return "";
+  return item.phone || item.farmer_phone || "";
+}
+
+function isPhotoDoctorLead(item?: LeadItem | null) {
+  return (
+    item?.source_type === "photodoctor" ||
+    item?.source_type === "photodoctor_product"
+  );
 }
 
 function stageLabel(value?: string | null) {
@@ -186,32 +228,6 @@ function contractStatusLabel(value?: string | null) {
   }
 }
 
-function vendorNotificationLabel(value?: string | null) {
-  switch (value) {
-    case "pending":
-      return "대기";
-    case "sent":
-      return "발송완료";
-    case "failed":
-      return "발송실패";
-    default:
-      return value || "-";
-  }
-}
-
-function vendorNotificationClass(value?: string | null) {
-  switch (value) {
-    case "sent":
-      return "bg-emerald-100 text-emerald-800";
-    case "failed":
-      return "bg-red-100 text-red-800";
-    case "pending":
-      return "bg-amber-100 text-amber-800";
-    default:
-      return "bg-neutral-100 text-neutral-700";
-  }
-}
-
 function negotiationStatusLabel(value?: string | null) {
   switch (value) {
     case "new":
@@ -237,6 +253,10 @@ function negotiationStatusLabel(value?: string | null) {
 
 function sourceLabel(value?: string | null) {
   switch (value) {
+    case "photodoctor_product":
+      return "포토닥터 제품신청";
+    case "photodoctor":
+      return "포토닥터 상담";
     case "booth_inquiry":
       return "부스문의";
     case "expo_deal":
@@ -250,6 +270,85 @@ function sourceLabel(value?: string | null) {
     default:
       return value || "-";
   }
+}
+
+function vendorLabel(value?: string | null) {
+  switch (value) {
+    case "dof":
+      return "도프";
+    case "unassigned":
+      return "관리자 확인";
+    case "none":
+      return "없음";
+    case "unknown":
+      return "미지정";
+    default:
+      return value || "-";
+  }
+}
+
+function vendorClass(value?: string | null) {
+  switch (value) {
+    case "dof":
+      return "bg-emerald-100 text-emerald-800";
+    case "unassigned":
+    case "unknown":
+      return "bg-amber-100 text-amber-800";
+    default:
+      return "bg-neutral-100 text-neutral-700";
+  }
+}
+
+function saleStatusLabel(value?: string | null) {
+  switch (value) {
+    case "new":
+      return "신규";
+    case "contacted":
+      return "통화완료";
+    case "quoted":
+      return "견적/안내";
+    case "won":
+      return "판매성사";
+    case "lost":
+      return "실패";
+    case "closed":
+      return "종결";
+    default:
+      return value || "-";
+  }
+}
+
+function saleStatusClass(value?: string | null) {
+  switch (value) {
+    case "new":
+      return "bg-amber-100 text-amber-800";
+    case "contacted":
+      return "bg-blue-100 text-blue-800";
+    case "quoted":
+      return "bg-violet-100 text-violet-800";
+    case "won":
+      return "bg-emerald-100 text-emerald-800";
+    case "lost":
+      return "bg-red-100 text-red-800";
+    case "closed":
+      return "bg-neutral-200 text-neutral-800";
+    default:
+      return "bg-neutral-100 text-neutral-700";
+  }
+}
+
+function leadSortScore(item: LeadItem) {
+  let score = 0;
+
+  if (item.sale_status === "new") score += 30;
+  if (item.vendor_target === "dof") score += 25;
+  if (item.source_type === "photodoctor_product") score += 100;
+  if (item.source_type === "photodoctor") score += 50;
+  if (item.hot_lead) score += 40;
+
+  score += Number(item.priority_rank || 0);
+
+  return score;
 }
 
 export default function AdminLeadsPage() {
@@ -280,13 +379,15 @@ export default function AdminLeadsPage() {
 
   const stats = useMemo(() => {
     const total = items.length;
-    const hot = items.filter((x) => x.hot_lead).length;
-    const foreign = items.filter((x) => x.is_foreign).length;
-    const won = items.filter((x) => x.lead_stage === "won").length;
-    const negotiating = items.filter((x) => x.lead_stage === "negotiating").length;
-    const sent = items.filter((x) => x.lead_stage === "sent").length;
+    const hot = items.filter(
+      (x) => x.hot_lead || x.source_type === "photodoctor_product"
+    ).length;
+    const photoDoctor = items.filter((x) => isPhotoDoctorLead(x)).length;
+    const dof = items.filter((x) => x.vendor_target === "dof").length;
+    const newSales = items.filter((x) => x.sale_status === "new").length;
+    const wonSales = items.filter((x) => x.sale_status === "won").length;
 
-    return { total, hot, foreign, won, negotiating, sent };
+    return { total, hot, photoDoctor, dof, newSales, wonSales };
   }, [items]);
 
   async function fetchLeads() {
@@ -312,13 +413,8 @@ export default function AdminLeadsPage() {
       }
 
       const sorted = [...(json.items || [])].sort((a, b) => {
-        const aHot = a.hot_lead ? 1 : 0;
-        const bHot = b.hot_lead ? 1 : 0;
-        if (bHot !== aHot) return bHot - aHot;
-
-        const aRank = Number(a.priority_rank || 0);
-        const bRank = Number(b.priority_rank || 0);
-        if (bRank !== aRank) return bRank - aRank;
+        const scoreDiff = leadSortScore(b) - leadSortScore(a);
+        if (scoreDiff !== 0) return scoreDiff;
 
         const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
         const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -401,6 +497,30 @@ export default function AdminLeadsPage() {
     );
   }
 
+  async function updateSaleStatus(nextStatus: SaleStatus) {
+    await patchLead(
+      {
+        sale_status: nextStatus,
+        last_contacted_at:
+          nextStatus === "contacted" ? new Date().toISOString() : undefined,
+      },
+      `판매 상태가 '${saleStatusLabel(nextStatus)}'로 변경되었습니다.`
+    );
+  }
+
+  async function assignToDof() {
+    await patchLead(
+      {
+        vendor_target: "dof",
+        commission_rate: selectedItem?.product_name?.includes("싹쓰리충")
+          ? 0.25
+          : 0.3,
+        lead_stage: "sent",
+      },
+      "도프 전달 대상으로 지정했습니다."
+    );
+  }
+
   async function saveAdminMemo() {
     await patchLead(
       { admin_memo: adminMemo },
@@ -417,6 +537,10 @@ export default function AdminLeadsPage() {
           selectedItem.lead_stage === "new"
             ? "screening"
             : selectedItem.lead_stage,
+        sale_status:
+          selectedItem.sale_status === "new" || !selectedItem.sale_status
+            ? "contacted"
+            : selectedItem.sale_status,
         last_contacted_at: new Date().toISOString(),
         admin_memo: adminMemo,
         log_type: kind,
@@ -491,8 +615,8 @@ export default function AdminLeadsPage() {
         },
         body: JSON.stringify({
           lead_id: selectedItem.id,
-          product_name: "품목 확인 필요",
-          quantity: selectedItem.quantity || "",
+          product_name: selectedItem.product_name || "품목 확인 필요",
+          quantity: selectedItem.quantity || selectedItem.area_text || "",
           unit_price: "To be discussed",
           incoterm: "FOB",
           payment_terms: "T/T",
@@ -616,6 +740,7 @@ export default function AdminLeadsPage() {
             commission_mode: commissionMode,
             contract_memo: contractMemo,
             contract_status: "contracted",
+            sale_status: "won",
           }),
         }
       );
@@ -659,6 +784,7 @@ export default function AdminLeadsPage() {
         },
         body: JSON.stringify({
           contract_status: "paid",
+          sale_status: "won",
           lead_stage:
             selectedItem.lead_stage === "won"
               ? "won"
@@ -686,6 +812,8 @@ export default function AdminLeadsPage() {
   const quotePdfUrl =
     selectedItem?.latest_quote_pdf_url || selectedItem?.quote_pdf_url || "";
 
+  const selectedPhone = displayPhone(selectedItem);
+
   return (
     <main className="min-h-screen bg-neutral-50 px-3 py-4 md:px-6 md:py-6">
       <div className="mx-auto max-w-[1600px]">
@@ -696,17 +824,17 @@ export default function AdminLeadsPage() {
                 리드 CRM
               </h1>
               <p className="mt-1 text-sm text-neutral-600">
-                모든 리드는 관리자 검토 후 연결합니다. 자동 벤더 전달 없이, 관리자 중심으로 통제합니다.
+                포토닥터 제품신청 리드는 도프 전달 여부, 판매 상태, 마진율까지 함께 관리합니다.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
               <StatCard title="전체" value={stats.total} />
               <StatCard title="HOT" value={stats.hot} accent="red" />
-              <StatCard title="해외" value={stats.foreign} accent="blue" />
-              <StatCard title="전달" value={stats.sent} accent="sky" />
-              <StatCard title="협상중" value={stats.negotiating} accent="violet" />
-              <StatCard title="성사" value={stats.won} accent="emerald" />
+              <StatCard title="포토닥터" value={stats.photoDoctor} accent="emerald" />
+              <StatCard title="도프전달" value={stats.dof} accent="sky" />
+              <StatCard title="신규판매" value={stats.newSales} accent="violet" />
+              <StatCard title="판매성사" value={stats.wonSales} accent="emerald" />
             </div>
           </div>
         </div>
@@ -731,7 +859,7 @@ export default function AdminLeadsPage() {
             <div className="mb-4">
               <div className="text-lg font-semibold">리드 목록</div>
               <div className="mt-1 text-sm text-neutral-500">
-                HOT 리드, 해외 리드, 최근 접수 리드를 우선 검토하십시오.
+                포토닥터 제품신청, 도프 전달 리드, 신규 판매 리드를 우선 검토하십시오.
               </div>
             </div>
 
@@ -739,7 +867,7 @@ export default function AdminLeadsPage() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="회사명, 담당자, 연락처, 이메일, 메모 검색"
+                placeholder="농민명, 연락처, 제품명, 작물명 검색"
                 className="w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-black"
               />
 
@@ -765,6 +893,8 @@ export default function AdminLeadsPage() {
                   className="w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-black"
                 >
                   <option value="">전체 유입경로</option>
+                  <option value="photodoctor_product">포토닥터 제품신청</option>
+                  <option value="photodoctor">포토닥터 상담</option>
                   <option value="booth_inquiry">부스 문의</option>
                   <option value="expo_deal">엑스포 특가</option>
                   <option value="global_inquiry">해외 문의</option>
@@ -818,6 +948,8 @@ export default function AdminLeadsPage() {
 
               {items.map((item) => {
                 const selected = item.id === selectedId;
+                const name = displayName(item);
+                const phone = displayPhone(item);
 
                 return (
                   <button
@@ -827,53 +959,63 @@ export default function AdminLeadsPage() {
                     className={`w-full rounded-3xl border p-4 text-left transition ${
                       selected
                         ? "border-black bg-black text-white"
+                        : item.vendor_target === "dof"
+                        ? "border-emerald-300 bg-emerald-50 hover:border-emerald-500"
+                        : item.source_type === "photodoctor_product"
+                        ? "border-amber-300 bg-amber-50 hover:border-amber-500"
                         : "border-neutral-200 bg-white hover:border-neutral-400"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="truncate text-base font-semibold">
-                          {item.contact_name || item.company_name || "이름 없음"}
+                          {name}
                         </div>
                         <div
                           className={`mt-1 truncate text-xs ${
                             selected ? "text-neutral-300" : "text-neutral-500"
                           }`}
                         >
-                          {item.company_name || "-"}
+                          {item.product_name || item.company_name || "-"}
                         </div>
                       </div>
 
                       <div className="shrink-0 text-right">
                         <div className="text-sm font-bold">
-                          {item.priority_rank ?? 0}
+                          {formatRate(item.commission_rate)}
                         </div>
                         <div
-                          className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${stageClass(
-                            item.lead_stage
+                          className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${saleStatusClass(
+                            item.sale_status
                           )}`}
                         >
-                          {stageLabel(item.lead_stage)}
+                          {saleStatusLabel(item.sale_status)}
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {item.hot_lead ? (
+                      {(item.hot_lead || item.source_type === "photodoctor_product") ? (
                         <span className="rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
                           🔥 HOT
                         </span>
                       ) : null}
 
-                      {item.is_foreign ? (
-                        <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
-                          FOREIGN
+                      {item.source_type === "photodoctor_product" ? (
+                        <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
+                          📸 제품신청
                         </span>
-                      ) : (
-                        <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-700">
-                          DOMESTIC
+                      ) : null}
+
+                      {item.vendor_target ? (
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${vendorClass(
+                            item.vendor_target
+                          )}`}
+                        >
+                          업체 · {vendorLabel(item.vendor_target)}
                         </span>
-                      )}
+                      ) : null}
 
                       {item.quote_status ? (
                         <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700">
@@ -888,20 +1030,11 @@ export default function AdminLeadsPage() {
                       }`}
                     >
                       <div>유입: {sourceLabel(item.source_type)}</div>
-                      <div>국가: {item.country || "-"}</div>
-                      <div>연락처: {item.phone || "-"}</div>
+                      <div>작물: {item.crop_name || "-"}</div>
+                      <div>제품: {item.product_name || "-"}</div>
+                      <div>연락처: {phone || "-"}</div>
                       <div>접수일: {formatDate(item.created_at)}</div>
                     </div>
-
-                    {item.detection_summary ? (
-                      <div
-                        className={`mt-2 text-xs leading-5 ${
-                          selected ? "text-amber-200" : "text-amber-700"
-                        }`}
-                      >
-                        자동분석: {item.detection_summary}
-                      </div>
-                    ) : null}
                   </button>
                 );
               })}
@@ -919,64 +1052,72 @@ export default function AdminLeadsPage() {
               <div className="space-y-5">
                 <div className="border-b border-neutral-200 pb-5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-bold">
-                      {selectedItem.contact_name || "이름 없음"}
-                    </h2>
+                    <h2 className="text-2xl font-bold">{displayName(selectedItem)}</h2>
 
-                    {selectedItem.hot_lead ? (
+                    {(selectedItem.hot_lead ||
+                      selectedItem.source_type === "photodoctor_product") ? (
                       <span className="rounded-full bg-red-600 px-3 py-1 text-sm font-semibold text-white">
                         🔥 HOT 리드
                       </span>
                     ) : null}
 
-                    {selectedItem.is_foreign ? (
-                      <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
-                        FOREIGN BUYER
+                    {selectedItem.source_type === "photodoctor_product" ? (
+                      <span className="rounded-full bg-emerald-600 px-3 py-1 text-sm font-semibold text-white">
+                        📸 포토닥터 제품신청
                       </span>
                     ) : null}
+
+                    {selectedItem.vendor_target ? (
+                      <span
+                        className={`rounded-full px-3 py-1 text-sm font-semibold ${vendorClass(
+                          selectedItem.vendor_target
+                        )}`}
+                      >
+                        연결업체 · {vendorLabel(selectedItem.vendor_target)}
+                      </span>
+                    ) : null}
+
+                    <span
+                      className={`rounded-full px-3 py-1 text-sm font-semibold ${saleStatusClass(
+                        selectedItem.sale_status
+                      )}`}
+                    >
+                      판매상태 · {saleStatusLabel(selectedItem.sale_status)}
+                    </span>
                   </div>
 
                   <div className="mt-2 text-sm text-neutral-500">
-                    회사명: {selectedItem.company_name || "-"}
+                    제품: {selectedItem.product_name || "-"} / 작물:{" "}
+                    {selectedItem.crop_name || "-"} / 증상:{" "}
+                    {selectedItem.issue_type || "-"}
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span
-                      className={`rounded-full px-3 py-1.5 text-sm font-semibold ${stageClass(
-                        selectedItem.lead_stage
-                      )}`}
-                    >
-                      단계 · {stageLabel(selectedItem.lead_stage)}
-                    </span>
-
-                    <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-semibold text-neutral-700">
-                      유입경로 · {sourceLabel(selectedItem.source_type)}
-                    </span>
-
-                    <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-semibold text-neutral-700">
-                      리드점수 · {selectedItem.lead_score ?? 0}
-                    </span>
-
-                    <span className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-semibold text-neutral-700">
-                      우선순위 · {selectedItem.priority_rank ?? 0}
-                    </span>
-
-                    <span className="rounded-full bg-indigo-100 px-3 py-1.5 text-sm font-semibold text-indigo-700">
-                      견적 · {quoteStatusLabel(selectedItem.quote_status)}
-                    </span>
-
-                    {selectedItem.contract_status ? (
-                      <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-sm font-semibold text-emerald-700">
-                        계약 · {contractStatusLabel(selectedItem.contract_status)}
-                      </span>
-                    ) : null}
-
-                    {selectedItem.negotiation_status ? (
-                      <span className="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-semibold text-amber-800">
-                        협상 · {negotiationStatusLabel(selectedItem.negotiation_status)}
-                      </span>
-                    ) : null}
-                  </div>
+                  {isPhotoDoctorLead(selectedItem) ? (
+                    <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                      <div className="text-sm font-bold text-emerald-700">
+                        📸 포토닥터 유입 리드
+                      </div>
+                      <div className="mt-2 text-sm leading-6 text-emerald-900">
+                        농민: {selectedItem.farmer_name || "-"}
+                        <br />
+                        연락처: {selectedItem.farmer_phone || "-"}
+                        <br />
+                        제품: {selectedItem.product_name || "-"}
+                        <br />
+                        작물: {selectedItem.crop_name || "-"}
+                        <br />
+                        진단/증상: {selectedItem.issue_type || "-"}
+                        <br />
+                        재배면적: {selectedItem.area_text || selectedItem.quantity || "-"}
+                        <br />
+                        연결업체: {vendorLabel(selectedItem.vendor_target)}
+                        <br />
+                        마진율: {formatRate(selectedItem.commission_rate)}
+                        <br />
+                        진단ID: {selectedItem.source_ref_id || "-"}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -984,34 +1125,18 @@ export default function AdminLeadsPage() {
                     <InfoCard
                       title="기본 정보"
                       rows={[
-                        ["회사명", selectedItem.company_name || "-"],
-                        ["담당자명", selectedItem.contact_name || "-"],
-                        ["연락처", selectedItem.phone || "-"],
+                        ["담당자/농민명", displayName(selectedItem)],
+                        ["연락처", displayPhone(selectedItem) || "-"],
                         ["이메일", selectedItem.email || "-"],
-                        [
-                          "부스명",
-                          selectedItem.assigned_booth_name ||
-                            selectedItem.booth_name ||
-                            selectedItem.booth_id ||
-                            "-",
-                        ],
-                        [
-                          "업체명",
-                          selectedItem.assigned_vendor_name ||
-                            selectedItem.vendor_name ||
-                            selectedItem.vendor_id ||
-                            "-",
-                        ],
-                        ["특가ID", selectedItem.deal_id || "-"],
-                        ["국가", selectedItem.country || "-"],
-                        ["언어", selectedItem.inquiry_language || "-"],
-                        ["거래유형", selectedItem.trade_type || "-"],
-                        ["예상수량", selectedItem.quantity || "-"],
-                        ["바이어등급", selectedItem.buyer_level || "-"],
-                        ["검증상태", selectedItem.buyer_verification_status || "-"],
-                        ["HOT 여부", selectedItem.hot_lead ? "예" : "아니오"],
-                        ["자동분석", selectedItem.detection_summary || "-"],
-                        ["관리자알림", formatDate(selectedItem.admin_alert_sent_at)],
+                        ["제품명", selectedItem.product_name || "-"],
+                        ["작물", selectedItem.crop_name || "-"],
+                        ["진단/증상", selectedItem.issue_type || "-"],
+                        ["재배면적", selectedItem.area_text || selectedItem.quantity || "-"],
+                        ["연결업체", vendorLabel(selectedItem.vendor_target)],
+                        ["판매상태", saleStatusLabel(selectedItem.sale_status)],
+                        ["마진율", formatRate(selectedItem.commission_rate)],
+                        ["부스명", selectedItem.assigned_booth_name || selectedItem.booth_name || selectedItem.booth_id || "-"],
+                        ["업체명", selectedItem.assigned_vendor_name || selectedItem.vendor_name || selectedItem.vendor_id || "-"],
                         ["접수일", formatDate(selectedItem.created_at)],
                         ["최초연락", formatDate(selectedItem.first_contacted_at)],
                         ["최근연락", formatDate(selectedItem.last_contacted_at)],
@@ -1024,13 +1149,9 @@ export default function AdminLeadsPage() {
                       title="매출 / 수익 정보"
                       rows={[
                         ["계약상태", contractStatusLabel(selectedItem.contract_status)],
+                        ["판매상태", saleStatusLabel(selectedItem.sale_status)],
                         ["계약금액", formatWon(selectedItem.deal_amount_krw)],
-                        [
-                          "수수료율",
-                          selectedItem.commission_rate != null
-                            ? `${Math.round(Number(selectedItem.commission_rate) * 100)}%`
-                            : "-",
-                        ],
+                        ["수수료율", formatRate(selectedItem.commission_rate)],
                         ["수수료금액", formatWon(selectedItem.commission_amount_krw)],
                         ["순매출", formatWon(selectedItem.net_revenue_krw)],
                         ["계약일", formatDate(selectedItem.contracted_at)],
@@ -1041,21 +1162,6 @@ export default function AdminLeadsPage() {
                     <SimpleBox title="원문 문의 내용">
                       <div className="whitespace-pre-wrap rounded-2xl bg-neutral-50 p-4 text-sm leading-7 text-neutral-800">
                         {selectedItem.message || "문의 내용이 없습니다."}
-                      </div>
-                    </SimpleBox>
-
-                    <SimpleBox title="번역본">
-                      <div className="whitespace-pre-wrap rounded-2xl bg-neutral-50 p-4 text-sm leading-7 text-neutral-800">
-                        {selectedItem.translated_message || "저장된 번역본이 없습니다."}
-                      </div>
-
-                      <div className="mt-4">
-                        <ActionButton
-                          label="번역 저장"
-                          onClick={translateMessage}
-                          disabled={acting || !selectedItem.message}
-                          variant="secondary"
-                        />
                       </div>
                     </SimpleBox>
 
@@ -1085,52 +1191,47 @@ export default function AdminLeadsPage() {
                     <SimpleBox title="빠른 액션">
                       <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
                         <ActionButton
-                          label="📞 전화하기"
+                          label="📞 농민 전화하기"
                           onClick={() => {
-                            if (selectedItem.phone) {
-                              markContactedAndOpen("phone", selectedItem.phone);
+                            if (selectedPhone) {
+                              markContactedAndOpen("phone", selectedPhone);
                             }
                           }}
-                          disabled={acting || !selectedItem.phone}
+                          disabled={acting || !selectedPhone}
                         />
 
                         <ActionButton
-                          label="✉ 이메일 보내기"
-                          onClick={() => {
-                            if (selectedItem.email) {
-                              markContactedAndOpen("email", selectedItem.email);
-                            }
-                          }}
-                          disabled={acting || !selectedItem.email}
+                          label="도프 전달 지정"
+                          onClick={assignToDof}
+                          disabled={acting || selectedItem.vendor_target === "dof"}
                           variant="secondary"
                         />
 
                         <ActionButton
-                          label="견적 초안 생성"
-                          onClick={createQuoteDraft}
-                          disabled={acting}
+                          label="통화완료"
+                          onClick={() => updateSaleStatus("contacted")}
+                          disabled={acting || selectedItem.sale_status === "contacted"}
                           variant="secondary"
                         />
 
                         <ActionButton
-                          label={sendingQuote ? "견적 발송 중..." : "견적 이메일 발송"}
-                          onClick={sendQuoteEmail}
-                          disabled={acting || sendingQuote || !selectedItem.latest_quote_id}
+                          label="견적/안내 완료"
+                          onClick={() => updateSaleStatus("quoted")}
+                          disabled={acting || selectedItem.sale_status === "quoted"}
                           variant="secondary"
                         />
 
                         <ActionButton
-                          label={notifyingVendor ? "벤더 알림 중..." : "벤더 알림 발송"}
-                          onClick={notifyVendor}
-                          disabled={acting || notifyingVendor || !selectedItem.vendor_id}
-                          variant="secondary"
+                          label="판매성사"
+                          onClick={() => updateSaleStatus("won")}
+                          disabled={acting || selectedItem.sale_status === "won"}
                         />
 
                         <ActionButton
-                          label="벤더 전달 준비"
-                          onClick={() => updateLeadStage("sent")}
-                          disabled={acting || selectedItem.lead_stage === "sent"}
-                          variant="secondary"
+                          label="판매실패"
+                          onClick={() => updateSaleStatus("lost")}
+                          disabled={acting || selectedItem.sale_status === "lost"}
+                          variant="danger"
                         />
                       </div>
 
@@ -1151,7 +1252,9 @@ export default function AdminLeadsPage() {
                     <SimpleBox title="성사 / 매출 등록">
                       <div className="grid gap-3">
                         <div>
-                          <div className="mb-2 text-sm font-semibold">계약금액(원)</div>
+                          <div className="mb-2 text-sm font-semibold">
+                            계약금액(원)
+                          </div>
                           <input
                             value={dealAmount}
                             onChange={(e) => setDealAmount(e.target.value)}
@@ -1161,7 +1264,9 @@ export default function AdminLeadsPage() {
                         </div>
 
                         <div>
-                          <div className="mb-2 text-sm font-semibold">수수료 방식</div>
+                          <div className="mb-2 text-sm font-semibold">
+                            수수료 방식
+                          </div>
                           <select
                             value={commissionMode}
                             onChange={(e) => setCommissionMode(e.target.value)}
@@ -1175,7 +1280,9 @@ export default function AdminLeadsPage() {
                         </div>
 
                         <div>
-                          <div className="mb-2 text-sm font-semibold">계약 메모</div>
+                          <div className="mb-2 text-sm font-semibold">
+                            계약 메모
+                          </div>
                           <textarea
                             value={contractMemo}
                             onChange={(e) => setContractMemo(e.target.value)}
@@ -1195,7 +1302,9 @@ export default function AdminLeadsPage() {
                           <ActionButton
                             label="입금완료 처리"
                             onClick={markAsPaid}
-                            disabled={acting || selectedItem?.contract_status === "paid"}
+                            disabled={
+                              acting || selectedItem?.contract_status === "paid"
+                            }
                             variant="secondary"
                           />
                         </div>
@@ -1220,6 +1329,12 @@ export default function AdminLeadsPage() {
                           label="유효리드"
                           onClick={() => updateLeadStage("qualified")}
                           disabled={acting || selectedItem.lead_stage === "qualified"}
+                          variant="secondary"
+                        />
+                        <ActionButton
+                          label="벤더전달"
+                          onClick={() => updateLeadStage("sent")}
+                          disabled={acting || selectedItem.lead_stage === "sent"}
                           variant="secondary"
                         />
                         <ActionButton

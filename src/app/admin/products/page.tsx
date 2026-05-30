@@ -3,501 +3,351 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-type ProductRow = {
-  id: string;
-  booth_id: string | null;
-  name: string | null;
-  description: string | null;
-  product_url: string | null;
-  is_active: boolean | null;
-  sponsor_weight: number | null;
-  manual_boost: number | null;
-  is_featured: boolean | null;
-  campaign_tag: string | null;
-  crop_tags?: string[] | null;
-  issue_tags?: string[] | null;
-  category_tags?: string[] | null;
-  updated_at?: string | null;
-};
+import ProductDesktopTable, {
+  type ProductRow,
+} from "@/components/admin/products/ProductDesktopTable";
+import ProductMobileCardList from "@/components/admin/products/ProductMobileCardList";
 
-type ActiveFilter = "all" | "active" | "inactive";
+const PAGE_SIZE = 30;
+
+const FILTERS = [
+  { value: "all", label: "전체" },
+  { value: "vendor", label: "업체 업로드" },
+  { value: "material", label: "농자재" },
+  { value: "photodoctor", label: "포토닥터 추천" },
+  { value: "booth_product", label: "업체 판매상품" },
+  { value: "booth_plan", label: "입점상품" },
+  { value: "event", label: "경품/프로모션" },
+  { value: "inactive", label: "숨김" },
+];
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<ProductRow[]>([]);
-  const [selected, setSelected] = useState<ProductRow | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [keyword, setKeyword] = useState("");
-  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
   const [errorText, setErrorText] = useState("");
 
-  const queryString = useMemo(() => {
-    const p = new URLSearchParams();
-    if (keyword.trim()) p.set("keyword", keyword.trim());
-    if (activeFilter !== "all") p.set("active", activeFilter);
-    return p.toString();
-  }, [keyword, activeFilter]);
-
-  const loadProducts = async () => {
+  async function loadProducts() {
     setLoading(true);
     setErrorText("");
 
     try {
-      const res = await fetch(`/api/admin/products?${queryString}`, {
+      const params = new URLSearchParams();
+
+      if (keyword.trim()) {
+        params.set("keyword", keyword.trim());
+      }
+
+      if (filter === "vendor") {
+        params.set("source_type", "vendor");
+      }
+
+      if (filter === "material") {
+        params.set("product_group", "material");
+      }
+
+      if (filter === "photodoctor") {
+        params.set("photodoctor", "true");
+      }
+
+      if (filter === "booth_product") {
+        params.set("booth_product", "true");
+      }
+
+      if (filter === "booth_plan") {
+        params.set("booth_plan", "true");
+      }
+
+      if (filter === "event") {
+        params.set("product_group", "event");
+      }
+
+      if (filter === "inactive") {
+        params.set("active", "inactive");
+      }
+
+      const res = await fetch(`/api/admin/products?${params.toString()}`, {
         cache: "no-store",
       });
+
       const data = await res.json();
 
       if (!data.success) {
-        setErrorText(data.error || "제품 목록을 불러오지 못했습니다.");
+        setProducts([]);
+        setSelectedIds([]);
+        setErrorText(data.error || "상품 목록 조회 실패");
         return;
       }
 
       setProducts(data.products || []);
+      setSelectedIds([]);
+      setPage(1);
     } catch {
-      setErrorText("네트워크 오류가 발생했습니다.");
+      setProducts([]);
+      setSelectedIds([]);
+      setErrorText("네트워크 오류");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
     loadProducts();
-  }, [queryString]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
 
   const stats = useMemo(() => {
     return {
       total: products.length,
-      active: products.filter((p) => p.is_active).length,
-      featured: products.filter((p) => p.is_featured).length,
-      sponsored: products.filter((p) => (p.sponsor_weight ?? 0) > 0).length,
+      active: products.filter((p) => p.active).length,
+      hidden: products.filter((p) => !p.active).length,
+      vendor: products.filter((p) => p.source_type === "vendor").length,
+      selected: selectedIds.length,
     };
-  }, [products]);
+  }, [products, selectedIds]);
 
-  const saveProduct = async () => {
-    if (!selected) return;
+  const pageCount = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
 
-    setSaving(true);
-    setErrorText("");
-    setMessage("");
+  const pageProducts = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return products.slice(start, start + PAGE_SIZE);
+  }, [products, page]);
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+    );
+  }
+
+  function togglePageSelect() {
+    const ids = pageProducts.map((p) => p.product_id);
+
+    if (ids.length === 0) return;
+
+    const allChecked = ids.every((id) => selectedIds.includes(id));
+
+    if (allChecked) {
+      setSelectedIds((prev) => prev.filter((id) => !ids.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...ids])));
+    }
+  }
+
+  async function bulkUpdate(active: boolean) {
+    if (selectedIds.length === 0) {
+      alert("상품을 먼저 선택하세요.");
+      return;
+    }
+
+    const label = active ? "승인/노출" : "숨김";
+
+    if (!confirm(`선택한 ${selectedIds.length}개 상품을 ${label} 처리할까요?`)) {
+      return;
+    }
 
     try {
-      const res = await fetch(`/api/admin/products/${selected.id}`, {
+      const res = await fetch("/api/admin/products/bulk", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...selected,
-          sponsor_weight: Number(selected.sponsor_weight ?? 0),
-          manual_boost: Number(selected.manual_boost ?? 0),
-          is_featured: !!selected.is_featured,
-          is_active: !!selected.is_active,
-          campaign_tag: (selected.campaign_tag || "").trim() || null,
+          ids: selectedIds,
+          active,
         }),
       });
 
       const data = await res.json();
 
       if (!data.success) {
-        setErrorText(data.error || "제품 저장에 실패했습니다.");
+        alert(data.error || "일괄 처리 실패");
         return;
       }
 
-      setMessage(data.message || "저장되었습니다.");
-      setSelected(data.product || selected);
+      alert(data.message || "처리되었습니다.");
       await loadProducts();
     } catch {
-      setErrorText("네트워크 오류가 발생했습니다.");
-    } finally {
-      setSaving(false);
+      alert("네트워크 오류");
     }
-  };
-
-  const toggleActive = async (row: ProductRow) => {
-    setSaving(true);
-    setErrorText("");
-    setMessage("");
-
-    try {
-      const res = await fetch(`/api/admin/products/${row.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          is_active: !row.is_active,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setErrorText(data.error || "활성 상태 변경에 실패했습니다.");
-        return;
-      }
-
-      setMessage("활성 상태가 변경되었습니다.");
-      if (selected?.id === row.id) {
-        setSelected(data.product);
-      }
-      await loadProducts();
-    } catch {
-      setErrorText("네트워크 오류가 발생했습니다.");
-    } finally {
-      setSaving(false);
-    }
-  };
+  }
 
   return (
-    <main className="space-y-6 text-slate-900">
-      <section className="rounded-3xl bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+    <main className="min-h-screen bg-slate-100 p-3 text-slate-950 md:p-6">
+      <section className="mb-4 rounded-3xl bg-white p-5 shadow-sm md:mb-5 md:p-7">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
-            <div className="text-sm font-black text-emerald-700">PRODUCTS</div>
-            <h1 className="mt-2 text-3xl font-black">제품 운영 관리</h1>
-            <p className="mt-2 text-slate-600">
-              제품 정보와 함께 협찬 점수, 수동 부스트, 대표 노출, 캠페인 태그를 한 번에 운영합니다.
+            <div className="text-sm font-black text-emerald-700 md:text-base">
+              PRODUCT REVIEW CENTER
+            </div>
+
+            <h1 className="mt-2 text-3xl font-black md:text-4xl">
+              상품 검수센터
+            </h1>
+
+            <p className="mt-3 text-base font-bold text-slate-600 md:text-lg">
+              업체 업로드 상품을 확인하고 승인·숨김·추천 여부를 관리합니다.
             </p>
           </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex">
+            <Link
+              href="/admin/products/new"
+              className="h-14 rounded-2xl bg-emerald-700 px-6 text-center text-base font-black leading-[56px] text-white md:px-7 md:text-lg"
+            >
+              관리자 상품 등록
+            </Link>
+
+            <button
+              type="button"
+              onClick={loadProducts}
+              className="h-14 rounded-2xl bg-slate-950 px-6 text-base font-black text-white md:px-7 md:text-lg"
+            >
+              새로고침
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3 md:mt-7 md:grid-cols-5">
+          <Stat label="현재 목록" value={`${stats.total}개`} color="bg-slate-950" />
+          <Stat label="노출중" value={`${stats.active}개`} color="bg-emerald-700" />
+          <Stat label="숨김" value={`${stats.hidden}개`} color="bg-red-700" />
+          <Stat label="업체 업로드" value={`${stats.vendor}개`} color="bg-blue-700" />
+          <Stat label="선택" value={`${stats.selected}개`} color="bg-purple-700" />
+        </div>
+      </section>
+
+      <section className="mb-4 rounded-3xl bg-white p-4 shadow-sm md:mb-5 md:p-6">
+        <div className="mb-5 flex flex-wrap gap-2">
+          {FILTERS.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setFilter(item.value)}
+              className={`min-h-12 rounded-2xl px-4 py-3 text-sm font-black md:px-5 md:text-base ${
+                filter === item.value
+                  ? "bg-slate-950 text-white"
+                  : "bg-slate-200 text-slate-700"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto_auto_auto]">
+          <input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") loadProducts();
+            }}
+            placeholder="상품명 / 업체명 / 작물 / 병해충 검색"
+            className="h-14 w-full rounded-2xl border-2 border-slate-300 px-5 text-base font-bold outline-none focus:border-emerald-600 md:text-lg"
+          />
 
           <button
             type="button"
             onClick={loadProducts}
-            className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white"
+            className="h-14 rounded-2xl bg-slate-950 px-7 text-lg font-black text-white"
           >
-            새로고침
+            검색
+          </button>
+
+          <button
+            type="button"
+            onClick={() => bulkUpdate(true)}
+            className="h-14 rounded-2xl bg-emerald-700 px-7 text-lg font-black text-white"
+          >
+            선택 승인
+          </button>
+
+          <button
+            type="button"
+            onClick={() => bulkUpdate(false)}
+            className="h-14 rounded-2xl bg-red-700 px-7 text-lg font-black text-white"
+          >
+            선택 숨김
           </button>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="전체 제품" value={`${stats.total}개`} tone="slate" />
-          <StatCard label="활성 제품" value={`${stats.active}개`} tone="green" />
-          <StatCard label="대표 노출" value={`${stats.featured}개`} tone="purple" />
-          <StatCard label="협찬 적용" value={`${stats.sponsored}개`} tone="amber" />
-        </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-4">
-          <div className="lg:col-span-3">
-            <label className="mb-2 block text-sm font-bold">검색</label>
-            <input
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="제품명, 설명, 부스 ID"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-bold">활성 여부</label>
-            <select
-              value={activeFilter}
-              onChange={(e) => setActiveFilter(e.target.value as ActiveFilter)}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
-            >
-              <option value="all">전체</option>
-              <option value="active">활성</option>
-              <option value="inactive">비활성</option>
-            </select>
-          </div>
-        </div>
-
-        {message ? (
-          <div className="mt-4 rounded-xl bg-emerald-100 px-4 py-3 font-bold text-emerald-700">
-            {message}
-          </div>
-        ) : null}
-
         {errorText ? (
-          <div className="mt-4 rounded-xl bg-red-100 px-4 py-3 font-bold text-red-700">
+          <div className="mt-4 rounded-2xl bg-red-100 px-5 py-4 text-base font-black text-red-700 md:text-lg">
             {errorText}
           </div>
         ) : null}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-black">제품 목록</h2>
-            <div className="text-sm font-bold text-slate-500">
-              {loading ? "불러오는 중..." : `표시 ${products.length.toLocaleString()}개`}
-            </div>
+      <section className="rounded-3xl bg-white p-4 shadow-sm md:p-6">
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-sm font-black text-emerald-700">PRODUCTS</div>
+            <div className="mt-1 text-3xl font-black">상품 목록</div>
           </div>
 
-          {products.length === 0 ? (
-            <div className="rounded-xl bg-slate-50 p-6 text-slate-500">
-              제품이 없습니다.
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {products.map((row) => (
-                <div
-                  key={row.id}
-                  className={`rounded-2xl border p-4 ${
-                    selected?.id === row.id
-                      ? "border-slate-900 bg-slate-50"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-lg font-black">
-                        {row.name || "이름 없음"}
-                      </div>
-                      <div className="mt-1 text-xs text-slate-500">
-                        product_id: {row.id}
-                      </div>
-                    </div>
-
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
-                        row.is_active
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-slate-200 text-slate-700"
-                      }`}
-                    >
-                      {row.is_active ? "활성" : "비활성"}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 text-sm leading-7 text-slate-600">
-                    {row.description || "설명이 없습니다."}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {row.is_featured ? (
-                      <span className="inline-flex rounded-full bg-purple-100 px-2.5 py-1 text-xs font-bold text-purple-700">
-                        대표노출
-                      </span>
-                    ) : null}
-
-                    {(row.sponsor_weight ?? 0) > 0 ? (
-                      <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
-                        협찬 {row.sponsor_weight}
-                      </span>
-                    ) : null}
-
-                    {(row.manual_boost ?? 0) > 0 ? (
-                      <span className="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
-                        부스트 {row.manual_boost}
-                      </span>
-                    ) : null}
-
-                    {row.campaign_tag ? (
-                      <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">
-                        {row.campaign_tag}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-3 text-xs leading-6 text-slate-500">
-                    <div>crop: {formatTags(row.crop_tags)}</div>
-                    <div>issue: {formatTags(row.issue_tags)}</div>
-                    <div>category: {formatTags(row.category_tags)}</div>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelected(row)}
-                      className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white"
-                    >
-                      편집
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => toggleActive(row)}
-                      className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-900"
-                      disabled={saving}
-                    >
-                      {row.is_active ? "비활성화" : "활성화"}
-                    </button>
-
-                    <Link
-                      href={row.product_url || `/expo/booths/${row.booth_id ?? ""}`}
-                      className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-900"
-                    >
-                      보기
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="text-base font-black text-slate-600">
+            {loading
+              ? "불러오는 중..."
+              : `총 ${products.length.toLocaleString()}개 / 현재 ${pageProducts.length}개 표시`}
+          </div>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-2xl font-black">제품 편집</h2>
+        <ProductDesktopTable
+          products={pageProducts}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          onTogglePageSelect={togglePageSelect}
+        />
 
-          {!selected ? (
-            <div className="rounded-xl bg-slate-50 p-4 text-slate-500">
-              왼쪽에서 제품을 선택해 주세요.
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-bold">제품명</label>
-                <input
-                  value={selected.name || ""}
-                  onChange={(e) =>
-                    setSelected({ ...selected, name: e.target.value })
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                />
-              </div>
+        <ProductMobileCardList
+          products={pageProducts}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+        />
 
-              <div>
-                <label className="mb-2 block text-sm font-bold">설명</label>
-                <textarea
-                  value={selected.description || ""}
-                  onChange={(e) =>
-                    setSelected({ ...selected, description: e.target.value })
-                  }
-                  className="min-h-[120px] w-full rounded-xl border border-slate-300 px-4 py-3"
-                />
-              </div>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 md:flex-row">
+          <button
+            type="button"
+            onClick={() => setPage((v) => Math.max(1, v - 1))}
+            disabled={page <= 1}
+            className="h-14 w-full rounded-2xl border border-slate-300 bg-white px-6 text-lg font-black disabled:opacity-40 md:w-auto"
+          >
+            이전
+          </button>
 
-              <div>
-                <label className="mb-2 block text-sm font-bold">제품 URL</label>
-                <input
-                  value={selected.product_url || ""}
-                  onChange={(e) =>
-                    setSelected({ ...selected, product_url: e.target.value })
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                />
-              </div>
+          <div className="text-lg font-black">
+            {page} / {pageCount} 페이지
+          </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="mb-3 text-base font-black text-slate-900">
-                  노출 제어 설정
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-bold">협찬 점수</label>
-                    <input
-                      type="number"
-                      value={selected.sponsor_weight ?? 0}
-                      onChange={(e) =>
-                        setSelected({
-                          ...selected,
-                          sponsor_weight: Number(e.target.value || 0),
-                        })
-                      }
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-bold">수동 부스트</label>
-                    <input
-                      type="number"
-                      value={selected.manual_boost ?? 0}
-                      onChange={(e) =>
-                        setSelected({
-                          ...selected,
-                          manual_boost: Number(e.target.value || 0),
-                        })
-                      }
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="mb-2 block text-sm font-bold">캠페인 태그</label>
-                  <input
-                    value={selected.campaign_tag || ""}
-                    onChange={(e) =>
-                      setSelected({ ...selected, campaign_tag: e.target.value })
-                    }
-                    placeholder="예: thrips_campaign"
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3"
-                  />
-                </div>
-
-                <div className="mt-4 flex items-center gap-3">
-                  <input
-                    id="product_is_featured"
-                    type="checkbox"
-                    checked={!!selected.is_featured}
-                    onChange={(e) =>
-                      setSelected({ ...selected, is_featured: e.target.checked })
-                    }
-                  />
-                  <label htmlFor="product_is_featured" className="text-sm font-bold">
-                    대표 노출 제품으로 운영
-                  </label>
-                </div>
-
-                <div className="mt-4 flex items-center gap-3">
-                  <input
-                    id="product_is_active"
-                    type="checkbox"
-                    checked={!!selected.is_active}
-                    onChange={(e) =>
-                      setSelected({ ...selected, is_active: e.target.checked })
-                    }
-                  />
-                  <label htmlFor="product_is_active" className="text-sm font-bold">
-                    활성 상태로 운영
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={saveProduct}
-                  disabled={saving}
-                  className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white disabled:opacity-60"
-                >
-                  {saving ? "저장 중..." : "제품 저장"}
-                </button>
-
-                <Link
-                  href={selected.product_url || `/expo/booths/${selected.booth_id ?? ""}`}
-                  className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900"
-                >
-                  제품 보기
-                </Link>
-              </div>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => setPage((v) => Math.min(pageCount, v + 1))}
+            disabled={page >= pageCount}
+            className="h-14 w-full rounded-2xl border border-slate-300 bg-white px-6 text-lg font-black disabled:opacity-40 md:w-auto"
+          >
+            다음
+          </button>
         </div>
       </section>
     </main>
   );
 }
 
-function formatTags(tags?: string[] | null) {
-  if (!tags || tags.length === 0) return "-";
-  return tags.join(", ");
-}
-
-function StatCard({
+function Stat({
   label,
   value,
-  tone,
+  color,
 }: {
   label: string;
   value: string;
-  tone: "slate" | "green" | "purple" | "amber";
+  color: string;
 }) {
-  const map = {
-    slate: "bg-slate-900 text-white",
-    green: "bg-emerald-600 text-white",
-    purple: "bg-purple-600 text-white",
-    amber: "bg-amber-500 text-white",
-  };
-
   return (
-    <div className={`rounded-2xl p-5 ${map[tone]}`}>
-      <div className="text-sm font-bold opacity-90">{label}</div>
-      <div className="mt-2 text-3xl font-black">{value}</div>
+    <div className={`rounded-3xl ${color} p-4 text-white md:p-5`}>
+      <div className="text-xs font-black opacity-90 md:text-sm">{label}</div>
+      <div className="mt-2 text-2xl font-black md:text-3xl">{value}</div>
     </div>
   );
 }

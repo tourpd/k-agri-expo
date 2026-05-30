@@ -1,101 +1,47 @@
-"use client"
+"use client";
 
 export default function HeroEvent() {
-
   return (
-    <section style={S.wrap}>
+    <section className="rounded-3xl bg-slate-900 text-white p-5 md:p-10">
+      
+      <div className="grid gap-6 md:grid-cols-2 md:items-center">
 
-      <div style={S.left}>
+        {/* 텍스트 영역 */}
+        <div>
 
-        <div style={S.badge}>
-          🔥 신제품 경품 이벤트
+          <div className="inline-block rounded-full bg-emerald-500 px-3 py-1 text-xs font-black md:text-sm">
+            🔥 신제품 경품 이벤트
+          </div>
+
+          <h1 className="mt-3 text-2xl font-black leading-tight md:text-5xl">
+            영진 로타리 YJ-180
+          </h1>
+
+          <p className="mt-3 text-sm font-bold text-white/80 md:text-lg">
+            3,200만원 상당 신제품 로터리  
+            농민 대상 특별 경품 이벤트
+          </p>
+
+          <div className="mt-4 text-base font-black text-emerald-300 md:text-xl">
+            응모자 5,432명
+          </div>
+
+          <button className="mt-4 h-12 w-full rounded-xl bg-white text-base font-black text-slate-900 md:w-auto md:px-8">
+            경품 응모하기
+          </button>
+
         </div>
 
-        <h1 style={S.title}>
-          영진 로타리 YJ-180
-        </h1>
-
-        <p style={S.desc}>
-          3,200만원 상당 신제품 로터리  
-          농민 대상 특별 경품 이벤트
-        </p>
-
-        <div style={S.counter}>
-          응모자 5,432명
+        {/* 이미지 영역 */}
+        <div>
+          <img
+            src="/sample_rotary.jpg"
+            className="w-full rounded-2xl object-cover"
+          />
         </div>
 
-        <button style={S.btn}>
-          경품 응모하기
-        </button>
-
-      </div>
-
-      <div style={S.right}>
-        <img
-          src="/sample_rotary.jpg"
-          style={S.img}
-        />
       </div>
 
     </section>
-  )
-}
-
-const S: any = {
-
-wrap:{
-display:"grid",
-gridTemplateColumns:"1.2fr 1fr",
-gap:40,
-padding:40,
-borderRadius:30,
-background:"#0f172a",
-color:"white"
-},
-
-left:{},
-
-badge:{
-background:"#16a34a",
-padding:"6px 12px",
-borderRadius:20,
-display:"inline-block",
-fontWeight:700
-},
-
-title:{
-fontSize:46,
-fontWeight:900,
-marginTop:12
-},
-
-desc:{
-marginTop:10,
-fontSize:18,
-opacity:.9
-},
-
-counter:{
-marginTop:20,
-fontWeight:800,
-fontSize:20
-},
-
-btn:{
-marginTop:20,
-padding:"14px 26px",
-borderRadius:16,
-border:"none",
-background:"white",
-fontWeight:800,
-cursor:"pointer"
-},
-
-right:{},
-
-img:{
-width:"100%",
-borderRadius:20
-}
-
+  );
 }

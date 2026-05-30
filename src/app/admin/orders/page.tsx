@@ -25,46 +25,26 @@ type PaymentFilter = "all" | "pending" | "paid" | "cancelled";
 type OrderFilter = "all" | "requested" | "approved" | "completed" | "cancelled";
 
 function paymentLabel(v?: string | null) {
-  switch (v) {
-    case "pending":
-      return "입금대기";
-    case "paid":
-      return "입금완료";
-    case "cancelled":
-      return "취소";
-    default:
-      return v || "-";
-  }
+  if (v === "pending") return "입금대기";
+  if (v === "paid") return "입금완료";
+  if (v === "cancelled") return "취소";
+  return v || "-";
 }
 
 function orderLabel(v?: string | null) {
-  switch (v) {
-    case "requested":
-      return "신청접수";
-    case "approved":
-      return "승인완료";
-    case "completed":
-      return "처리완료";
-    case "cancelled":
-      return "취소";
-    default:
-      return v || "-";
-  }
+  if (v === "requested") return "신청접수";
+  if (v === "approved") return "승인완료";
+  if (v === "completed") return "처리완료";
+  if (v === "cancelled") return "취소";
+  return v || "-";
 }
 
 function badgeClass(type: "gray" | "yellow" | "green" | "red" | "blue") {
-  switch (type) {
-    case "yellow":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "green":
-      return "bg-emerald-100 text-emerald-800 border-emerald-200";
-    case "red":
-      return "bg-red-100 text-red-800 border-red-200";
-    case "blue":
-      return "bg-blue-100 text-blue-800 border-blue-200";
-    default:
-      return "bg-slate-100 text-slate-700 border-slate-200";
-  }
+  if (type === "yellow") return "bg-yellow-100 text-yellow-800 border-yellow-200";
+  if (type === "green") return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  if (type === "red") return "bg-red-100 text-red-800 border-red-200";
+  if (type === "blue") return "bg-blue-100 text-blue-800 border-blue-200";
+  return "bg-slate-100 text-slate-700 border-slate-200";
 }
 
 function paymentBadge(v?: string | null) {
@@ -80,6 +60,11 @@ function orderBadge(v?: string | null) {
   if (v === "completed") return badgeClass("green");
   if (v === "cancelled") return badgeClass("red");
   return badgeClass("gray");
+}
+
+function shortDate(v?: string | null) {
+  if (!v) return "-";
+  return String(v).replace("T", " ").slice(0, 16);
 }
 
 export default function AdminOrdersPage() {
@@ -99,7 +84,7 @@ export default function AdminOrdersPage() {
     return p.toString();
   }, [keyword]);
 
-  const loadOrders = async () => {
+  async function loadOrders() {
     setLoading(true);
     setErrorText("");
 
@@ -107,6 +92,7 @@ export default function AdminOrdersPage() {
       const res = await fetch(`/api/admin/orders?${queryString}`, {
         cache: "no-store",
       });
+
       const data = await res.json();
 
       if (!data.success) {
@@ -120,7 +106,7 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
     loadOrders();
@@ -130,8 +116,10 @@ export default function AdminOrdersPage() {
     return orders.filter((row) => {
       const paymentOk =
         paymentFilter === "all" ? true : row.payment_status === paymentFilter;
+
       const orderOk =
         orderFilter === "all" ? true : row.order_status === orderFilter;
+
       return paymentOk && orderOk;
     });
   }, [orders, paymentFilter, orderFilter]);
@@ -159,7 +147,7 @@ export default function AdminOrdersPage() {
     };
   }, [orders]);
 
-  const saveMemoAndStatus = async () => {
+  async function saveMemoAndStatus() {
     if (!selected) return;
 
     setSaving(true);
@@ -183,7 +171,7 @@ export default function AdminOrdersPage() {
       const data = await res.json();
 
       if (!data.success) {
-        setErrorText(data.error || "메모 저장에 실패했습니다.");
+        setErrorText(data.error || "저장에 실패했습니다.");
         return;
       }
 
@@ -195,14 +183,15 @@ export default function AdminOrdersPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }
 
-  const confirmPayment = async () => {
+  async function confirmPayment() {
     if (!selected) return;
 
     const ok = window.confirm(
       "입금 확인 처리하시겠습니까?\n처리되면 vendor/booth가 자동 생성됩니다."
     );
+
     if (!ok) return;
 
     setSaving(true);
@@ -246,10 +235,11 @@ export default function AdminOrdersPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }
 
   const logLines = useMemo(() => {
     if (!selected?.note) return [];
+
     return selected.note
       .split("\n")
       .map((v) => v.trim())
@@ -258,15 +248,53 @@ export default function AdminOrdersPage() {
   }, [selected?.note]);
 
   return (
-    <main className="space-y-6 text-slate-900">
+    <main className="min-h-screen bg-slate-100 p-6 text-slate-900">
       <section className="rounded-3xl bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <div className="text-sm font-black text-emerald-700">ORDERS</div>
-            <h1 className="mt-2 text-3xl font-black">주문/결제 관리</h1>
+            <div className="text-sm font-black text-emerald-700">ADMIN ORDERS</div>
+            <h1 className="mt-2 text-3xl font-black">입점 주문 / 결제 관리</h1>
+
             <p className="mt-2 text-slate-600">
-              입점 신청 주문을 확인하고, 입금 확인 시 자동으로 업체/부스를 생성합니다.
+              입점 신청 주문을 확인하고, 입금 확인 시 업체와 부스를 자동 생성합니다.
             </p>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/admin/orders"
+                className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white"
+              >
+                입점 주문관리
+              </Link>
+
+              <Link
+                href="/admin/product-orders"
+                className="rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white"
+              >
+                제품 주문관리
+              </Link>
+
+              <Link
+                href="/admin/order-logs"
+                className="rounded-2xl bg-blue-700 px-5 py-3 font-black text-white"
+              >
+                주문 로그센터
+              </Link>
+
+              <Link
+                href="/admin/tracking-upload"
+                className="rounded-2xl bg-purple-700 px-5 py-3 font-black text-white"
+              >
+                송장 업로드
+              </Link>
+
+              <Link
+                href="/admin/booths"
+                className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900"
+              >
+                부스관리
+              </Link>
+            </div>
           </div>
 
           <button
@@ -347,31 +375,31 @@ export default function AdminOrdersPage() {
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-3xl bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-black">주문 목록</h2>
+            <h2 className="text-2xl font-black">입점 주문 목록</h2>
+
             <div className="text-sm font-bold text-slate-500">
               {loading ? "불러오는 중..." : `표시 ${filteredOrders.length.toLocaleString()}건`}
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse">
+            <table className="min-w-[900px] w-full border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-sm">
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-sm">
                   <th className="px-3 py-3">회사명</th>
                   <th className="px-3 py-3">상품</th>
                   <th className="px-3 py-3">금액</th>
                   <th className="px-3 py-3">결제상태</th>
                   <th className="px-3 py-3">주문상태</th>
+                  <th className="px-3 py-3">신청일</th>
                   <th className="px-3 py-3">관리</th>
                 </tr>
               </thead>
+
               <tbody>
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="px-3 py-10 text-center text-slate-500"
-                    >
+                    <td colSpan={7} className="px-3 py-10 text-center text-slate-500">
                       주문이 없습니다.
                     </td>
                   </tr>
@@ -385,16 +413,18 @@ export default function AdminOrdersPage() {
                     >
                       <td className="px-3 py-3 align-top">
                         <div className="font-bold">{row.company_name}</div>
-                        <div className="mt-1 text-xs text-slate-500">
-                          주문번호 #{row.id}
-                        </div>
+                        <div className="mt-1 text-xs text-slate-500">주문번호 #{row.id}</div>
+                        <div className="mt-1 text-xs text-slate-500">{row.phone || "-"}</div>
                       </td>
+
                       <td className="px-3 py-3 align-top">
                         {row.product_name || row.product_code || "-"}
                       </td>
+
                       <td className="px-3 py-3 align-top font-bold">
                         {(row.amount_krw || 0).toLocaleString()}원
                       </td>
+
                       <td className="px-3 py-3 align-top">
                         <span
                           className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${paymentBadge(
@@ -404,6 +434,7 @@ export default function AdminOrdersPage() {
                           {paymentLabel(row.payment_status)}
                         </span>
                       </td>
+
                       <td className="px-3 py-3 align-top">
                         <span
                           className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${orderBadge(
@@ -413,6 +444,11 @@ export default function AdminOrdersPage() {
                           {orderLabel(row.order_status)}
                         </span>
                       </td>
+
+                      <td className="px-3 py-3 align-top text-sm font-bold text-slate-600">
+                        {shortDate(row.created_at)}
+                      </td>
+
                       <td className="px-3 py-3 align-top">
                         <button
                           type="button"
@@ -440,51 +476,58 @@ export default function AdminOrdersPage() {
           ) : (
             <div className="grid gap-4">
               <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-7">
-                <div>
-                  <b>주문번호:</b> {selected.id}
-                </div>
-                <div>
-                  <b>회사명:</b> {selected.company_name}
-                </div>
-                <div>
-                  <b>담당자:</b> {selected.applicant_name || "-"}
-                </div>
-                <div>
-                  <b>연락처:</b> {selected.phone || "-"}
-                </div>
-                <div>
-                  <b>이메일:</b> {selected.email || "-"}
-                </div>
-                <div>
-                  <b>상품:</b> {selected.product_name || selected.product_code || "-"}
-                </div>
-                <div>
-                  <b>금액:</b> {(selected.amount_krw || 0).toLocaleString()}원
-                </div>
-                <div>
-                  <b>결제상태:</b> {paymentLabel(selected.payment_status)}
-                </div>
-                <div>
-                  <b>주문상태:</b> {orderLabel(selected.order_status)}
-                </div>
-                <div>
-                  <b>vendor_id:</b> {selected.vendor_id || "-"}
-                </div>
-                <div>
-                  <b>booth_id:</b> {selected.booth_id || "-"}
-                </div>
-                <div>
-                  <b>신청일:</b> {selected.created_at || "-"}
-                </div>
+                <div><b>주문번호:</b> {selected.id}</div>
+                <div><b>회사명:</b> {selected.company_name}</div>
+                <div><b>담당자:</b> {selected.applicant_name || "-"}</div>
+                <div><b>연락처:</b> {selected.phone || "-"}</div>
+                <div><b>이메일:</b> {selected.email || "-"}</div>
+                <div><b>상품:</b> {selected.product_name || selected.product_code || "-"}</div>
+                <div><b>금액:</b> {(selected.amount_krw || 0).toLocaleString()}원</div>
+                <div><b>결제상태:</b> {paymentLabel(selected.payment_status)}</div>
+                <div><b>주문상태:</b> {orderLabel(selected.order_status)}</div>
+                <div><b>vendor_id:</b> {selected.vendor_id || "-"}</div>
+                <div><b>booth_id:</b> {selected.booth_id || "-"}</div>
+                <div><b>신청일:</b> {shortDate(selected.created_at)}</div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label>
+                  <span className="mb-2 block text-sm font-bold">결제 상태</span>
+                  <select
+                    value={selected.payment_status || "pending"}
+                    onChange={(e) =>
+                      setSelected({ ...selected, payment_status: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                  >
+                    <option value="pending">입금대기</option>
+                    <option value="paid">입금완료</option>
+                    <option value="cancelled">취소</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span className="mb-2 block text-sm font-bold">주문 상태</span>
+                  <select
+                    value={selected.order_status || "requested"}
+                    onChange={(e) =>
+                      setSelected({ ...selected, order_status: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3"
+                  >
+                    <option value="requested">신청접수</option>
+                    <option value="approved">승인완료</option>
+                    <option value="completed">처리완료</option>
+                    <option value="cancelled">취소</option>
+                  </select>
+                </label>
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-bold">관리 메모 / 상태 로그</label>
                 <textarea
                   value={selected.note || ""}
-                  onChange={(e) =>
-                    setSelected({ ...selected, note: e.target.value })
-                  }
+                  onChange={(e) => setSelected({ ...selected, note: e.target.value })}
                   className="min-h-[140px] w-full rounded-xl border border-slate-300 px-4 py-3"
                   placeholder="입금 확인 내용, 연락 사항 등을 기록"
                 />
@@ -497,7 +540,7 @@ export default function AdminOrdersPage() {
                     {logLines.map((line, idx) => (
                       <div
                         key={`${line}-${idx}`}
-                        className="rounded-lg bg-white px-3 py-2 border border-slate-200"
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2"
                       >
                         {line}
                       </div>
@@ -511,9 +554,11 @@ export default function AdminOrdersPage() {
                   <div className="text-sm font-bold text-emerald-700">
                     생성된 부스가 있습니다
                   </div>
+
                   <div className="mt-2 text-sm text-slate-700">
                     booth_id: {selected.booth_id}
                   </div>
+
                   <div className="mt-3 flex flex-wrap gap-3">
                     <Link
                       href={`/expo/booths/${selected.booth_id}`}
@@ -526,7 +571,7 @@ export default function AdminOrdersPage() {
                       href="/admin/booths"
                       className="inline-flex rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-900"
                     >
-                      부스관리 바로가기
+                      부스관리
                     </Link>
                   </div>
                 </div>
@@ -535,6 +580,7 @@ export default function AdminOrdersPage() {
                   <div className="text-sm text-slate-600">
                     아직 연결된 부스가 없습니다.
                   </div>
+
                   <div className="mt-3">
                     <Link
                       href="/admin/booths"
@@ -553,7 +599,7 @@ export default function AdminOrdersPage() {
                   disabled={saving}
                   className="rounded-2xl bg-slate-950 px-5 py-3 font-black text-white disabled:opacity-60"
                 >
-                  {saving ? "저장 중..." : "메모 저장 + 로그기록"}
+                  {saving ? "저장 중..." : "메모 저장"}
                 </button>
 
                 <button

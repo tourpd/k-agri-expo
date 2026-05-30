@@ -1,305 +1,667 @@
-// src/app/expo/ExpoMapClient.tsx
-"use client";
-
 import React from "react";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getAutoHeroData } from "@/lib/expo/hero-auto";
+import { getMonthlyConsultQuestions } from "@/lib/expo/consult-queries";
+import { getExpoHotIssues } from "@/lib/expo/hot-issues";
+import { getMonthlyProblemCards } from "@/lib/expo/problem-cards";
+import { getExpoProblemSectionData } from "@/lib/expo/problem-queries";
+import { getHomeDeals } from "@/lib/expo/home-deals";
 
-export type HallHotspot = {
-  hallId: string;
-  title: string;
-  subtitle: string;
-  color: string;
+import ExpoTopBar from "@/components/expo/ExpoTopBar";
+import ExpoHeroSection from "@/components/expo/ExpoHeroSection";
+import ExpoCategoryEntrySection from "@/components/expo/ExpoCategoryEntrySection";
+import ExpoHotIssuesSection from "@/components/expo/ExpoHotIssuesSection";
+import ExpoLiveSection from "@/components/expo/ExpoLiveSection";
+import ExpoDealsSection from "@/components/expo/ExpoDealsSection";
+import ExpoFarmerConsultSection from "@/components/expo/ExpoFarmerConsultSection";
+import ExpoProblemSection from "@/components/expo/ExpoProblemSection";
+import ExpoNewProductsSection from "@/components/expo/ExpoNewProductsSection";
+import ExpoFooter from "@/components/expo/ExpoFooter";
 
-  // ✅ 핫스팟 위치(%) — 지도 이미지 위에 올릴 버튼 박스
-  // left/top/width/height 는 0~100 (퍼센트)
-  box: { left: number; top: number; width: number; height: number };
-};
+import type { CmsSettings, HomeSlot } from "@/types/expo-home";
+import { groupSlots } from "@/lib/expo/home-utils";
 
-export default function ExpoMapClient({ halls }: { halls: HallHotspot[] }) {
-  const containerRef = React.useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = React.useState(1);
-  const [pos, setPos] = React.useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = React.useState(false);
-  const startRef = React.useRef<{ x: number; y: number; px: number; py: number } | null>(null);
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-  function clamp(n: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, n));
-  }
-
-  function onWheel(e: React.WheelEvent) {
-    // ✅ 트랙패드/휠 확대
-    if (!e.ctrlKey && Math.abs(e.deltaY) < 2) return; // 너무 미세한 움직임 방지
-    e.preventDefault();
-    const next = clamp(scale + (e.deltaY > 0 ? -0.08 : 0.08), 1, 2.4);
-    setScale(next);
-  }
-
-  function onPointerDown(e: React.PointerEvent) {
-    // ✅ 드래그 이동
-    setDragging(true);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    startRef.current = { x: e.clientX, y: e.clientY, px: pos.x, py: pos.y };
-  }
-
-  function onPointerMove(e: React.PointerEvent) {
-    if (!dragging || !startRef.current) return;
-    const dx = e.clientX - startRef.current.x;
-    const dy = e.clientY - startRef.current.y;
-    setPos({ x: startRef.current.px + dx, y: startRef.current.py + dy });
-  }
-
-  function onPointerUp() {
-    setDragging(false);
-    startRef.current = null;
-  }
-
-  function zoomIn() {
-    setScale((s) => clamp(s + 0.15, 1, 2.4));
-  }
-  function zoomOut() {
-    setScale((s) => clamp(s - 0.15, 1, 2.4));
-  }
-  function reset() {
-    setScale(1);
-    setPos({ x: 0, y: 0 });
-  }
-
-  return (
-    <div>
-      {/* ✅ 툴바(모바일 큰 버튼) */}
-      <div style={toolbar}>
-        <div style={{ fontWeight: 950, fontSize: 16 }}>전시장 지도</div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button type="button" onClick={zoomOut} style={toolBtn} aria-label="축소">
-            −
-          </button>
-          <button type="button" onClick={zoomIn} style={toolBtn} aria-label="확대">
-            +
-          </button>
-          <button type="button" onClick={reset} style={toolBtnWide} aria-label="초기화">
-            초기화
-          </button>
-        </div>
-      </div>
-
-      {/* ✅ 지도 영역 */}
-      <div
-        ref={containerRef}
-        style={stage}
-        onWheel={onWheel}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-      >
-        {/* ✅ “지도” 배경(우선은 가상 지도 느낌 / 나중에 실제 박람회 지도 이미지로 교체) */}
-        <div
-          style={{
-            ...map,
-            transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`,
-            cursor: dragging ? "grabbing" : "grab",
-          }}
-        >
-          {/* 배경(가상 박람회장) */}
-          <div style={mapBg}>
-            <div style={mapTitle}>K-Agri Expo 전시장</div>
-            <div style={mapHint}>전시관을 터치해서 입장하십시오</div>
-
-            {/* “도로/구역” 같은 시각 요소(가볍게) */}
-            <div style={roadH} />
-            <div style={roadV} />
-            <div style={plaza}>중앙 광장</div>
-          </div>
-
-          {/* ✅ 핫스팟 버튼들 */}
-          {halls.map((h) => (
-            <a
-              key={h.hallId}
-              href={`/expo/hall/${h.hallId}`}
-              style={{
-                ...hotspot,
-                left: `${h.box.left}%`,
-                top: `${h.box.top}%`,
-                width: `${h.box.width}%`,
-                height: `${h.box.height}%`,
-                borderColor: h.color,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ ...hotDot, background: h.color }} />
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={hotTitle}>{h.title}</div>
-                  <div style={hotSub}>{h.subtitle}</div>
-                </div>
-              </div>
-              <div style={enterPill}>입장</div>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      <div style={tip}>
-        ✅ 지도를 <b>드래그</b>로 이동 / <b>+ −</b>로 확대·축소 가능합니다.
-      </div>
-    </div>
-  );
+const RESPONSIVE_CSS = `
+.expo-home * {
+  box-sizing: border-box;
 }
 
-const toolbar: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 12,
-  padding: "14px 14px",
-  borderBottom: "1px solid #eee",
-  background: "#fff",
+.expo-home img,
+.expo-home iframe,
+.expo-home video {
+  max-width: 100%;
+  height: auto;
+}
+
+.expo-home a,
+.expo-home button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.expo-home {
+  overflow-x: hidden;
+}
+
+.expo-home section {
+  scroll-margin-top: 84px;
+}
+
+@media (max-width: 1280px) {
+  .expo-new-grid,
+  .expo-problem-grid,
+  .expo-solution-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .expo-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .expo-topbar {
+    padding: 14px 16px 8px !important;
+    align-items: flex-start !important;
+  }
+
+  .expo-topbar,
+  .expo-section-head {
+    gap: 12px !important;
+  }
+
+  .expo-header-right,
+  .expo-top-actions {
+    flex-wrap: wrap !important;
+  }
+
+  .expo-hero-wrap {
+    padding: 14px 16px 0 !important;
+  }
+
+  .expo-hero-card,
+  .expo-promo-card,
+  .expo-live-card,
+  .expo-ai-card,
+  .expo-problem-card,
+  .expo-new-card {
+    border-radius: 24px !important;
+  }
+
+  .expo-hero-card {
+    padding: 22px 20px !important;
+  }
+
+  .expo-hero-buttons,
+  .expo-promo-buttons {
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .expo-logo-row {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    padding-bottom: 6px !important;
+    scrollbar-width: none;
+  }
+
+  .expo-logo-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .expo-logo-row a {
+    flex: 0 0 auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .expo-section {
+    padding: 14px 12px 0 !important;
+  }
+
+  .expo-topbar {
+    padding: 12px 12px 8px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .expo-header-right {
+    width: 100% !important;
+  }
+
+  .expo-top-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    justify-content: stretch !important;
+  }
+
+  .expo-top-actions a:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .expo-top-actions a,
+  .expo-top-actions button {
+    width: 100% !important;
+    min-height: 42px !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  .expo-hero-wrap {
+    padding: 12px 12px 0 !important;
+  }
+
+  .expo-hero-card {
+    padding: 18px 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .expo-hero-card h1 {
+    font-size: clamp(34px, 9vw, 52px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .expo-hero-card h2,
+  .expo-hero-card .expo-hero-subtitle {
+    font-size: clamp(22px, 6vw, 30px) !important;
+    line-height: 1.2 !important;
+  }
+
+  .expo-hero-card p,
+  .expo-promo-card p,
+  .expo-live-card p,
+  .expo-ai-card p {
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+  }
+
+  .expo-hero-buttons,
+  .expo-promo-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .expo-hero-buttons a,
+  .expo-promo-buttons a {
+    width: 100% !important;
+    min-height: 46px !important;
+    padding: 12px 10px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .expo-hero-media {
+    min-height: 180px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-section-head {
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .expo-section-head h2,
+  .expo-section-title {
+    font-size: clamp(28px, 7vw, 38px) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .expo-section-head p,
+  .expo-section-desc {
+    font-size: 13px !important;
+    line-height: 1.7 !important;
+  }
+
+  .expo-category-grid,
+  .expo-entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .expo-category-card,
+  .expo-entry-card {
+    min-height: 168px !important;
+    padding: 14px 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-category-card h3,
+  .expo-entry-card h3 {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+  }
+
+  .expo-category-card p,
+  .expo-entry-card p {
+    font-size: 12px !important;
+    line-height: 1.55 !important;
+  }
+
+  .expo-hotissues-wrap,
+  .expo-live-wrap,
+  .expo-deals-wrap,
+  .expo-ai-wrap,
+  .expo-problem-wrap,
+  .expo-new-wrap {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .expo-problem-grid,
+  .expo-new-grid,
+  .expo-solution-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .expo-problem-card,
+  .expo-ai-card,
+  .expo-new-card {
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-live-card,
+  .expo-promo-card {
+    padding: 18px 16px !important;
+    border-radius: 22px !important;
+  }
+
+  .expo-live-main,
+  .expo-live-grid,
+  .expo-ai-input-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  .expo-live-video,
+  .expo-video-frame,
+  .expo-youtube-wrap {
+    min-height: 220px !important;
+    border-radius: 18px !important;
+  }
+
+  .expo-deal-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .expo-footer {
+    padding: 20px 12px 28px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .expo-hero-buttons,
+  .expo-promo-buttons {
+    grid-template-columns: 1fr !important;
+  }
+
+  .expo-category-grid,
+  .expo-entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .expo-category-card,
+  .expo-entry-card {
+    min-height: 156px !important;
+    padding: 12px 10px !important;
+  }
+
+  .expo-problem-grid,
+  .expo-new-grid,
+  .expo-solution-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .expo-section {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .expo-hero-wrap {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .expo-hero-card {
+    padding: 16px 14px !important;
+  }
+
+  .expo-topbar {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .expo-category-grid,
+  .expo-entry-grid {
+    gap: 8px !important;
+  }
+
+  .expo-category-card,
+  .expo-entry-card {
+    min-height: 148px !important;
+    border-radius: 16px !important;
+  }
+
+  .expo-category-card h3,
+  .expo-entry-card h3 {
+    font-size: 14px !important;
+  }
+
+  .expo-category-card p,
+  .expo-entry-card p {
+    font-size: 11px !important;
+  }
+
+  .expo-live-card,
+  .expo-promo-card,
+  .expo-problem-card,
+  .expo-ai-card,
+  .expo-new-card {
+    border-radius: 18px !important;
+  }
+}
+`;
+
+const S: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)",
+    color: "#0f172a",
+  },
 };
 
-const toolBtn: React.CSSProperties = {
-  minWidth: 56,
-  height: 56, // ✅ 터치영역 56px 이상
-  borderRadius: 16,
-  border: "1px solid #111",
-  background: "#111",
-  color: "#fff",
-  fontSize: 24,
-  fontWeight: 950,
+type ExpoHomeSlotRow = {
+  id: string;
+  section_key?: string | null;
+  slot_type?: string | null;
+  slot_order?: number | null;
+  booth_id?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
+  badge?: string | null;
+  meta_1?: string | null;
+  meta_2?: string | null;
+  is_active?: boolean | null;
 };
 
-const toolBtnWide: React.CSSProperties = {
-  minWidth: 92,
-  height: 56,
-  borderRadius: 16,
-  border: "1px solid #111",
-  background: "#fff",
-  color: "#111",
-  fontSize: 16,
-  fontWeight: 950,
+type BoothLite = {
+  booth_id: string;
+  name?: string | null;
+  title?: string | null;
+  slug?: string | null;
+  intro?: string | null;
+  company_name?: string | null;
+  website_url?: string | null;
+  youtube_url?: string | null;
+  brochure_url?: string | null;
+  category_primary?: string | null;
+  hall_code?: string | null;
 };
 
-const stage: React.CSSProperties = {
-  position: "relative",
-  height: 420,
-  background: "#f3f4f6",
-  overflow: "hidden",
-  touchAction: "none",
+type HomeSlotWithLink = HomeSlot & {
+  link_url?: string | null;
+  badge?: string | null;
+  meta_1?: string | null;
+  meta_2?: string | null;
 };
 
-const map: React.CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  transformOrigin: "center",
-};
+function normalizeSlotSection(slot: ExpoHomeSlotRow): string {
+  if (slot.section_key) return String(slot.section_key);
 
-const mapBg: React.CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  borderRadius: 0,
-  background:
-    "linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.65))",
-};
+  switch (slot.slot_type) {
+    case "hero":
+      return "hero";
+    case "live":
+    case "live_show":
+      return "live_show";
+    case "new":
+    case "new_products":
+      return "new_products";
+    case "featured":
+      return "featured";
+    case "event":
+      return "event";
+    default:
+      return "new_products";
+  }
+}
 
-const mapTitle: React.CSSProperties = {
-  position: "absolute",
-  left: 16,
-  top: 14,
-  fontSize: 20,
-  fontWeight: 950,
-  color: "#111",
-};
+function buildBoothLink(booth?: BoothLite, slot?: ExpoHomeSlotRow): string {
+  const slotLink = typeof slot?.link_url === "string" ? slot.link_url.trim() : "";
+  if (slotLink) return slotLink;
 
-const mapHint: React.CSSProperties = {
-  position: "absolute",
-  left: 16,
-  top: 42,
-  fontSize: 16,
-  fontWeight: 900,
-  color: "#444",
-};
+  if (booth?.booth_id) {
+    return `/expo/booths/${encodeURIComponent(booth.booth_id)}`;
+  }
 
-const roadH: React.CSSProperties = {
-  position: "absolute",
-  left: "6%",
-  right: "6%",
-  top: "52%",
-  height: 14,
-  borderRadius: 999,
-  background: "rgba(17,17,17,0.10)",
-};
+  if (booth?.slug) {
+    return `/expo/booths/${encodeURIComponent(booth.slug)}`;
+  }
 
-const roadV: React.CSSProperties = {
-  position: "absolute",
-  top: "12%",
-  bottom: "10%",
-  left: "50%",
-  width: 14,
-  transform: "translateX(-7px)",
-  borderRadius: 999,
-  background: "rgba(17,17,17,0.08)",
-};
+  return "#";
+}
 
-const plaza: React.CSSProperties = {
-  position: "absolute",
-  left: "50%",
-  top: "52%",
-  transform: "translate(-50%, -50%)",
-  padding: "10px 14px",
-  borderRadius: 16,
-  background: "#fff",
-  border: "1px solid rgba(0,0,0,0.08)",
-  fontSize: 16,
-  fontWeight: 950,
-};
+function mapExpoSlotToHomeSlot(
+  slot: ExpoHomeSlotRow,
+  boothMap: Record<string, BoothLite>
+): HomeSlotWithLink {
+  const booth = slot.booth_id ? boothMap[slot.booth_id] : undefined;
 
-const hotspot: React.CSSProperties = {
-  position: "absolute",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  gap: 10,
-  padding: "12px 12px",
-  borderRadius: 18,
-  border: "2px solid #111",
-  background: "rgba(255,255,255,0.92)",
-  textDecoration: "none",
-  color: "#111",
-  minHeight: 64, // ✅ 터치영역 크게
-};
+  const boothName =
+    booth?.name ||
+    booth?.title ||
+    booth?.company_name ||
+    slot.title ||
+    "신규 입점 업체";
 
-const hotDot: React.CSSProperties = {
-  width: 14,
-  height: 14,
-  borderRadius: 999,
-  flex: "0 0 auto",
-};
+  const boothIntro =
+    booth?.intro ||
+    slot.subtitle ||
+    slot.description ||
+    "지금 확인하세요";
 
-const hotTitle: React.CSSProperties = {
-  fontSize: 18, // ✅ 고령층 가독성
-  fontWeight: 950,
-  lineHeight: 1.2,
-};
+  return {
+    ...(slot as unknown as HomeSlot),
+    section_key: normalizeSlotSection(slot),
+    title: slot.title || boothName,
+    subtitle: slot.subtitle || boothIntro,
+    description: slot.description || boothIntro,
+    image_url: slot.image_url || null,
+    link_url: buildBoothLink(booth, slot),
+    badge: slot.badge || "NEW",
+    meta_1: slot.meta_1 || booth?.category_primary || null,
+    meta_2: slot.meta_2 || booth?.hall_code || null,
+  };
+}
 
-const hotSub: React.CSSProperties = {
-  marginTop: 3,
-  fontSize: 15,
-  fontWeight: 900,
-  opacity: 0.75,
-};
+export default async function ExpoIndexPage() {
+  const supabase = createSupabaseAdminClient();
 
-const enterPill: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 999,
-  background: "#111",
-  color: "#fff",
-  fontWeight: 950,
-  fontSize: 16,
-  minHeight: 44,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
+  const [
+    { data: slotRows, error: slotError },
+    { data: cmsRows, error: cmsError },
+    autoHeroData,
+    monthlyQuestions,
+    hotIssues,
+    monthlyProblemCards,
+    problemSectionData,
+    homeDeals,
+  ] = await Promise.all([
+    supabase
+      .from("expo_home_slots")
+      .select("*")
+      .eq("is_active", true)
+      .order("slot_order", { ascending: true }),
+    supabase.from("cms_settings").select("*").eq("id", 1).limit(1),
+    getAutoHeroData(),
+    getMonthlyConsultQuestions(),
+    getExpoHotIssues(),
+    getMonthlyProblemCards(4),
+    getExpoProblemSectionData(),
+    getHomeDeals(),
+  ]);
 
-const tip: React.CSSProperties = {
-  padding: "12px 14px 14px",
-  fontSize: 15,
-  color: "#555",
-  lineHeight: 1.5,
-};
+  if (slotError) {
+    console.error("[expo/page] expo_home_slots query error:", slotError);
+  }
+
+  if (cmsError) {
+    console.error("[expo/page] cms_settings query error:", cmsError);
+  }
+
+  const rawSlotRows = (slotRows ?? []) as ExpoHomeSlotRow[];
+
+  const boothIds = Array.from(
+    new Set(
+      rawSlotRows
+        .map((row) => row.booth_id)
+        .filter((id): id is string => !!id)
+    )
+  );
+
+  let boothMap: Record<string, BoothLite> = {};
+
+  if (boothIds.length > 0) {
+    const { data: boothRows, error: boothError } = await supabase
+      .from("booths")
+      .select(`
+        booth_id,
+        name,
+        title,
+        slug,
+        intro,
+        company_name,
+        website_url,
+        youtube_url,
+        brochure_url,
+        category_primary,
+        hall_code
+      `)
+      .in("booth_id", boothIds);
+
+    if (boothError) {
+      console.error("[expo/page] booths query error:", boothError);
+    } else {
+      boothMap = Object.fromEntries(
+        ((boothRows ?? []) as BoothLite[]).map((booth) => [
+          booth.booth_id,
+          booth,
+        ])
+      );
+    }
+  }
+
+  const mappedSlots: HomeSlotWithLink[] = rawSlotRows.map((slot) =>
+    mapExpoSlotToHomeSlot(slot, boothMap)
+  );
+
+  const grouped = groupSlots(mappedSlots as HomeSlot[]);
+  const cms = ((cmsRows ?? [])[0] || null) as CmsSettings | null;
+
+  const hero = grouped.hero?.[0] ?? null;
+  const liveShow = grouped.live_show?.[0] ?? null;
+
+  const liveItem = {
+    ...(liveShow as any),
+    featured_video_url:
+      (liveShow as any)?.featured_video_url || "https://youtu.be/q9Fm3p6rpkE",
+  };
+
+  const autoNewProducts =
+    grouped.new_products?.length > 0
+      ? grouped.new_products
+      : grouped.featured ?? [];
+
+  const heroMode =
+    typeof (cms as any)?.hero_mode === "string"
+      ? String((cms as any).hero_mode)
+      : "manual";
+
+  const useAutoHero = heroMode === "auto" && !!autoHeroData;
+
+  const heroTitle = useAutoHero ? autoHeroData.title : "K-Agri 365 EXPO";
+  const heroSubtitle = useAutoHero
+    ? autoHeroData.subtitle
+    : "농민을 위한 연중무휴 농업 엑스포";
+  const heroDescription = useAutoHero
+    ? autoHeroData.description
+    : "지금 필요한 농자재 · 농사 상담 · 경품 · 특가를 한 번에";
+
+  const problemContents =
+    monthlyProblemCards.length > 0
+      ? monthlyProblemCards.map((item) => ({
+          id: item.id,
+          title: item.title,
+          link_url: item.link_url,
+          summary: item.summary ?? "",
+        }))
+      : problemSectionData.contents;
+
+  const monthlyQuestionItems = (monthlyQuestions ?? []).map((item: any) => ({
+    title: item.title ?? item.question ?? item.label ?? "",
+    description: item.description ?? item.summary ?? "",
+    href: item.href ?? item.link_url ?? "#",
+  }));
+
+  return (
+    <main style={S.page} className="expo-home">
+      <style>{RESPONSIVE_CSS}</style>
+
+      <ExpoTopBar />
+
+      <ExpoHeroSection
+        hero={hero}
+        cms={cms}
+        heroTitle={heroTitle}
+        heroSubtitle={heroSubtitle}
+        heroDescription={heroDescription}
+      />
+
+      <section className="expo-section" style={{ padding: "16px 20px 0" }}>
+        <ExpoCategoryEntrySection />
+      </section>
+
+      <ExpoHotIssuesSection items={hotIssues} />
+
+      <ExpoLiveSection item={liveItem as any} />
+
+      <ExpoDealsSection items={homeDeals} />
+
+      <ExpoFarmerConsultSection questions={monthlyQuestionItems as any} />
+
+      <ExpoProblemSection contents={problemContents as any} />
+
+      <ExpoNewProductsSection items={autoNewProducts} />
+
+      <ExpoFooter />
+    </main>
+  );
+}
