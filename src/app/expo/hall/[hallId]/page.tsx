@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import HallSponsorStrip from "@/components/expo/HallSponsorStrip";
 import ExpoHallMapClient from "@/components/expo/ExpoHallMapClient";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import InsectFutureHall from "@/components/expo/InsectFutureHall";
 
 export const dynamic = "force-dynamic";
 
@@ -396,30 +397,13 @@ export default async function ExpoHallPage({
     )
   );
 
-  if (boothIds.length === 0) {
-    return (
-      <main style={pageWrap}>
-        <header style={heroWrap}>
-          <div style={eyebrow}>CATEGORY HALL</div>
-          <h1 style={titleStyle}>{hallLabel(hallId)}</h1>
-          <p style={descStyle}>{heroText(hallId)}</p>
-
-          <div style={metaRow}>
-            <span style={metaPill}>총 0개 부스</span>
-            <span style={metaPill}>프리미엄 우선 노출</span>
-            <span style={metaPill}>추천 부스 별도 노출</span>
-          </div>
-        </header>
-
-        <section style={emptyWrap}>
-          <div style={emptyTitle}>아직 연결된 부스가 없습니다.</div>
-          <div style={emptyDesc}>
-            hall_booth_slots에 booth_id가 아직 연결되지 않았거나, 해당 관의 슬롯 데이터가 없습니다.
-          </div>
-        </section>
-      </main>
-    );
-  }
+  if (boothIds.length === 0 && hallMeta.routeId === "future-insect") {
+  return (
+    <main style={pageWrap}>
+      <InsectFutureHall />
+    </main>
+  );
+}
 
   const [boothRows, productMap] = await Promise.all([
     loadBoothsByBoothIds(boothIds),

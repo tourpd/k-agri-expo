@@ -3,9 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import type {
-  ExpoProblemContent,
-} from "@/types/expo-home";
+import type { ExpoProblemContent } from "@/types/expo-home";
 import { safeText } from "@/lib/expo/home-utils";
 
 type ProblemCardItem = {
@@ -44,21 +42,19 @@ export default function ExpoProblemSection({
             idx === 0
               ? "지금 시기에 꼭 확인해야 할 핵심 내용입니다."
               : idx === 1
-              ? "현장에서 바로 적용할 수 있는 실전 정보입니다."
-              : idx === 2
-              ? "문제 발생 전에 미리 대비하는 방법입니다."
-              : "농사를 망치지 않기 위한 중요한 포인트입니다.",
-          link_url: item.link_url,
+                ? "현장에서 바로 적용할 수 있는 실전 정보입니다."
+                : idx === 2
+                  ? "문제 발생 전에 미리 대비하는 방법입니다."
+                  : "농사를 망치지 않기 위한 중요한 포인트입니다.",
+          link_url: item.link_url || "/problems",
         }))
       : fallbackProblemCards;
 
   return (
     <section id="problem" style={S.sectionWrap} className="expo-section">
-      
-      {/* 🔥 포토닥터 배너 */}
       <div style={S.photoBanner}>
         <div style={S.photoLeft}>
-          <div style={S.photoBadge}>PHOTO DOCTOR</div>
+          <div style={S.photoBadge}>PHOTO DOCTOR INSIDE K-AGRI EXPO</div>
 
           <div style={S.photoMainRow}>
             <div style={S.iconWrap}>
@@ -72,37 +68,33 @@ export default function ExpoProblemSection({
             </div>
 
             <div style={S.copyWrap}>
-              <h2 style={S.photoTitle}>
-                사진 한 장으로 작물 상태 진단
-              </h2>
+              <h2 style={S.photoTitle}>사진 한 장으로 작물 상태 진단</h2>
 
               <div style={S.photoDesc}>
-                작물이 이상할 때<br />
-                원인을 모를 때<br />
-                지금 바로 확인하세요
+                병해충·생육 이상을 먼저 확인하고
+                <br />
+                진단 결과에 맞는 대응 자재까지 연결합니다.
+              </div>
+
+              <div style={S.photoMiniInfo}>
+                포토닥터 진단 → 원인 확인 → 추천 대응 자재 확인
               </div>
             </div>
           </div>
         </div>
 
         <div style={S.photoRight}>
-          <Link
-            href="/ai-consult"
-            style={S.photoPrimaryBtn}
-          >
+          <Link href="/ai-consult" style={S.photoPrimaryBtn}>
             포토닥터 시작 →
           </Link>
         </div>
       </div>
 
-      {/* 🧠 농민 고민 */}
       <div style={S.problemBlock}>
         <div style={S.problemCard} className="expo-problem-card">
           <div style={S.sectionEyebrow}>FARMER PROBLEM</div>
 
-          <h2 style={S.sectionTitle}>
-            농민들이 가장 많이 하는 고민
-          </h2>
+          <h2 style={S.sectionTitle}>농민들이 가장 많이 하는 고민</h2>
 
           <div style={S.sectionDesc}>
             먼저 읽고, 필요하면 상담까지 이어지는 구조입니다.
@@ -125,8 +117,6 @@ export default function ExpoProblemSection({
     </section>
   );
 }
-
-/* ================= 스타일 ================= */
 
 const S: Record<string, React.CSSProperties> = {
   sectionWrap: {
@@ -155,49 +145,81 @@ const S: Record<string, React.CSSProperties> = {
   },
 
   photoBadge: {
+    display: "inline-flex",
+    padding: "7px 12px",
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.1)",
     fontSize: 12,
     fontWeight: 900,
     color: "#86efac",
+    letterSpacing: 0.3,
   },
 
   photoMainRow: {
-    marginTop: 12,
+    marginTop: 14,
     display: "flex",
-    gap: 16,
+    gap: 18,
     alignItems: "center",
     flexWrap: "wrap",
   },
 
-  iconWrap: {},
+  iconWrap: {
+    width: 120,
+    height: 120,
+    borderRadius: 24,
+    background: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
 
   icon: {
     borderRadius: 20,
   },
 
   copyWrap: {
-    minWidth: 240,
+    minWidth: 260,
   },
 
   photoTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 950,
-    lineHeight: 1.4,
+    lineHeight: 1.35,
+    margin: 0,
   },
 
   photoDesc: {
     marginTop: 10,
     fontSize: 16,
-    lineHeight: 1.8,
-    color: "rgba(255,255,255,0.9)",
+    lineHeight: 1.75,
+    color: "rgba(255,255,255,0.92)",
+    fontWeight: 700,
+  },
+
+  photoMiniInfo: {
+    marginTop: 12,
+    display: "inline-flex",
+    padding: "8px 12px",
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.1)",
+    color: "#d1fae5",
+    fontSize: 13,
+    fontWeight: 800,
   },
 
   photoPrimaryBtn: {
     background: "#fff",
     color: "#0f172a",
-    padding: "14px 20px",
-    borderRadius: 14,
+    padding: "16px 22px",
+    borderRadius: 16,
     textDecoration: "none",
-    fontWeight: 900,
+    fontWeight: 950,
+    fontSize: 16,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 160,
   },
 
   problemBlock: {

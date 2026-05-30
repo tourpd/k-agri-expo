@@ -72,6 +72,7 @@ function jsonSuccess(data: Record<string, unknown>) {
 async function getAuthedUserId() {
   try {
     const supabase = await createSupabaseServerClient();
+
     const {
       data: { user },
       error,
@@ -89,11 +90,16 @@ async function getAuthedUserId() {
   }
 }
 
+function getExtension(filename: string) {
+  const name = (filename || "").trim();
+  if (!name.includes(".")) return "";
+  return name.split(".").pop()?.toLowerCase() || "";
+}
+
 function safeName(name: string) {
   const original = (name || "").trim();
-
-  const withoutExt = original.replace(/\.[^.]+$/, "");
   const ext = getExtension(original);
+  const withoutExt = original.replace(/\.[^.]+$/, "");
 
   const normalizedBase = withoutExt
     .normalize("NFKD")
@@ -116,12 +122,6 @@ function safeFolderName(folder: string) {
     .replace(/-+/g, "-");
 
   return normalized || "misc";
-}
-
-function getExtension(filename: string) {
-  const name = (filename || "").trim();
-  if (!name.includes(".")) return "";
-  return name.split(".").pop()?.toLowerCase() || "";
 }
 
 function isAllowedMimeType(file: File) {
@@ -172,13 +172,14 @@ function guessContentType(file: File) {
 export async function POST(req: Request) {
   try {
     const userId = await getAuthedUserId();
+
     if (!userId) {
       return jsonError("로그인이 필요합니다.", 401);
     }
 
     const formData = await req.formData();
     const file = formData.get("file");
-    const rawFolder = String(formData.get("folder") || "misc");
+    const rawFolder = String(formData.get("folder") || "products");
 
     if (!(file instanceof File)) {
       return jsonError("업로드할 파일이 없습니다.", 400);
@@ -199,9 +200,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const folder = safeFolderName(rawFolder);
     const admin = createSupabaseAdminClient();
 
+    const folder = safeFolderName(rawFolder);
     const ext = getExtension(file.name);
     const safeOriginalName = safeName(file.name || `file.${ext || "bin"}`);
     const timestamp = Date.now();
@@ -226,10 +227,7 @@ export async function POST(req: Request) {
         path,
       });
 
-      return jsonError(
-        uploadError.message || "파일 업로드에 실패했습니다.",
-        500
-      );
+      return jsonError(uploadError.message || "파일 업로드에 실패했습니다.", 500);
     }
 
     const { data: publicData } = admin.storage.from(BUCKET).getPublicUrl(path);
@@ -243,6 +241,23 @@ export async function POST(req: Request) {
     return jsonSuccess({
       ok: true,
       success: true,
+
+      url: publicUrl,
+      file_url: publicUrl,
+      image_url: publicUrl,
+      asset_url: publicUrl,
+      publicUrl,
+      public_url: publicUrl,
+
+      bucket: BUCKET,
+      folder,
+      path,
+      filename: file.name,
+      safe_filename: safeOriginalName,
+      extension: ext || "",
+      content_type: contentType,
+      size: file.size,
+
       file: {
         bucket: BUCKET,
         folder,
@@ -253,6 +268,8 @@ export async function POST(req: Request) {
         content_type: contentType,
         size: file.size,
         public_url: publicUrl,
+        publicUrl,
+        url: publicUrl,
       },
     });
   } catch (error) {

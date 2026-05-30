@@ -1,246 +1,299 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import React, { useMemo } from "react";
 
-type LivePrize = {
-  title?: string | null;
-  summary?: string | null;
-  link?: string | null;
+type Props = {
+  item: any;
 };
 
-type UpcomingLive = {
-  title?: string | null;
-  date_text?: string | null;
-  summary?: string | null;
-  link?: string | null;
-};
+function safe(v: any, fallback = "") {
+  const s = String(v || "").trim();
+  return s || fallback;
+}
 
-type LiveItem = {
-  title?: string | null;
-  subtitle?: string | null;
-  description?: string | null;
+function num(v: any, fallback: number) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
 
-  cta_label?: string | null;
-  cta_link?: string | null;
-
-  secondary_cta_label?: string | null;
-  secondary_cta_link?: string | null;
-
-  featured_title?: string | null;
-  featured_desc?: string | null;
-  featured_video_url?: string | null;
-  featured_link?: string | null;
-
-  prizes?: LivePrize[] | null;
-  upcoming?: UpcomingLive[] | null;
-
-  date_text?: string | null;
-  participant_text?: string | null;
-};
-
-function safeText(v: unknown, fallback = "") {
-  return typeof v === "string" && v.trim() ? v.trim() : fallback;
+function getDDay(v?: string | null) {
+  if (!v) return "LIVE";
+  const t = new Date(v).getTime();
+  if (Number.isNaN(t)) return "LIVE";
+  const diff = t - Date.now();
+  if (diff <= 0) return "D-DAY";
+  return `D-${Math.ceil(diff / (1000 * 60 * 60 * 24))}`;
 }
 
 function toYoutubeEmbed(url?: string | null) {
-  if (!url) return null;
+  const v = String(url || "").trim();
+  if (!v) return "";
 
-  try {
-    const u = new URL(url);
+  let id = "";
 
-    if (u.hostname.includes("youtu.be")) {
-      const id = u.pathname.replace("/", "");
-      return id ? `https://www.youtube.com/embed/${id}` : null;
-    }
+  if (v.includes("youtu.be/")) {
+    id = v.split("youtu.be/")[1]?.split("?")[0] || "";
+  } else if (v.includes("watch?v=")) {
+    id = v.split("watch?v=")[1]?.split("&")[0] || "";
+  } else if (v.includes("/embed/")) {
+    id = v.split("/embed/")[1]?.split("?")[0] || "";
+  }
 
-    const v = u.searchParams.get("v");
-    if (v) return `https://www.youtube.com/embed/${v}`;
-
-    if (u.pathname.includes("/embed/")) return url;
-  } catch {}
-
-  return null;
+  return id
+    ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=1&rel=0`
+    : "";
 }
 
-export default function ExpoLiveSection({
-  item,
-}: {
-  item?: LiveItem | null;
-}) {
-  const title = safeText(item?.title, "K-Agri 월간 라이브 쇼");
-  const subtitle = safeText(
-    item?.subtitle,
-    "신제품 발표 · 농민 퀴즈쇼 · 즉석 선물 · 대형 추첨"
+function getNumberFromText(v: any) {
+  const n = Number(String(v || "").replace(/\D/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+export default function ExpoLiveSection({ item }: Props) {
+  const title = safe(item?.title, "라이브 이벤트");
+  const subtitle = safe(item?.subtitle || item?.prize_text, "무료 추첨 이벤트");
+  const prizeTitle = safe(
+    item?.prize_text || item?.prize_title || item?.featured_title,
+    "오늘의 대표 경품"
   );
-  const description = safeText(
+  const prizeDesc = safe(
+    item?.featured_desc || item?.description,
+    "현재 방송 중인 대표 경품입니다."
+  );
+  const mainDescription = safe(
     item?.description,
-    "농민 참여와 기업 홍보를 동시에 살리는 라이브 프로그램입니다. 대표 장비 영상, 경품, 참여 방법을 한 번에 확인하세요."
+    "사전 참여 후 방송 중 실시간 추첨을 통해 최종 당첨자를 선정합니다."
   );
 
-  const ctaLabel = safeText(item?.cta_label, "라이브쇼 상세 보기");
-  const ctaLink = safeText(item?.cta_link, "/expo/live");
-
-  const secondaryCtaLabel = safeText(item?.secondary_cta_label, "이벤트 참여하기");
-  const secondaryCtaLink = safeText(item?.secondary_cta_link, "/expo/event");
-
-  const featuredTitle = safeText(
-    item?.featured_title,
-    "영진로타리 산악형 돌 분쇄기"
+  const imageUrl = safe(item?.image_url || item?.prize_image_url);
+  const youtubeUrl = safe(
+    item?.video_url || item?.featured_video_url || item?.youtube_url
   );
-  const featuredDesc = safeText(
-    item?.featured_desc,
-    "이번 라이브쇼의 대표 장비입니다. 영상을 먼저 확인하고, 상세 페이지에서 경품과 참여 방법까지 함께 확인하실 수 있습니다."
+  const embedUrl = toYoutubeEmbed(youtubeUrl);
+
+  const dateLabel = safe(
+    item?.live_date_label || item?.date_text,
+    "라이브 일정 준비중"
   );
-  const featuredLink = safeText(item?.featured_link, "/expo/live");
+  const dday = getDDay(item?.live_datetime || item?.date_text);
 
-  const dateText = safeText(item?.date_text, "일정 준비중");
-  const participantText = safeText(item?.participant_text, "참여 인원 집계중");
+  const sponsorName = safe(
+    item?.sponsor_name || item?.meta_1 || item?.sponsor,
+    "영진로타리"
+  );
+  const partnerName = safe(item?.partner_name, "K-Agri Expo");
 
-  const featuredVideoEmbed = toYoutubeEmbed(item?.featured_video_url);
+  const sponsorLogoUrl = safe(item?.sponsor_logo_url || item?.brand_logo_url);
+  const partnerLogoUrl = safe(
+    item?.partner_logo_url || item?.ppl_logo_url || item?.expo_logo_url
+  );
 
-  const prizes =
-    item?.prizes && item.prizes.length > 0
-      ? item.prizes
-      : [
-          {
-            title: "영진로타리 산악형 돌 분쇄기",
-            summary: "대표 장비 영상과 상세 내용을 확인할 수 있습니다.",
-            link: "/expo/live",
-          },
-          {
-            title: "싹쓰리충 골드",
-            summary: "라이브 경품과 협찬 품목 안내 페이지로 연결됩니다.",
-            link: "/expo/event",
-          },
-          {
-            title: "멸규니",
-            summary: "이번 회차 경품 및 상담 연결 품목으로 소개됩니다.",
-            link: "/expo/event",
-          },
-          {
-            title: "즉석 선물 / 참여 방법",
-            summary: "참여 조건과 진행 절차를 한눈에 볼 수 있습니다.",
-            link: "/expo/event",
-          },
-        ];
+  const sponsorLogoSize = num(item?.sponsor_logo_size, 64);
+  const partnerLogoSize = num(item?.partner_logo_size, 42);
+  const mainImageScale = num(item?.main_image_scale, 1.15);
+  const ddayFontSize = num(item?.dday_font_size, 58);
+  const participantFontSize = num(item?.participant_font_size, 36);
+  const threshold = num(item?.participant_threshold, 50);
 
-  const upcoming =
-    item?.upcoming && item.upcoming.length > 0
-      ? item.upcoming
-      : [
-          {
-            title: "5월 1차 라이브",
-            date_text: "5월 첫째 주 예정",
-            summary: "신제품 발표와 현장 문제 상담 중심으로 진행 예정입니다.",
-            link: "/expo/live",
-          },
-          {
-            title: "5월 2차 라이브",
-            date_text: "5월 셋째 주 예정",
-            summary: "계절 병해충과 특가 품목을 중심으로 구성합니다.",
-            link: "/expo/live",
-          },
-        ];
+  const participantCount =
+    Number(item?.participant_count_auto || 0) ||
+    getNumberFromText(item?.participant_text);
+
+  const showParticipantCount = participantCount >= threshold;
+
+  const productPoints = useMemo(() => {
+    return [item?.feature_1, item?.feature_2]
+      .map((x) => safe(x))
+      .filter(Boolean);
+  }, [item]);
+
+  const drawPoints = useMemo(() => {
+    return [item?.feature_3, item?.feature_4]
+      .map((x) => safe(x))
+      .filter(Boolean);
+  }, [item]);
+
+  const ctaLabel = safe(item?.cta_label, "무료 추첨 참여하기");
+  const ctaLink = safe(item?.cta_link, "/expo/live/join");
+
+  const secondaryLabel = safe(item?.secondary_cta_label, "제품 영상 보기");
+  const secondaryLink = safe(
+    item?.secondary_cta_link || youtubeUrl,
+    youtubeUrl || "/expo/live"
+  );
 
   return (
-    <section style={S.section} className="expo-section">
-      <div style={S.card}>
-        <div style={S.topMeta}>
-          <div style={S.kicker}>MONTHLY LIVE SHOW</div>
-          <div style={S.metaRight}>
-            <span style={S.metaPill}>{dateText}</span>
-            <span style={S.metaPill}>{participantText}</span>
-          </div>
-        </div>
+    <section className="expo-live-wrap" style={wrap}>
+      <style>{RESPONSIVE_CSS}</style>
 
-        <h2 style={S.title}>{title}</h2>
-        <div style={S.subtitle}>{subtitle}</div>
-        <div style={S.desc}>{description}</div>
+      <div className="expo-live-card" style={card}>
+        <div style={left}>
+          <div style={topBrandRow}>
+            <div style={brandStack}>
+              <div style={partnerLine}>
+                {partnerLogoUrl ? (
+                  <img
+                    src={partnerLogoUrl}
+                    alt={partnerName}
+                    style={{
+                      height: partnerLogoSize,
+                      maxWidth: 150,
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : null}
+                <span>{partnerName}</span>
+              </div>
 
-        <div style={S.actions}>
-          <Link href={ctaLink} style={S.primaryBtn}>
-            {ctaLabel} →
-          </Link>
-          <Link href={secondaryCtaLink} style={S.secondaryBtn}>
-            {secondaryCtaLabel} →
-          </Link>
-        </div>
+              <div style={sponsorLine}>
+                {sponsorLogoUrl ? (
+                  <img
+                    src={sponsorLogoUrl}
+                    alt={sponsorName}
+                    style={{
+                      height: sponsorLogoSize,
+                      maxWidth: 210,
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : null}
+                <strong>{sponsorName}</strong>
+              </div>
+            </div>
 
-        <div style={S.videoSection}>
-          <div style={S.videoHead}>
-            <div>
-              <div style={S.videoBadge}>대표 장비</div>
-              <div style={S.videoTitle}>{featuredTitle}</div>
-              <div style={S.videoDesc}>{featuredDesc}</div>
+            <div style={ddayBox}>
+              <strong style={{ fontSize: ddayFontSize }}>{dday}</strong>
+              <span>{dateLabel}</span>
             </div>
           </div>
 
-          <div style={S.videoWrap}>
-            {featuredVideoEmbed ? (
-              <iframe
-                title={featuredTitle}
-                src={featuredVideoEmbed}
-                style={S.iframe}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <div style={S.videoFallback}>대표 영상이 아직 등록되지 않았습니다.</div>
-            )}
+          <h2 style={titleStyle}>{title}</h2>
+
+          <div style={priceBanner}>🎁 {subtitle}</div>
+
+          <div style={flowBox}>
+            <b>참여 방법</b>
+            <span>사전 참여 → 방송 시청 → 실시간 추첨 → 전화 확인 → 최종 당첨</span>
           </div>
 
-          <div style={S.videoActions}>
-            <Link href={featuredLink} style={S.primaryBtnSmall}>
-              장비 상세 보기 →
-            </Link>
-            <Link href={secondaryCtaLink} style={S.secondaryBtnSmall}>
-              경품/참여 보기 →
-            </Link>
-          </div>
-        </div>
+          <div style={splitInfoGrid}>
+            <div style={infoBoxProduct}>
+              <strong>제품 핵심</strong>
+              {(productPoints.length
+                ? productPoints
+                : ["제품 영상으로 실제 성능 확인", "현장 작업에 필요한 대표 장비"]
+              ).map((p, i) => (
+                <p key={i}>✓ {p}</p>
+              ))}
+            </div>
 
-        <div style={S.lowerGrid}>
-          <div style={S.block}>
-            <div style={S.blockTitle}>이번 방송에서 함께 보실 내용</div>
-            <div style={S.prizeGrid}>
-              {prizes.map((prize, idx) => (
-                <Link
-                  key={`${prize.title ?? "prize"}-${idx}`}
-                  href={safeText(prize.link, "/expo/live")}
-                  style={S.prizeCard}
-                >
-                  <div style={S.prizeCardTitle}>
-                    {safeText(prize.title, "라이브 콘텐츠")}
-                  </div>
-                  <div style={S.prizeCardDesc}>
-                    {safeText(prize.summary, "이번 라이브에서 확인할 수 있는 내용입니다.")}
-                  </div>
-                  <div style={S.prizeCardCta}>보러가기 →</div>
-                </Link>
+            <div style={infoBoxDraw}>
+              <strong>추첨 방식</strong>
+              {(drawPoints.length
+                ? drawPoints
+                : ["방송 중 실시간 당첨자 공개", "전화 확인 후 최종 당첨 확정"]
+              ).map((p, i) => (
+                <p key={i}>✓ {p}</p>
               ))}
             </div>
           </div>
 
-          <div style={S.block}>
-            <div style={S.blockTitle}>예정된 다음 라이브</div>
-            <div style={S.upcomingList}>
-              {upcoming.map((live, idx) => (
-                <Link
-                  key={`${live.title ?? "upcoming"}-${idx}`}
-                  href={safeText(live.link, "/expo/live")}
-                  style={S.upcomingCard}
-                >
-                  <div style={S.upcomingDate}>{safeText(live.date_text, "일정 준비중")}</div>
-                  <div style={S.upcomingTitle}>
-                    {safeText(live.title, "다음 라이브")}
-                  </div>
-                  <div style={S.upcomingDesc}>
-                    {safeText(live.summary, "다음 방송 정보를 곧 안내드립니다.")}
-                  </div>
-                </Link>
-              ))}
+          <a href={ctaLink} style={primaryButton}>
+            🎁 {ctaLabel}
+            <span style={buttonArrow}>›</span>
+          </a>
+
+          <p style={notice}>{mainDescription}</p>
+        </div>
+
+        <div style={right}>
+          <div style={mediaCard}>
+            <div style={livePulse} />
+
+            <div style={mediaTop}>
+              <div style={rightBrandBox}>
+                <span style={pplBadge}>PPL 협찬사</span>
+                <div style={rightLogoLine}>
+                  {sponsorLogoUrl ? (
+                    <img
+                      src={sponsorLogoUrl}
+                      alt={sponsorName}
+                      style={{ height: 56, maxWidth: 180, objectFit: "contain" }}
+                    />
+                  ) : null}
+                  <strong>{sponsorName}</strong>
+                </div>
+              </div>
+
+              {showParticipantCount ? (
+                <div style={countCard}>
+                  <span>현재 참여 농가</span>
+                  <strong style={{ fontSize: participantFontSize }}>
+                    {participantCount.toLocaleString("ko-KR")}
+                  </strong>
+                  <b>명</b>
+                </div>
+              ) : (
+                <div style={dateMiniCard}>
+                  <span>LIVE 일정</span>
+                  <strong>{dateLabel}</strong>
+                </div>
+              )}
             </div>
+
+            <div style={mediaBox}>
+              {embedUrl ? (
+                <iframe
+                  src={embedUrl}
+                  title={prizeTitle}
+                  style={video}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={prizeTitle}
+                  style={{
+                    ...image,
+                    transform: `scale(${mainImageScale})`,
+                  }}
+                />
+              ) : (
+                <div style={noImage}>
+                  LIVE
+                  <br />
+                  PRIZE
+                </div>
+              )}
+            </div>
+
+            <div style={prizeArea}>
+              <div>
+                <div style={prizeLabel}>오늘의 대표 경품</div>
+                <h3 style={prizeTitleStyle}>{prizeTitle}</h3>
+                <p style={prizeDescStyle}>{prizeDesc}</p>
+              </div>
+
+              {imageUrl ? (
+                <img src={imageUrl} alt={prizeTitle} style={productImageSmall} />
+              ) : null}
+            </div>
+
+            <div style={rightDateBox}>
+              📅 <strong>{dateLabel}</strong>
+            </div>
+
+            {secondaryLink ? (
+              <a
+                href={secondaryLink}
+                target={secondaryLink.startsWith("http") ? "_blank" : undefined}
+                rel={secondaryLink.startsWith("http") ? "noopener noreferrer" : undefined}
+                style={secondaryButton}
+              >
+                ▶ {secondaryLabel}
+              </a>
+            ) : null}
           </div>
         </div>
       </div>
@@ -248,259 +301,357 @@ export default function ExpoLiveSection({
   );
 }
 
-const S: Record<string, React.CSSProperties> = {
-  section: {
-    maxWidth: 1440,
-    margin: "0 auto",
-    padding: "28px 24px 0",
-  },
-  card: {
-    background:
-      "linear-gradient(135deg, #0b3ea8 0%, #1451d1 45%, #0f766e 100%)",
-    borderRadius: 34,
-    padding: 28,
-    color: "#fff",
-    boxShadow: "0 20px 44px rgba(15,23,42,0.12)",
-  },
-  topMeta: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  kicker: {
-    fontSize: 12,
-    fontWeight: 950,
-    color: "#86efac",
-    letterSpacing: 0.5,
-  },
-  metaRight: {
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  metaPill: {
-    display: "inline-block",
-    padding: "8px 12px",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.14)",
-    border: "1px solid rgba(255,255,255,0.14)",
-    fontSize: 13,
-    fontWeight: 900,
-    color: "#fff",
-  },
-  title: {
-    margin: "10px 0 0",
-    fontSize: "clamp(36px, 6vw, 62px)",
-    lineHeight: 1.02,
-    fontWeight: 950,
-    letterSpacing: -1.2,
-  },
-  subtitle: {
-    marginTop: 14,
-    fontSize: 18,
-    fontWeight: 900,
-    color: "rgba(255,255,255,0.96)",
-  },
-  desc: {
-    marginTop: 12,
-    maxWidth: 980,
-    fontSize: 15,
-    lineHeight: 1.85,
-    color: "rgba(255,255,255,0.86)",
-  },
-  actions: {
-    marginTop: 22,
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  primaryBtn: {
-    textDecoration: "none",
-    background: "#fff",
-    color: "#0f172a",
-    borderRadius: 16,
-    padding: "14px 20px",
-    fontWeight: 950,
-    fontSize: 15,
-    display: "inline-block",
-  },
-  secondaryBtn: {
-    textDecoration: "none",
-    background: "rgba(255,255,255,0.12)",
-    color: "#fff",
-    border: "1px solid rgba(255,255,255,0.18)",
-    borderRadius: 16,
-    padding: "14px 20px",
-    fontWeight: 950,
-    fontSize: 15,
-    display: "inline-block",
-  },
-  videoSection: {
-    marginTop: 26,
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: 26,
-    padding: 18,
-    backdropFilter: "blur(10px)",
-  },
-  videoHead: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  videoBadge: {
-    display: "inline-block",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.14)",
-    padding: "8px 12px",
-    fontSize: 12,
-    fontWeight: 950,
-  },
-  videoTitle: {
-    marginTop: 14,
-    fontSize: 34,
-    lineHeight: 1.12,
-    fontWeight: 950,
-  },
-  videoDesc: {
-    marginTop: 12,
-    maxWidth: 920,
-    fontSize: 15,
-    lineHeight: 1.8,
-    color: "rgba(255,255,255,0.88)",
-  },
-  videoWrap: {
-    marginTop: 18,
-    width: "100%",
-    aspectRatio: "16 / 9",
-    borderRadius: 22,
-    overflow: "hidden",
-    background: "rgba(2,6,23,0.72)",
-  },
-  iframe: {
-    width: "100%",
-    height: "100%",
-    border: 0,
-  },
-  videoFallback: {
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "rgba(255,255,255,0.76)",
-    fontSize: 16,
-  },
-  videoActions: {
-    marginTop: 16,
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  primaryBtnSmall: {
-    textDecoration: "none",
-    background: "#fff",
-    color: "#0f172a",
-    borderRadius: 14,
-    padding: "12px 16px",
-    fontWeight: 950,
-    fontSize: 14,
-    display: "inline-block",
-  },
-  secondaryBtnSmall: {
-    textDecoration: "none",
-    background: "rgba(255,255,255,0.12)",
-    color: "#fff",
-    border: "1px solid rgba(255,255,255,0.18)",
-    borderRadius: 14,
-    padding: "12px 16px",
-    fontWeight: 950,
-    fontSize: 14,
-    display: "inline-block",
-  },
-  lowerGrid: {
-    marginTop: 22,
-    display: "grid",
-    gridTemplateColumns: "1.15fr 0.85fr",
-    gap: 14,
-  },
-  block: {
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: 24,
-    padding: 18,
-  },
-  blockTitle: {
-    fontSize: 22,
-    fontWeight: 950,
-    color: "#fff",
-  },
-  prizeGrid: {
-    marginTop: 14,
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 12,
-  },
-  prizeCard: {
-    textDecoration: "none",
-    color: "#fff",
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: 20,
-    padding: 16,
-    minHeight: 132,
-    display: "block",
-  },
-  prizeCardTitle: {
-    fontSize: 20,
-    fontWeight: 950,
-    lineHeight: 1.2,
-  },
-  prizeCardDesc: {
-    marginTop: 10,
-    fontSize: 14,
-    lineHeight: 1.7,
-    color: "rgba(255,255,255,0.82)",
-  },
-  prizeCardCta: {
-    marginTop: 14,
-    fontSize: 14,
-    fontWeight: 950,
-    color: "#bbf7d0",
-  },
-  upcomingList: {
-    marginTop: 14,
-    display: "grid",
-    gap: 12,
-  },
-  upcomingCard: {
-    textDecoration: "none",
-    color: "#fff",
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: 20,
-    padding: 16,
-    display: "block",
-  },
-  upcomingDate: {
-    fontSize: 12,
-    fontWeight: 950,
-    color: "#86efac",
-    letterSpacing: 0.3,
-  },
-  upcomingTitle: {
-    marginTop: 8,
-    fontSize: 20,
-    fontWeight: 950,
-  },
-  upcomingDesc: {
-    marginTop: 10,
-    fontSize: 14,
-    lineHeight: 1.7,
-    color: "rgba(255,255,255,0.82)",
-  },
+const RESPONSIVE_CSS = `
+@keyframes livePulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }
+  70% { transform: scale(1.12); box-shadow: 0 0 0 18px rgba(239,68,68,0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+
+@media (max-width: 900px) {
+  .expo-live-card {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .expo-live-wrap {
+    padding: 16px 10px 0 !important;
+  }
+
+  .expo-live-card {
+    padding: 18px !important;
+    border-radius: 24px !important;
+  }
+}
+`;
+
+const wrap: React.CSSProperties = { padding: "30px 20px 0" };
+
+const card: React.CSSProperties = {
+  maxWidth: 1220,
+  margin: "0 auto",
+  borderRadius: 36,
+  padding: 28,
+  display: "grid",
+  gridTemplateColumns: "0.95fr 1.05fr",
+  gap: 28,
+  background:
+    "radial-gradient(circle at 80% 10%, rgba(250,204,21,0.22), transparent 30%), linear-gradient(135deg, #050d1a 0%, #0c2746 45%, #064e3b 100%)",
+  color: "#fff",
+  boxShadow: "0 28px 80px rgba(15,23,42,0.28)",
+  overflow: "hidden",
+};
+
+const left: React.CSSProperties = {
+  display: "grid",
+  alignContent: "center",
+  gap: 16,
+  minWidth: 0,
+};
+
+const right: React.CSSProperties = { minWidth: 0 };
+
+const topBrandRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 18,
+  alignItems: "flex-start",
+};
+
+const brandStack: React.CSSProperties = { display: "grid", gap: 10 };
+
+const partnerLine: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  color: "#86efac",
+  fontSize: 17,
+  fontWeight: 950,
+};
+
+const sponsorLine: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  fontSize: 28,
+  fontWeight: 950,
+};
+
+const ddayBox: React.CSSProperties = {
+  width: 210,
+  minHeight: 170,
+  borderRadius: 26,
+  background: "linear-gradient(180deg,#ef4444,#991b1b)",
+  display: "grid",
+  alignContent: "center",
+  justifyItems: "center",
+  textAlign: "center",
+  padding: 12,
+  boxShadow: "0 18px 40px rgba(220,38,38,0.32)",
+};
+
+const titleStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: "clamp(42px, 5vw, 76px)",
+  lineHeight: 0.98,
+  fontWeight: 950,
+  letterSpacing: "-0.075em",
+  wordBreak: "keep-all",
+};
+
+const priceBanner: React.CSSProperties = {
+  padding: "16px 20px",
+  borderRadius: 20,
+  background: "linear-gradient(135deg, #fde047, #f97316)",
+  color: "#111827",
+  fontSize: "clamp(24px, 2.7vw, 38px)",
+  lineHeight: 1.12,
+  fontWeight: 950,
+  textAlign: "center",
+};
+
+const flowBox: React.CSSProperties = {
+  display: "grid",
+  gap: 6,
+  padding: "14px 16px",
+  borderRadius: 18,
+  background: "rgba(15,23,42,0.5)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  fontWeight: 900,
+};
+
+const splitInfoGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 10,
+};
+
+const infoBoxProduct: React.CSSProperties = {
+  padding: 14,
+  borderRadius: 18,
+  background: "rgba(22,101,52,0.36)",
+  border: "1px solid rgba(134,239,172,0.25)",
+  fontWeight: 850,
+};
+
+const infoBoxDraw: React.CSSProperties = {
+  padding: 14,
+  borderRadius: 18,
+  background: "rgba(30,64,175,0.36)",
+  border: "1px solid rgba(147,197,253,0.25)",
+  fontWeight: 850,
+};
+
+const primaryButton: React.CSSProperties = {
+  minHeight: 76,
+  borderRadius: 22,
+  background: "linear-gradient(135deg,#facc15,#f59e0b)",
+  color: "#111827",
+  textDecoration: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 12,
+  fontSize: 30,
+  fontWeight: 950,
+  boxShadow: "0 18px 38px rgba(250,204,21,0.3)",
+};
+
+const buttonArrow: React.CSSProperties = {
+  width: 34,
+  height: 34,
+  borderRadius: 999,
+  display: "grid",
+  placeItems: "center",
+  background: "#111827",
+  color: "#fff",
+  fontSize: 34,
+};
+
+const notice: React.CSSProperties = {
+  margin: 0,
+  color: "rgba(255,255,255,0.78)",
+  fontSize: 14,
+  lineHeight: 1.55,
+  fontWeight: 750,
+};
+
+const mediaCard: React.CSSProperties = {
+  position: "relative",
+  height: "100%",
+  minHeight: 585,
+  borderRadius: 30,
+  padding: 20,
+  background: "#fff",
+  color: "#111827",
+  display: "grid",
+  gridTemplateRows: "auto auto 1fr auto auto",
+  gap: 16,
+  boxShadow: "0 22px 60px rgba(0,0,0,0.28)",
+};
+
+const livePulse: React.CSSProperties = {
+  position: "absolute",
+  top: 18,
+  right: 18,
+  width: 18,
+  height: 18,
+  borderRadius: 999,
+  background: "#ef4444",
+  animation: "livePulse 1.6s infinite",
+};
+
+const mediaTop: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: 12,
+  alignItems: "flex-start",
+};
+
+const rightBrandBox: React.CSSProperties = { display: "grid", gap: 9 };
+
+const pplBadge: React.CSSProperties = {
+  width: "fit-content",
+  padding: "7px 12px",
+  borderRadius: 999,
+  background: "#166534",
+  color: "#fff",
+  fontSize: 13,
+  fontWeight: 950,
+};
+
+const rightLogoLine: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  color: "#166534",
+  fontSize: 28,
+  fontWeight: 950,
+};
+
+const countCard: React.CSSProperties = {
+  minWidth: 180,
+  minHeight: 105,
+  borderRadius: 20,
+  background: "#111827",
+  color: "#fff",
+  display: "grid",
+  alignContent: "center",
+  justifyItems: "center",
+  textAlign: "center",
+  padding: 12,
+};
+
+const dateMiniCard: React.CSSProperties = {
+  minWidth: 180,
+  minHeight: 105,
+  borderRadius: 20,
+  background: "#dbeafe",
+  color: "#1e3a8a",
+  display: "grid",
+  alignContent: "center",
+  justifyItems: "center",
+  textAlign: "center",
+  padding: 12,
+  fontWeight: 950,
+};
+
+const mediaBox: React.CSSProperties = {
+  width: "100%",
+  height: 330,
+  borderRadius: 24,
+  overflow: "hidden",
+  background: "#020617",
+  display: "grid",
+  placeItems: "center",
+};
+
+const video: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+  border: 0,
+  background: "#000",
+};
+
+const image: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
+  background: "#f8fafc",
+};
+
+const noImage: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+  background: "linear-gradient(135deg,#e0f2fe,#dcfce7)",
+  display: "grid",
+  placeItems: "center",
+  textAlign: "center",
+  fontSize: 38,
+  lineHeight: 1,
+  fontWeight: 950,
+};
+
+const prizeArea: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 210px",
+  gap: 16,
+  alignItems: "center",
+};
+
+const productImageSmall: React.CSSProperties = {
+  width: "100%",
+  height: 150,
+  objectFit: "contain",
+  borderRadius: 20,
+  background: "#f8fafc",
+};
+
+const prizeLabel: React.CSSProperties = {
+  color: "#166534",
+  fontSize: 15,
+  fontWeight: 950,
+};
+
+const prizeTitleStyle: React.CSSProperties = {
+  margin: "4px 0 0",
+  fontSize: "clamp(32px, 3.3vw, 46px)",
+  lineHeight: 1.06,
+  fontWeight: 950,
+  letterSpacing: "-0.06em",
+};
+
+const prizeDescStyle: React.CSSProperties = {
+  margin: "8px 0 0",
+  color: "#4b5563",
+  fontSize: 15,
+  lineHeight: 1.5,
+  fontWeight: 800,
+};
+
+const rightDateBox: React.CSSProperties = {
+  minHeight: 60,
+  borderRadius: 16,
+  background: "#111827",
+  color: "#fff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 10,
+  fontSize: 22,
+  fontWeight: 950,
+};
+
+const secondaryButton: React.CSSProperties = {
+  minHeight: 52,
+  borderRadius: 16,
+  background: "#ecfdf5",
+  color: "#166534",
+  textDecoration: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 17,
+  fontWeight: 950,
 };

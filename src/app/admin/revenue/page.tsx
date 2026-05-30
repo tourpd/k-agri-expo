@@ -4,534 +4,414 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RevenueLeadRow = {
-  id: string;
-  company_name?: string | null;
-  contact_name?: string | null;
-  vendor_id?: string | null;
-  deal_amount_krw?: number | null;
-  commission_rate?: number | null;
-  commission_amount_krw?: number | null;
-  net_revenue_krw?: number | null;
-  contract_status?: string | null;
-  contracted_at?: string | null;
-  paid_at?: string | null;
-  created_at?: string | null;
+type SourceType = "expo_orders" | "photodoctor_orders";
+type OrderType = "photodoctor" | "general" | "live";
+
+type RevenueOrder = {
+  sourceTable: SourceType;
+  orderType: OrderType;
+  brandName: string;
+  productName: string;
+  orderAmount: number;
+  platformFeeAmount: number;
+  vendorSettlementAmount: number;
+  settlementStatus: string;
+  createdAt: string;
+  hasError: boolean;
 };
 
-type VendorRow = {
-  id: string;
-  company_name?: string | null;
-};
-
-type RangeKey = "this_month" | "last_month" | "this_year" | "all";
-
-type VendorStat = {
-  vendor_name: string;
-  deal_count: number;
-  paid_count: number;
-  total_amount: number;
-  paid_amount: number;
-  total_commission: number;
-  total_net_revenue: number;
-};
-
-function formatWon(value?: number | null) {
-  return `${Number(value || 0).toLocaleString()}원`;
+function num(v: any) {
+  const n = Number(v || 0);
+  return Number.isFinite(n) ? n : 0;
 }
 
-function formatDate(value?: string | null) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(d);
+function money(v: number) {
+  return Math.round(v).toLocaleString("ko-KR");
 }
 
-function contractStatusLabel(value?: string | null) {
-  switch (value) {
-    case "none":
-      return "미등록";
-    case "verbal":
-      return "구두합의";
-    case "contract_sent":
-      return "계약서발송";
-    case "contracted":
-      return "계약완료";
-    case "paid":
-      return "입금완료";
-    case "closed":
-      return "종결";
-    default:
-      return value || "-";
-  }
+function pct(v: number) {
+  return `${Math.round(v * 100)}%`;
 }
 
-function getRangeLabel(range: RangeKey) {
-  switch (range) {
-    case "this_month":
-      return "이번 달";
-    case "last_month":
-      return "지난 달";
-    case "this_year":
-      return "올해";
-    case "all":
-      return "전체";
-    default:
-      return "이번 달";
-  }
+function nowKst() {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000);
 }
 
-function getRangeDates(range: RangeKey, now: Date) {
-  if (range === "this_month") {
-    return {
-      start: new Date(now.getFullYear(), now.getMonth(), 1),
-      end: new Date(now.getFullYear(), now.getMonth() + 1, 1),
-    };
-  }
+function todayKey() {
+  return nowKst().toISOString().slice(0, 10);
+}
 
-  if (range === "last_month") {
-    return {
-      start: new Date(now.getFullYear(), now.getMonth() - 1, 1),
-      end: new Date(now.getFullYear(), now.getMonth(), 1),
-    };
-  }
+function currentMonthKey() {
+  return nowKst().toISOString().slice(0, 7);
+}
 
-  if (range === "this_year") {
-    return {
-      start: new Date(now.getFullYear(), 0, 1),
-      end: new Date(now.getFullYear() + 1, 0, 1),
-    };
-  }
+function monthStartIso(month: string) {
+  return `${month}-01T00:00:00+09:00`;
+}
+
+function nextMonthStartIso(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01T00:00:00+09:00`;
+}
+
+function getAmount(row: any) {
+  return (
+    num(row.total_amount_krw) ||
+    num(row.amount_krw) ||
+    num(row.sale_price_krw) ||
+    num(row.price_krw) ||
+    num(row.order_amount_krw)
+  );
+}
+
+function getBrandName(row: any, fallback = "") {
+  return row.brand_name || row.vendor_name || row.company_name || row.brand_title || fallback;
+}
+
+function getProductName(row: any) {
+  return row.product_name || row.product_title || row.item_name || row.title || "";
+}
+
+function normalizeRate(row: any, fallback: number) {
+  const raw = num(row.platform_fee_rate);
+  if (!raw) return fallback;
+  if (raw > 0 && raw <= 1) return raw;
+  if (raw > 1 && raw <= 100) return raw / 100;
+  return fallback;
+}
+
+function normalizeExpo(row: any): RevenueOrder {
+  const orderAmount = getAmount(row);
+  const orderType: OrderType =
+    row.order_type === "photodoctor" ? "photodoctor" : row.order_type === "live" ? "live" : "general";
+
+  const fallbackRate = orderType === "photodoctor" ? 0.5 : orderType === "live" ? 0.3 : 0.18;
+  const rate = normalizeRate(row, fallbackRate);
+  const platformFeeAmount = num(row.platform_fee_amount) || Math.round(orderAmount * rate);
+  const vendorSettlementAmount =
+    num(row.vendor_settlement_amount) || Math.max(orderAmount - platformFeeAmount, 0);
+
+  const brandName = getBrandName(row, "-");
+  const productName = getProductName(row);
 
   return {
-    start: null,
-    end: null,
+    sourceTable: "expo_orders",
+    orderType,
+    brandName,
+    productName,
+    orderAmount,
+    platformFeeAmount,
+    vendorSettlementAmount,
+    settlementStatus: row.settlement_status || "pending",
+    createdAt: row.created_at || "",
+    hasError: !brandName || brandName === "-" || !productName || orderAmount <= 0,
   };
 }
 
-export default async function AdminRevenuePage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ range?: string }>;
-}) {
-  const resolved = (await searchParams) || {};
-  const requestedRange = resolved.range;
+function normalizePhoto(row: any): RevenueOrder {
+  const orderAmount = getAmount(row);
+  const rate = normalizeRate(row, 0.5);
+  const platformFeeAmount = num(row.platform_fee_amount) || Math.round(orderAmount * rate);
+  const vendorSettlementAmount =
+    num(row.vendor_settlement_amount) || Math.max(orderAmount - platformFeeAmount, 0);
 
-  const range: RangeKey =
-    requestedRange === "last_month" ||
-    requestedRange === "this_year" ||
-    requestedRange === "all"
-      ? requestedRange
-      : "this_month";
+  const productName = getProductName(row);
 
-  const supabase = createSupabaseAdminClient();
-  const now = new Date();
-  const { start, end } = getRangeDates(range, now);
-
-  let query = supabase
-    .from("deal_leads")
-    .select(`
-      id,
-      company_name,
-      contact_name,
-      vendor_id,
-      deal_amount_krw,
-      commission_rate,
-      commission_amount_krw,
-      net_revenue_krw,
-      contract_status,
-      contracted_at,
-      paid_at,
-      created_at
-    `)
-    .eq("lead_stage", "won")
-    .order("contracted_at", { ascending: false });
-
-  if (start) {
-    query = query.gte("contracted_at", start.toISOString());
-  }
-
-  if (end) {
-    query = query.lt("contracted_at", end.toISOString());
-  }
-
-  const { data: revenueRows, error: revenueError } = await query;
-
-  if (revenueError) {
-    throw new Error(`매출 데이터 조회 실패: ${revenueError.message}`);
-  }
-
-  const rows = (revenueRows || []) as RevenueLeadRow[];
-
-  const vendorIds = Array.from(
-    new Set(rows.map((row) => row.vendor_id).filter(Boolean))
-  ) as string[];
-
-  const vendorMap = new Map<string, string>();
-
-  if (vendorIds.length > 0) {
-    const { data: vendorRows, error: vendorError } = await supabase
-      .from("vendors")
-      .select("id, company_name")
-      .in("id", vendorIds);
-
-    if (vendorError) {
-      throw new Error(`벤더 조회 실패: ${vendorError.message}`);
-    }
-
-    (vendorRows || []).forEach((vendor: VendorRow) => {
-      vendorMap.set(vendor.id, vendor.company_name || vendor.id);
-    });
-  }
-
-  const totalDeals = rows.length;
-  const totalAmount = rows.reduce(
-    (sum, row) => sum + Number(row.deal_amount_krw || 0),
-    0
-  );
-  const totalCommission = rows.reduce(
-    (sum, row) => sum + Number(row.commission_amount_krw || 0),
-    0
-  );
-  const totalNetRevenue = rows.reduce(
-    (sum, row) => sum + Number(row.net_revenue_krw || 0),
-    0
-  );
-
-  const paidRows = rows.filter((row) => row.contract_status === "paid");
-  const paidCount = paidRows.length;
-  const paidAmount = paidRows.reduce(
-    (sum, row) => sum + Number(row.deal_amount_krw || 0),
-    0
-  );
-
-  const statusCounts = rows.reduce<Record<string, number>>((acc, row) => {
-    const key = row.contract_status || "none";
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-
-  const vendorStatsMap = new Map<string, VendorStat>();
-
-  rows.forEach((row) => {
-    const vendorId = row.vendor_id || "unknown";
-    const vendorName = row.vendor_id
-      ? vendorMap.get(row.vendor_id) || row.vendor_id
-      : "미지정 벤더";
-
-    if (!vendorStatsMap.has(vendorId)) {
-      vendorStatsMap.set(vendorId, {
-        vendor_name: vendorName,
-        deal_count: 0,
-        paid_count: 0,
-        total_amount: 0,
-        paid_amount: 0,
-        total_commission: 0,
-        total_net_revenue: 0,
-      });
-    }
-
-    const stat = vendorStatsMap.get(vendorId)!;
-    stat.deal_count += 1;
-    stat.total_amount += Number(row.deal_amount_krw || 0);
-    stat.total_commission += Number(row.commission_amount_krw || 0);
-    stat.total_net_revenue += Number(row.net_revenue_krw || 0);
-
-    if (row.contract_status === "paid") {
-      stat.paid_count += 1;
-      stat.paid_amount += Number(row.deal_amount_krw || 0);
-    }
-  });
-
-  const vendorStats = Array.from(vendorStatsMap.values()).sort(
-    (a, b) => b.total_commission - a.total_commission
-  );
-
-  const topVendorCommissionData = vendorStats.slice(0, 5).map((vendor) => ({
-    label: vendor.vendor_name,
-    value: vendor.total_commission,
-  }));
-
-  return (
-    <main className="min-h-screen bg-neutral-50 px-4 py-6 md:px-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">매출 대시보드</h1>
-            <p className="mt-1 text-sm text-neutral-600">
-              {getRangeLabel(range)} 성사 건, 입금 현황, 수수료/순매출을 확인합니다.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <RangeTab
-              href="/admin/revenue?range=this_month"
-              active={range === "this_month"}
-            >
-              이번 달
-            </RangeTab>
-            <RangeTab
-              href="/admin/revenue?range=last_month"
-              active={range === "last_month"}
-            >
-              지난 달
-            </RangeTab>
-            <RangeTab
-              href="/admin/revenue?range=this_year"
-              active={range === "this_year"}
-            >
-              올해
-            </RangeTab>
-            <RangeTab href="/admin/revenue?range=all" active={range === "all"}>
-              전체
-            </RangeTab>
-
-            <Link
-              href={`/api/admin/revenue/export?range=${range}`}
-              className="rounded-2xl border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
-            >
-              CSV 다운로드
-            </Link>
-          </div>
-        </div>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          <MetricCard
-            title={`${getRangeLabel(range)} 성사 건수`}
-            value={`${totalDeals}건`}
-          />
-          <MetricCard title="총 계약금액" value={formatWon(totalAmount)} />
-          <MetricCard title="총 수수료" value={formatWon(totalCommission)} />
-          <MetricCard title="순매출" value={formatWon(totalNetRevenue)} />
-          <MetricCard title="입금완료 건수" value={`${paidCount}건`} />
-          <MetricCard title="입금완료 금액" value={formatWon(paidAmount)} />
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 text-lg font-semibold">최근 성사 리스트</div>
-
-              {rows.length === 0 ? (
-                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
-                  선택한 기간의 성사 데이터가 없습니다.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-neutral-200 text-left text-neutral-500">
-                        <th className="px-3 py-3">계약일</th>
-                        <th className="px-3 py-3">회사명</th>
-                        <th className="px-3 py-3">담당자</th>
-                        <th className="px-3 py-3">벤더</th>
-                        <th className="px-3 py-3">계약금액</th>
-                        <th className="px-3 py-3">수수료</th>
-                        <th className="px-3 py-3">순매출</th>
-                        <th className="px-3 py-3">계약상태</th>
-                        <th className="px-3 py-3">입금일</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row) => (
-                        <tr key={row.id} className="border-b border-neutral-100">
-                          <td className="px-3 py-3">{formatDate(row.contracted_at)}</td>
-                          <td className="px-3 py-3 font-medium">
-                            {row.company_name || "-"}
-                          </td>
-                          <td className="px-3 py-3">{row.contact_name || "-"}</td>
-                          <td className="px-3 py-3">
-                            {row.vendor_id
-                              ? vendorMap.get(row.vendor_id) || row.vendor_id
-                              : "-"}
-                          </td>
-                          <td className="px-3 py-3">{formatWon(row.deal_amount_krw)}</td>
-                          <td className="px-3 py-3">
-                            {formatWon(row.commission_amount_krw)}
-                          </td>
-                          <td className="px-3 py-3">
-                            {formatWon(row.net_revenue_krw)}
-                          </td>
-                          <td className="px-3 py-3">
-                            {contractStatusLabel(row.contract_status)}
-                          </td>
-                          <td className="px-3 py-3">{formatDate(row.paid_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 text-lg font-semibold">벤더 수수료 TOP5</div>
-
-              {topVendorCommissionData.length === 0 ? (
-                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
-                  차트 데이터가 없습니다.
-                </div>
-              ) : (
-                <SimpleBarChart data={topVendorCommissionData} />
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 text-lg font-semibold">계약 상태별 건수</div>
-
-              <div className="space-y-3">
-                {Object.keys(statusCounts).length === 0 ? (
-                  <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
-                    상태별 집계가 없습니다.
-                  </div>
-                ) : (
-                  Object.entries(statusCounts).map(([status, count]) => (
-                    <div
-                      key={status}
-                      className="flex items-center justify-between rounded-2xl border border-neutral-200 px-4 py-3"
-                    >
-                      <span className="font-medium text-neutral-700">
-                        {contractStatusLabel(status)}
-                      </span>
-                      <span className="font-bold text-neutral-900">{count}건</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 text-lg font-semibold">벤더별 성과</div>
-
-              {vendorStats.length === 0 ? (
-                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
-                  벤더별 집계가 없습니다.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {vendorStats.map((vendor, idx) => (
-                    <div
-                      key={`${vendor.vendor_name}-${idx}`}
-                      className="rounded-2xl border border-neutral-200 p-4"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="font-semibold">{vendor.vendor_name}</div>
-                        <div className="text-sm text-neutral-500">
-                          성사 {vendor.deal_count}건 / 입금 {vendor.paid_count}건
-                        </div>
-                      </div>
-
-                      <div className="mt-3 grid gap-2 text-sm text-neutral-700">
-                        <div className="flex items-center justify-between">
-                          <span>총 계약금액</span>
-                          <span className="font-medium">
-                            {formatWon(vendor.total_amount)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>입금완료 금액</span>
-                          <span className="font-medium">
-                            {formatWon(vendor.paid_amount)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>총 수수료</span>
-                          <span className="font-medium">
-                            {formatWon(vendor.total_commission)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>순매출</span>
-                          <span className="font-medium">
-                            {formatWon(vendor.total_net_revenue)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
-  );
+  return {
+    sourceTable: "photodoctor_orders",
+    orderType: "photodoctor",
+    brandName: getBrandName(row, "포토닥터"),
+    productName,
+    orderAmount,
+    platformFeeAmount,
+    vendorSettlementAmount,
+    settlementStatus: row.settlement_status || "pending",
+    createdAt: row.created_at || "",
+    hasError: !productName || orderAmount <= 0,
+  };
 }
 
-function MetricCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-      <div className="text-sm font-medium text-neutral-500">{title}</div>
-      <div className="mt-3 text-3xl font-bold tracking-tight text-neutral-900">
-        {value}
-      </div>
-    </div>
-  );
+function sum<T>(list: T[], pick: (item: T) => number) {
+  return list.reduce((acc, item) => acc + pick(item), 0);
 }
 
-function RangeTab({
+function LinkButton({
   href,
-  active,
   children,
+  tone = "white",
 }: {
   href: string;
-  active: boolean;
   children: React.ReactNode;
+  tone?: "white" | "blue" | "red" | "dark";
 }) {
+  const cls =
+    tone === "blue"
+      ? "bg-blue-600 text-white border-blue-600"
+      : tone === "red"
+        ? "bg-red-600 text-white border-red-600"
+        : tone === "dark"
+          ? "bg-slate-950 text-white border-slate-950"
+          : "bg-white text-slate-900 border-slate-300";
+
   return (
     <Link
       href={href}
-      className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-        active
-          ? "bg-black text-white"
-          : "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50"
-      }`}
+      className={`inline-flex h-8 items-center justify-center rounded border px-3 text-xs font-black ${cls}`}
     >
       {children}
     </Link>
   );
 }
 
-function SimpleBarChart({
-  data,
-}: {
-  data: { label: string; value: number }[];
-}) {
-  const max = Math.max(...data.map((d) => d.value), 1);
+export default async function AdminRevenuePage() {
+  const month = currentMonthKey();
+  const today = todayKey();
+  const supabase = createSupabaseAdminClient();
+
+  const [expoRes, photoRes] = await Promise.all([
+    supabase
+      .from("expo_orders")
+      .select("*")
+      .gte("created_at", monthStartIso(month))
+      .lt("created_at", nextMonthStartIso(month))
+      .order("created_at", { ascending: false })
+      .limit(10000),
+    supabase
+      .from("photodoctor_orders")
+      .select("*")
+      .gte("created_at", monthStartIso(month))
+      .lt("created_at", nextMonthStartIso(month))
+      .order("created_at", { ascending: false })
+      .limit(10000),
+  ]);
+
+  const orders = [
+    ...(expoRes.data || []).map(normalizeExpo),
+    ...(photoRes.data || []).map(normalizePhoto),
+  ];
+
+  const normalOrders = orders.filter((o) => !o.hasError);
+  const errorOrders = orders.filter((o) => o.hasError);
+  const todayOrders = normalOrders.filter((o) => o.createdAt.startsWith(today));
+
+  const totalSales = sum(normalOrders, (o) => o.orderAmount);
+  const todaySales = sum(todayOrders, (o) => o.orderAmount);
+  const totalRevenue = sum(normalOrders, (o) => o.platformFeeAmount);
+  const todayRevenue = sum(todayOrders, (o) => o.platformFeeAmount);
+  const totalSettlement = sum(normalOrders, (o) => o.vendorSettlementAmount);
+  const todaySettlement = sum(todayOrders, (o) => o.vendorSettlementAmount);
+  const pendingOrders = normalOrders.filter((o) => o.settlementStatus !== "paid");
+  const pendingSettlement = sum(pendingOrders, (o) => o.vendorSettlementAmount);
+  const avgRate = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+  const photoOrders = normalOrders.filter((o) => o.orderType === "photodoctor");
+  const generalOrders = normalOrders.filter((o) => o.orderType === "general");
+  const liveOrders = normalOrders.filter((o) => o.orderType === "live");
+
+  const sourceRows = [
+    { label: "포토닥터", desc: "AI 진단 후 연결 수익", orders: photoOrders, href: "/admin/revenue/orders?type=photodoctor" },
+    { label: "엑스포 일반", desc: "브랜드관·상품관 주문", orders: generalOrders, href: "/admin/revenue/orders?type=general" },
+    { label: "라이브 특가", desc: "방송·공동구매 주문", orders: liveOrders, href: "/admin/revenue/orders?type=live" },
+  ];
+
+  const taskRows = [
+    {
+      label: "정산대기",
+      desc: "업체에 지급해야 할 금액",
+      count: pendingOrders.length,
+      amount: pendingSettlement,
+      href: "/admin/settlements",
+      action: "정산처리",
+      tone: "blue" as const,
+    },
+    {
+      label: "오류주문",
+      desc: "상품명·브랜드명·금액 누락 주문",
+      count: errorOrders.length,
+      amount: 0,
+      href: "/admin/revenue/orders?status=error",
+      action: "오류정리",
+      tone: "red" as const,
+    },
+    {
+      label: "업체별 확인",
+      desc: "업체별 매출·수익·정산 확인",
+      count: 0,
+      amount: 0,
+      href: "/admin/revenue/vendors",
+      action: "업체보기",
+      tone: "white" as const,
+    },
+    {
+      label: "수익원장",
+      desc: "전체 주문 수익 원장",
+      count: normalOrders.length,
+      amount: totalRevenue,
+      href: "/admin/revenue/orders",
+      action: "원장보기",
+      tone: "dark" as const,
+    },
+  ];
 
   return (
-    <div className="space-y-4">
-      {data.map((d, i) => (
-        <div key={`${d.label}-${i}`} className="space-y-1">
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="truncate font-medium text-neutral-700">
-              {d.label}
-            </span>
-            <span className="shrink-0 font-semibold text-neutral-900">
-              {d.value.toLocaleString()}원
-            </span>
+    <main className="min-h-screen bg-slate-100 p-5 text-slate-950">
+      <div className="mx-auto max-w-[1700px] space-y-4">
+        <header className="flex items-end justify-between border-b-2 border-slate-300 pb-4">
+          <div>
+            <h1 className="text-3xl font-black">수익센터</h1>
+            <p className="mt-2 text-sm font-bold text-slate-600">
+              전체 매출·수익·정산·오류를 엑셀형으로 관리합니다.
+            </p>
           </div>
-          <div className="h-3 rounded-full bg-neutral-200">
-            <div
-              className="h-3 rounded-full bg-black"
-              style={{ width: `${(d.value / max) * 100}%` }}
-            />
+
+          <div className="flex gap-2">
+            <LinkButton href="/admin/revenue/orders">수익원장</LinkButton>
+            <LinkButton href="/admin/revenue/vendors">업체별 현황</LinkButton>
+            <LinkButton href="/admin/settlements" tone="blue">
+              정산센터
+            </LinkButton>
           </div>
+        </header>
+
+        <div className="overflow-x-auto rounded border border-slate-300 bg-white">
+          <table className="w-full min-w-[1300px] border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-200 text-slate-950">
+                <th className="border border-slate-300 px-3 py-2 text-left">구분</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">오늘</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">이번 달</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">건수/비율</th>
+                <th className="border border-slate-300 px-3 py-2 text-center">바로가기</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td className="border border-slate-300 px-3 py-2 font-black">총 주문금액</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold">{money(todaySales)}</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-black">{money(totalSales)}</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold">{normalOrders.length}건</td>
+                <td className="border border-slate-300 px-2 py-1 text-center">
+                  <LinkButton href="/admin/product-orders">주문조회</LinkButton>
+                </td>
+              </tr>
+
+              <tr className="bg-blue-50">
+                <td className="border border-slate-300 px-3 py-2 font-black">플랫폼 수익</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-black text-blue-700">{money(todayRevenue)}</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-black text-blue-700">{money(totalRevenue)}</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold">평균 {pct(avgRate)}</td>
+                <td className="border border-slate-300 px-2 py-1 text-center">
+                  <LinkButton href="/admin/revenue/orders" tone="blue">수익원장</LinkButton>
+                </td>
+              </tr>
+
+              <tr>
+                <td className="border border-slate-300 px-3 py-2 font-black">업체 정산금</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-black text-emerald-700">{money(todaySettlement)}</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-black text-emerald-700">{money(totalSettlement)}</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold">대기 {pendingOrders.length}건</td>
+                <td className="border border-slate-300 px-2 py-1 text-center">
+                  <LinkButton href="/admin/settlements" tone="blue">정산처리</LinkButton>
+                </td>
+              </tr>
+
+              <tr>
+                <td className="border border-slate-300 px-3 py-2 font-black">업체별 현황</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold">-</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold">업체 단위 확인</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold">매출·수익·정산</td>
+                <td className="border border-slate-300 px-2 py-1 text-center">
+                  <LinkButton href="/admin/revenue/vendors">업체보기</LinkButton>
+                </td>
+              </tr>
+
+              <tr className="bg-red-50">
+                <td className="border border-slate-300 px-3 py-2 font-black text-red-700">오류 주문</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-black text-red-700">-</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-black text-red-700">{errorOrders.length}건</td>
+                <td className="border border-slate-300 px-3 py-2 text-right font-bold text-red-700">수익 제외</td>
+                <td className="border border-slate-300 px-2 py-1 text-center">
+                  <LinkButton href="/admin/revenue/orders?status=error" tone="red">오류정리</LinkButton>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      ))}
-    </div>
+
+        <div className="overflow-x-auto rounded border border-slate-300 bg-white">
+          <table className="w-full min-w-[1300px] border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-200 text-slate-950">
+                <th className="border border-slate-300 px-3 py-2 text-left">수익원</th>
+                <th className="border border-slate-300 px-3 py-2 text-left">설명</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">주문</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">주문금액</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">플랫폼 수익</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">평균 수익률</th>
+                <th className="border border-slate-300 px-3 py-2 text-center">관리</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {sourceRows.map((row) => {
+                const sales = sum(row.orders, (o) => o.orderAmount);
+                const revenue = sum(row.orders, (o) => o.platformFeeAmount);
+                const rate = sales > 0 ? revenue / sales : 0;
+
+                return (
+                  <tr key={row.label} className="hover:bg-yellow-50">
+                    <td className="border border-slate-300 px-3 py-2 font-black">{row.label}</td>
+                    <td className="border border-slate-300 px-3 py-2 font-bold">{row.desc}</td>
+                    <td className="border border-slate-300 px-3 py-2 text-right font-bold">{row.orders.length}</td>
+                    <td className="border border-slate-300 px-3 py-2 text-right font-bold">{money(sales)}</td>
+                    <td className="border border-slate-300 px-3 py-2 text-right font-black text-blue-700">{money(revenue)}</td>
+                    <td className="border border-slate-300 px-3 py-2 text-right font-bold">{pct(rate)}</td>
+                    <td className="border border-slate-300 px-2 py-1 text-center">
+                      <LinkButton href={row.href}>보기</LinkButton>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="overflow-x-auto rounded border border-slate-300 bg-white">
+          <table className="w-full min-w-[1300px] border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-200 text-slate-950">
+                <th className="border border-slate-300 px-3 py-2 text-left">업무</th>
+                <th className="border border-slate-300 px-3 py-2 text-left">설명</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">건수</th>
+                <th className="border border-slate-300 px-3 py-2 text-right">금액</th>
+                <th className="border border-slate-300 px-3 py-2 text-center">처리</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {taskRows.map((row) => (
+                <tr key={row.label} className="hover:bg-yellow-50">
+                  <td className="border border-slate-300 px-3 py-2 font-black">{row.label}</td>
+                  <td className="border border-slate-300 px-3 py-2 font-bold">{row.desc}</td>
+                  <td className="border border-slate-300 px-3 py-2 text-right font-black">
+                    {row.count > 0 ? `${row.count}건` : "-"}
+                  </td>
+                  <td className="border border-slate-300 px-3 py-2 text-right font-black">
+                    {row.amount > 0 ? money(row.amount) : "-"}
+                  </td>
+                  <td className="border border-slate-300 px-2 py-1 text-center">
+                    <LinkButton href={row.href} tone={row.tone}>
+                      {row.action}
+                    </LinkButton>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
   );
 }
