@@ -10,6 +10,44 @@ function jsonError(message: string, status = 400, extra?: unknown) {
   );
 }
 
+async function findApplication(supabase: ReturnType<typeof createSupabaseAdminClient>, applicationId: string) {
+  const selectColumns = `
+    id,
+    application_id,
+    company_name,
+    source_file_name,
+    source_file_mime,
+    business_license_bucket,
+    business_license_path,
+    business_license_url
+  `;
+
+  const byApplicationId = await supabase
+    .from("vendor_applications_v2")
+    .select(selectColumns)
+    .eq("application_id", applicationId)
+    .maybeSingle();
+
+  if (!byApplicationId.error && byApplicationId.data) {
+    return { app: byApplicationId.data, error: null };
+  }
+
+  const byId = await supabase
+    .from("vendor_applications_v2")
+    .select(selectColumns)
+    .eq("id", applicationId)
+    .maybeSingle();
+
+  if (!byId.error && byId.data) {
+    return { app: byId.data, error: null };
+  }
+
+  return {
+    app: null,
+    error: byApplicationId.error?.message || byId.error?.message || "not_found",
+  };
+}
+
 export async function GET(
   _req: Request,
   context: { params: Promise<{ applicationId: string }> }
@@ -23,27 +61,12 @@ export async function GET(
 
     const supabase = createSupabaseAdminClient();
 
-    const { data: app, error } = await supabase
-      .from("vendor_applications_v2")
-      .select(
-        `
-        id,
-        company_name,
-        source_file_name,
-        source_file_mime,
-        business_license_bucket,
-        business_license_path,
-        business_license_url
-      `
-      )
-      .eq("id", applicationId)
-      .single();
+    const { app, error } = await findApplication(supabase, applicationId);
 
-    if (error || !app) {
-      return jsonError("신청 정보를 찾지 못했습니다.", 404, error?.message);
+    if (!app) {
+      return jsonError("신청 정보를 찾지 못했습니다.", 404, error);
     }
 
-    // 1차: private bucket signed url 생성 시도
     if (app.business_license_bucket && app.business_license_path) {
       const { data, error: signedError } = await supabase.storage
         .from(app.business_license_bucket)
@@ -62,7 +85,6 @@ export async function GET(
         });
       }
 
-      // signed url 실패했지만 public url이 있으면 fallback
       if (app.business_license_url) {
         return Response.json({
           ok: true,
@@ -83,7 +105,6 @@ export async function GET(
       );
     }
 
-    // 2차: bucket/path는 없지만 url만 저장된 경우 fallback
     if (app.business_license_url) {
       return Response.json({
         ok: true,

@@ -16,6 +16,64 @@ function slugify(v: string) {
     .slice(0, 80);
 }
 
+function getPlanType(app: any) {
+  return safe(app?.source_extracted_json?.plan_type) || safe(app?.plan_type);
+}
+
+function getPlanLabel(planType: string, boothType?: string | null) {
+  if (planType === "free") return "무료 체험";
+  if (planType === "bronze") return "브론즈";
+  if (planType === "silver") return "실버";
+  if (planType === "gold") return "골드";
+  if (planType === "enterprise") return "엔터프라이즈";
+
+  const booth = safe(boothType);
+  if (booth === "free") return "무료 체험";
+  if (booth === "basic") return "일반";
+  if (booth === "premium") return "프리미엄";
+
+  return "일반";
+}
+
+function getBrandDescription(app: any, companyName: string) {
+  return (
+    safe(app.company_intro) ||
+    safe(app.intro) ||
+    safe(app.short_description) ||
+    `${companyName} 브랜드관입니다.`
+  );
+}
+
+function getHallKey(app: any) {
+  return (
+    safe(app.assigned_hall) ||
+    safe(app.preferred_hall_1) ||
+    "crop-nutrition"
+  );
+}
+
+async function makeUniqueSlug(
+  supabase: any,
+  companyName: string,
+  applicationId: string
+) {
+  const baseSlug = slugify(companyName) || `brand-${applicationId.slice(0, 8)}`;
+
+  for (let i = 0; i < 20; i += 1) {
+    const slug = i === 0 ? baseSlug : `${baseSlug}-${i + 1}`;
+
+    const { data } = await supabase
+      .from("expo_brands")
+      .select("id")
+      .eq("brand_slug", slug)
+      .maybeSingle();
+
+    if (!data?.id) return slug;
+  }
+
+  return `${baseSlug}-${Date.now()}`;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -23,7 +81,7 @@ export async function POST(req: Request) {
 
     if (!applicationId) {
       return NextResponse.json(
-        { success: false, error: "application_id가 필요합니다." },
+        { success: false, ok: false, error: "application_id가 필요합니다." },
         { status: 400 }
       );
     }
@@ -31,14 +89,18 @@ export async function POST(req: Request) {
     const supabase = createSupabaseAdminClient();
 
     const { data: app, error: appError } = await supabase
-      .from("vendor_applications")
+      .from("vendor_applications_v2")
       .select("*")
-      .eq("id", applicationId)
+      .eq("application_id", applicationId)
       .maybeSingle();
 
     if (appError || !app) {
       return NextResponse.json(
-        { success: false, error: appError?.message || "입점 신청서를 찾을 수 없습니다." },
+        {
+          success: false,
+          ok: false,
+          error: appError?.message || "입점 신청서를 찾을 수 없습니다.",
+        },
         { status: 404 }
       );
     }
@@ -47,80 +109,101 @@ export async function POST(req: Request) {
       safe(app.company_name) ||
       safe(app.brand_name) ||
       safe(app.contact_name) ||
+      safe(app.representative_name) ||
       "새 브랜드";
 
-    const baseSlug = slugify(companyName) || `brand-${applicationId.slice(0, 8)}`;
+    const finalSlug = await makeUniqueSlug(supabase, companyName, applicationId);
 
-    let finalSlug = baseSlug;
+    const planType = getPlanType(app);
+    const resolvedPlanLabel = getPlanLabel(planType, app.booth_type);
+    const nowIso = new Date().toISOString();
 
-    for (let i = 0; i < 20; i += 1) {
-      const slug = i === 0 ? baseSlug : `${baseSlug}-${i + 1}`;
+    const brandPayload = {
+      vendor_id: app.provisioned_vendor_id || null,
+      hall_key: getHallKey(app),
 
-      const { data: exists } = await supabase
-        .from("expo_brands")
-        .select("id")
-        .eq("brand_slug", slug)
-        .maybeSingle();
+      brand_name: companyName,
+      brand_slug: finalSlug,
 
-      if (!exists?.id) {
-        finalSlug = slug;
-        break;
-      }
-    }
+      logo_url: null,
+      banner_url: null,
+
+      short_description: getBrandDescription(app, companyName),
+
+      main_crop: null,
+      main_crops: "",
+      main_category: safe(app.preferred_category) || "기타",
+
+      youtube_url: safe(app.youtube_url) || null,
+      homepage_url: safe(app.website_url) || null,
+
+      is_featured: false,
+      is_active: true,
+      sort_order: 0,
+
+      vendor_plan: planType || safe(app.booth_type) || "basic",
+
+      created_at: nowIso,
+      updated_at: nowIso,
+    };
 
     const { data: brand, error: brandError } = await supabase
       .from("expo_brands")
-      .insert({
-        brand_slug: finalSlug,
-        brand_name: companyName,
-        company_name: companyName,
-        contact_name: safe(app.contact_name),
-        phone: safe(app.phone),
-        email: safe(app.email),
-        main_category: safe(app.hall_name) || safe(app.preferred_hall) || "미분류",
-        main_crops: safe(app.main_crops),
-        short_description:
-          safe(app.short_description) ||
-          safe(app.memo) ||
-          `${companyName} 브랜드관입니다.`,
-        is_active: true,
-        application_id: applicationId,
-      })
+      .insert(brandPayload)
       .select("*")
       .single();
 
     if (brandError) {
       return NextResponse.json(
-        { success: false, error: brandError.message },
+        {
+          success: false,
+          ok: false,
+          error: brandError.message,
+          payload: brandPayload,
+        },
         { status: 500 }
       );
     }
 
     const { error: updateError } = await supabase
-      .from("vendor_applications")
+      .from("vendor_applications_v2")
       .update({
         status: "approved",
-        approved_at: new Date().toISOString(),
-        brand_id: brand.id,
+        application_status: "approved",
+        approved_at: nowIso,
+        reviewed_at: app.reviewed_at || nowIso,
+        booth_progress_status: "assigned",
+        provision_status: "completed",
+        provisioned_at: nowIso,
+        provision_result: `브랜드관 생성 완료: /expo/brands/${finalSlug}`,
+        provisioned_booth_id: brand.id,
+        updated_at: nowIso,
       })
-      .eq("id", applicationId);
+      .eq("application_id", applicationId);
 
     if (updateError) {
       return NextResponse.json(
-        { success: false, error: updateError.message },
+        { success: false, ok: false, error: updateError.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
+      ok: true,
       brand,
       brand_url: `/expo/brands/${finalSlug}`,
+      plan_type: planType,
+      plan_label: resolvedPlanLabel,
       message: "입점 승인 및 브랜드관 생성 완료",
     });
   } catch (e: any) {
     return NextResponse.json(
-      { success: false, error: e?.message || "입점 승인 처리 실패" },
+      {
+        success: false,
+        ok: false,
+        error: e?.message || "입점 승인 처리 실패",
+      },
       { status: 500 }
     );
   }

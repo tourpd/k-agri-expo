@@ -47,7 +47,7 @@ const HALLS = [
     icon: "🦗",
     title: "미래식량·곤충관",
     desc: "곤충 · 기능성식품 · 대체단백",
-    href: "/expo/halls/future-food",
+    href: "/expo/future-food",
     cta: "미래식량관 입장",
   },
 ];

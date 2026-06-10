@@ -1,6 +1,12 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export type OrderType = "general" | "photodoctor" | "live";
+export type OrderType =
+  | "general"
+  | "group_buy"
+  | "live"
+  | "sample"
+  | "exclusive"
+  | "photodoctor";
 
 export type CommissionInput = {
   orderType: OrderType;
@@ -27,23 +33,44 @@ function normalizeRate(v: unknown) {
   return 0;
 }
 
-function defaultRate(orderType: OrderType) {
+export function defaultRate(orderType: OrderType) {
   if (orderType === "photodoctor") return 0.5;
+  if (orderType === "exclusive") return 0.35;
   if (orderType === "live") return 0.3;
+  if (orderType === "sample") return 0.3;
+  if (orderType === "group_buy") return 0.25;
   return 0.18;
+}
+
+export function orderTypeLabel(orderType?: string | null) {
+  switch (orderType) {
+    case "general":
+      return "일반판매";
+    case "group_buy":
+      return "공동구매";
+    case "live":
+      return "라이브판매";
+    case "sample":
+      return "샘플·체험단 전환판매";
+    case "exclusive":
+      return "독점상품";
+    case "photodoctor":
+      return "포토닥터 추천상품";
+    default:
+      return "일반판매";
+  }
 }
 
 export async function getCommissionRate(
   input: CommissionInput
 ): Promise<CommissionResult> {
   const supabase = createSupabaseAdminClient();
-
   const now = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("commission_rules")
     .select(
-      "id, scope_type, order_type, order_id, product_id, vendor_id, brand_id, commission_rate, title, priority, starts_at, ends_at, is_active"
+      "id, scope_type, order_type, order_id, product_id, vendor_id, brand_id, commission_rate, title, priority, starts_at, ends_at, is_active, created_at"
     )
     .eq("is_active", true)
     .order("priority", { ascending: true })
@@ -53,7 +80,7 @@ export async function getCommissionRate(
     return {
       commissionRate: defaultRate(input.orderType),
       ruleId: null,
-      ruleTitle: "기본 수수료",
+      ruleTitle: `${orderTypeLabel(input.orderType)} 기본 수수료`,
       scopeType: "default",
     };
   }
@@ -78,7 +105,7 @@ export async function getCommissionRate(
       return input.vendorId && rule.vendor_id === input.vendorId;
     }
 
-    if (rule.scope_type === "source") {
+    if (rule.scope_type === "source" || rule.scope_type === "order_type") {
       return rule.order_type === input.orderType;
     }
 
@@ -89,7 +116,7 @@ export async function getCommissionRate(
     return {
       commissionRate: defaultRate(input.orderType),
       ruleId: null,
-      ruleTitle: "기본 수수료",
+      ruleTitle: `${orderTypeLabel(input.orderType)} 기본 수수료`,
       scopeType: "default",
     };
   }

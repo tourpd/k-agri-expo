@@ -29,7 +29,6 @@ function cleanNullableText(v: unknown) {
 
 function cleanNumber(v: unknown, fallback: number | null = null) {
   if (v === null || v === undefined || v === "") return fallback;
-
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 }
@@ -37,8 +36,12 @@ function cleanNumber(v: unknown, fallback: number | null = null) {
 function normalizeOrderType(v: unknown): OrderType {
   const text = cleanText(v, "general");
 
-  if (text === "photodoctor") return "photodoctor";
+  if (text === "general") return "general";
+  if (text === "group_buy") return "group_buy";
   if (text === "live") return "live";
+  if (text === "sample") return "sample";
+  if (text === "exclusive") return "exclusive";
+  if (text === "photodoctor") return "photodoctor";
 
   return "general";
 }
@@ -79,6 +82,7 @@ export async function POST(req: Request) {
           price_krw,
           sale_price_krw,
           coverage_per_unit,
+          sale_type,
           commission_type,
           platform_fee_rate
         `
@@ -101,12 +105,9 @@ export async function POST(req: Request) {
       "제품명 미입력";
 
     const product_code =
-      cleanText(body.product_code) ||
-      product_id ||
-      `ORDER-${Date.now()}`;
+      cleanText(body.product_code) || product_id || `ORDER-${Date.now()}`;
 
     const quantity = cleanNumber(body.quantity, 1) || 1;
-
     const farm_area = cleanNumber(body.farm_area, null);
 
     const coverage_per_unit =
@@ -115,13 +116,10 @@ export async function POST(req: Request) {
       null;
 
     const recommended_quantity =
-      cleanNumber(body.recommended_quantity, null) ??
-      quantity;
+      cleanNumber(body.recommended_quantity, null) ?? quantity;
 
     const price_krw =
-      cleanNumber(body.price_krw) ??
-      cleanNumber(product?.price_krw) ??
-      0;
+      cleanNumber(body.price_krw) ?? cleanNumber(product?.price_krw) ?? 0;
 
     const sale_price_krw =
       cleanNumber(body.sale_price_krw) ??
@@ -131,16 +129,17 @@ export async function POST(req: Request) {
     const total_amount_krw = Math.max(unit_price_krw * quantity, 0);
 
     const order_type = normalizeOrderType(
-      body.order_type || product?.commission_type
+      body.order_type ||
+        body.sale_type ||
+        product?.sale_type ||
+        product?.commission_type
     );
 
     const vendor_id =
-      cleanNullableText(body.vendor_id) ||
-      cleanNullableText(product?.vendor_id);
+      cleanNullableText(body.vendor_id) || cleanNullableText(product?.vendor_id);
 
     const brand_id =
-      cleanNullableText(body.brand_id) ||
-      cleanNullableText(product?.brand_id);
+      cleanNullableText(body.brand_id) || cleanNullableText(product?.brand_id);
 
     const revenue = await applyRevenueToOrder({
       orderType: order_type,
@@ -155,9 +154,11 @@ export async function POST(req: Request) {
       applicant_name: buyer_name,
       phone: buyer_phone,
       email: cleanNullableText(body.email),
+
       product_code,
       product_name,
       amount_krw: total_amount_krw,
+
       payment_method: cleanText(body.payment_method, "bank_transfer"),
       payment_status: cleanText(body.payment_status, "requested"),
       order_status: cleanText(body.order_status, "pending"),
@@ -169,6 +170,9 @@ export async function POST(req: Request) {
       brand_id,
 
       order_type,
+      sale_type: order_type,
+      commission_type: order_type,
+      revenue_category: order_type,
 
       promo_type: cleanNullableText(body.promo_type),
       promo_title: cleanNullableText(body.promo_title),
@@ -199,9 +203,6 @@ export async function POST(req: Request) {
       applied_commission_scope: revenue.applied_commission_scope,
       applied_commission_title: revenue.applied_commission_title,
 
-      commission_type: order_type,
-      revenue_category: order_type,
-
       status: cleanText(body.status, "pending"),
       source: cleanText(body.source, "expo_product"),
 
@@ -226,7 +227,6 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     console.error("[expo_orders create exception]", e);
-
     return jsonError(e instanceof Error ? e.message : "서버 오류", 500);
   }
 }

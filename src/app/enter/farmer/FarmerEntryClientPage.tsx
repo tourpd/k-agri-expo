@@ -38,12 +38,12 @@ export default function FarmerEntryClientPage() {
       const normalizedPhone = normalizeKoreanPhone(phone);
 
       if (!name.trim()) {
-        setMsg("이름을 입력해주세요.");
+        setMsg("이름을 입력해 주세요.");
         return;
       }
 
       if (normalizedPhone.length < 10) {
-        setMsg("전화번호를 정확히 입력해주세요.");
+        setMsg("전화번호를 정확히 입력해 주세요.");
         return;
       }
 
@@ -63,7 +63,7 @@ export default function FarmerEntryClientPage() {
       const data = await res.json();
 
       if (!res.ok || !data?.success) {
-        setMsg(data?.error ?? "입장 처리 실패");
+        setMsg(data?.error ?? "입장 처리에 실패했습니다.");
         return;
       }
 
@@ -74,8 +74,8 @@ export default function FarmerEntryClientPage() {
 
       router.replace("/expo");
       router.refresh();
-    } catch (err: any) {
-      setMsg(err?.message ?? "오류가 발생했습니다.");
+    } catch (err: unknown) {
+      setMsg(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -84,12 +84,14 @@ export default function FarmerEntryClientPage() {
   return (
     <main style={S.page}>
       <div style={S.card}>
-        <div style={S.kicker}>FARMER ENTRY</div>
+        <div style={S.kicker}>K-AGRI EXPO FARMER ENTRY</div>
+
         <h1 style={S.title}>농민 간편입장</h1>
+
         <p style={S.desc}>
           이름과 전화번호만 입력하면 바로 입장합니다.
           <br />
-          경품·이벤트 참여 시에만 추가 인증을 붙이면 됩니다.
+          경품·샘플·특가 참여 시에만 추가 인증을 붙이면 됩니다.
         </p>
 
         <form onSubmit={onSubmit} style={S.form}>
@@ -102,7 +104,7 @@ export default function FarmerEntryClientPage() {
             required
           />
 
-          <label style={{ ...S.label, marginTop: 14 }}>전화번호</label>
+          <label style={S.labelWithMargin}>전화번호</label>
           <input
             value={phone}
             onChange={(e) => setPhone(formatKoreanPhone(e.target.value))}
@@ -112,7 +114,7 @@ export default function FarmerEntryClientPage() {
             required
           />
 
-          <label style={{ ...S.label, marginTop: 14 }}>지역 (선택)</label>
+          <label style={S.labelWithMargin}>지역 선택</label>
           <input
             value={region}
             onChange={(e) => setRegion(e.target.value)}
@@ -120,7 +122,7 @@ export default function FarmerEntryClientPage() {
             style={S.input}
           />
 
-          <label style={{ ...S.label, marginTop: 14 }}>주 작물 (선택)</label>
+          <label style={S.labelWithMargin}>주 작물 선택</label>
           <input
             value={crop}
             onChange={(e) => setCrop(e.target.value)}
@@ -128,8 +130,16 @@ export default function FarmerEntryClientPage() {
             style={S.input}
           />
 
-          <button type="submit" style={S.primaryBtn} disabled={loading}>
-            {loading ? "입장 중..." : "농민 입장"}
+          <button
+            type="submit"
+            style={{
+              ...S.primaryBtn,
+              opacity: loading ? 0.65 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+            disabled={loading}
+          >
+            {loading ? "입장 중..." : "농민 입장하기"}
           </button>
         </form>
 
@@ -137,7 +147,7 @@ export default function FarmerEntryClientPage() {
 
         <div style={S.bottom}>
           <Link href="/login" style={S.back}>
-            ← 로그인 선택으로
+            ← 로그인 선택으로 돌아가기
           </Link>
         </div>
       </div>
@@ -153,79 +163,109 @@ const S = {
     justifyContent: "center",
     background: "linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)",
     padding: 20,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 560,
-    background: "#fff",
-    borderRadius: 28,
-    padding: 28,
-    boxShadow: "0 24px 70px rgba(15,23,42,0.12)",
-  },
-  kicker: {
-    fontSize: 12,
-    fontWeight: 950,
-    color: "#16a34a",
-  },
-  title: {
-    margin: "10px 0 0",
-    fontSize: 34,
-    fontWeight: 950,
-    color: "#0f172a",
-  },
-  desc: {
-    marginTop: 12,
-    color: "#64748b",
-    lineHeight: 1.7,
-    fontSize: 15,
-  },
-  form: {
-    marginTop: 20,
-  },
-  label: {
-    display: "block",
-    fontSize: 13,
-    fontWeight: 900,
-    marginBottom: 8,
     color: "#111827",
   },
+
+  card: {
+    width: "100%",
+    maxWidth: 720,
+    background: "#ffffff",
+    borderRadius: 32,
+    padding: 42,
+    boxShadow: "0 24px 70px rgba(15,23,42,0.12)",
+    border: "1px solid #d1d5db",
+    color: "#111827",
+  },
+
+  kicker: {
+    fontSize: 15,
+    fontWeight: 950,
+    color: "#16a34a",
+    letterSpacing: 0.4,
+  },
+
+  title: {
+    margin: "12px 0 0",
+    fontSize: 48,
+    lineHeight: 1.12,
+    fontWeight: 950,
+    color: "#111827",
+  },
+
+  desc: {
+    marginTop: 16,
+    color: "#374151",
+    lineHeight: 1.8,
+    fontSize: 20,
+    fontWeight: 800,
+  },
+
+  form: {
+    marginTop: 28,
+  },
+
+  label: {
+    display: "block",
+    fontSize: 21,
+    fontWeight: 950,
+    marginBottom: 10,
+    color: "#111827",
+  },
+
+  labelWithMargin: {
+    display: "block",
+    fontSize: 21,
+    fontWeight: 950,
+    marginTop: 18,
+    marginBottom: 10,
+    color: "#111827",
+  },
+
   input: {
     width: "100%",
-    padding: "14px 16px",
-    borderRadius: 14,
-    border: "1px solid #dbe2ea",
+    padding: "20px 22px",
+    borderRadius: 18,
+    border: "2px solid #cbd5e1",
     boxSizing: "border-box",
-    fontSize: 15,
-    background: "#fff",
+    fontSize: 22,
+    fontWeight: 900,
+    background: "#ffffff",
+    color: "#111827",
+    outline: "none",
   },
+
   primaryBtn: {
     width: "100%",
-    marginTop: 18,
-    padding: "14px 16px",
-    borderRadius: 14,
-    border: "1px solid #111",
-    background: "#111",
-    color: "#fff",
+    marginTop: 28,
+    padding: "24px 20px",
+    borderRadius: 20,
+    border: 0,
+    background: "#16a34a",
+    color: "#ffffff",
     fontWeight: 950,
-    cursor: "pointer",
-    fontSize: 16,
+    fontSize: 28,
   },
+
   msg: {
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 12,
-    background: "#f8fafc",
-    color: "#334155",
-    lineHeight: 1.7,
-    fontSize: 14,
-    border: "1px solid #e2e8f0",
-  },
-  bottom: {
     marginTop: 18,
-  },
-  back: {
-    color: "#111",
-    textDecoration: "none",
+    padding: 16,
+    borderRadius: 16,
+    background: "#fff7ed",
+    color: "#9a3412",
+    lineHeight: 1.7,
+    fontSize: 18,
     fontWeight: 900,
+    border: "1px solid #fed7aa",
+  },
+
+  bottom: {
+    marginTop: 24,
+  },
+
+  back: {
+    color: "#111827",
+    textDecoration: "none",
+    fontWeight: 950,
+    fontSize: 18,
   },
 } satisfies Record<string, React.CSSProperties>;

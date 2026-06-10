@@ -29,6 +29,10 @@ function normalizeYoutubeUrls(v: unknown) {
   return [];
 }
 
+function compactLines(lines: Array<string | null>) {
+  return lines.filter(Boolean).join("\n");
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -46,13 +50,72 @@ export async function POST(req: Request) {
 
     if (!productName) {
       return NextResponse.json(
-        { ok: false, error: "제품명을 입력하세요." },
+        { ok: false, error: "제품명 또는 사업명을 입력하세요." },
         { status: 400 }
       );
     }
 
     const youtubeUrls = normalizeYoutubeUrls(body.youtube_urls);
     const firstYoutubeUrl = cleanText(body.youtube_url) || youtubeUrls[0] || null;
+
+    const futureBusinessType = cleanText(body.future_business_type);
+
+    const containerFarmSpec = compactLines([
+      cleanText(body.container_farm_spec),
+      cleanText(body.container_model)
+        ? `컨테이너 모델: ${cleanText(body.container_model)}`
+        : null,
+      cleanText(body.container_size)
+        ? `컨테이너 규격: ${cleanText(body.container_size)}`
+        : null,
+      cleanText(body.expected_monthly_production)
+        ? `월 예상 생산량: ${cleanText(body.expected_monthly_production)}`
+        : null,
+      cleanNumber(body.farm_sale_price)
+        ? `분양가: ${cleanNumber(body.farm_sale_price).toLocaleString()}원`
+        : null,
+    ]);
+
+    const educationProgram = compactLines([
+      cleanText(body.education_program),
+      cleanText(body.education_program_name)
+        ? `교육명: ${cleanText(body.education_program_name)}`
+        : null,
+      cleanNumber(body.education_fee)
+        ? `교육비: ${cleanNumber(body.education_fee).toLocaleString()}원`
+        : null,
+    ]);
+
+    const buybackTerms = compactLines([
+      cleanText(body.buyback_terms),
+      cleanText(body.buyback_item)
+        ? `수매 품목: ${cleanText(body.buyback_item)}`
+        : null,
+      cleanText(body.buyback_price)
+        ? `수매 조건/단가: ${cleanText(body.buyback_price)}`
+        : null,
+    ]);
+
+    const healingProgram = compactLines([
+      cleanText(body.healing_program),
+      cleanText(body.healing_program_name)
+        ? `치유농업 프로그램: ${cleanText(body.healing_program_name)}`
+        : null,
+    ]);
+
+    const functionalFoodInfo = compactLines([
+      cleanText(body.functional_food_info),
+      cleanText(body.functional_claim)
+        ? `기능성 방향: ${cleanText(body.functional_claim)}`
+        : null,
+    ]);
+
+    const patentInfo = compactLines([
+      cleanText(body.patent_info),
+      cleanText(body.patent_note)
+        ? `특허/개별인정형 자료: ${cleanText(body.patent_note)}`
+        : null,
+    ]);
 
     const payload = {
       id: cleanText(body.id) || undefined,
@@ -84,6 +147,15 @@ export async function POST(req: Request) {
       recommended_rounds: cleanNumber(body.recommended_rounds),
       spray_interval: cleanText(body.spray_interval),
       use_period: cleanText(body.use_period),
+
+      future_business_type: futureBusinessType,
+      container_farm_spec: containerFarmSpec || null,
+      education_program: educationProgram || null,
+      buyback_terms: buybackTerms || null,
+      healing_program: healingProgram || null,
+      functional_food_info: functionalFoodInfo || null,
+      patent_info: patentInfo || null,
+      target_customer: cleanText(body.target_customer),
 
       link_url: cleanText(body.link_url),
       is_active: body.is_active !== false,

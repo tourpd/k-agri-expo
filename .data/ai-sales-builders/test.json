@@ -1,0 +1,81 @@
+{
+  "projectId": "test",
+  "projectName": "test 상세페이지",
+  "cards": [
+    {
+      "id": "solution",
+      "type": "solution",
+      "title": "농민의 고민을 한 번에 해결하는 스마트 농자재!",
+      "subtitle": "당신의 농작물에 힘을 불어넣는 해결책",
+      "content": "이 제품은 작물별 맞춤형 성분으로 구성되어 있으며, 각 작물의 성장에 최적화된 사용 시기를 제공합니다. 이해하기 쉬운 설명으로, 당신의 농작물에 어떤 이점이 있는지 한눈에 확인하세요.",
+      "bg": "bg-blue-100",
+      "buttonText": "지금 체험단에 신청하세요!"
+    },
+    {
+      "id": "reason",
+      "type": "reason",
+      "title": "약만 쓰지 말고, 뿌리부터 살펴보세요!",
+      "subtitle": "이성준 회장형 신뢰 카드로 농업의 기본을 다지세요",
+      "content": "병해, 뿌리, 영양, 토양 상태를 정확히 파악하고 그에 맞는 솔루션을 찾아야 진정한 농업의 성공이 가능합니다. 무조건 약을 사용하는 것이 아니라, 문제의 근본을 이해하고 해결하는 것이 중요합니다.",
+      "bg": "bg-yellow-100",
+      "buttonText": "지금 바로 진단받기!"
+    },
+    {
+      "id": "problem",
+      "type": "problem",
+      "title": "옆집은 멀쩡한데, 우리 밭만 왜 이래?",
+      "subtitle": "농민이 바로 공감하는 첫 문제",
+      "content": "잎이 이상하고, 비료를 줘도 작물이 힘이 없고, 병인지 영양문제인지 헷갈리는 상황을 크게 보여줍니다.",
+      "bg": "bg-red-100"
+    },
+    {
+      "id": "compare",
+      "type": "compare",
+      "title": "사용 전 / 사용 후",
+      "subtitle": "비포애프터 이미지 자리",
+      "content": "제품을 쓰기 전 문제 장면과 사용 후 기대 장면을 한눈에 비교하는 이미지 블록입니다.",
+      "bg": "bg-blue-100"
+    },
+    {
+      "id": "usage",
+      "type": "usage",
+      "title": "작물별 사용법",
+      "subtitle": "고추 · 마늘 · 딸기 · 오이",
+      "content": "작물별 사용량, 희석배수, 사용시기, 반복횟수를 표처럼 쉽게 정리합니다.",
+      "bg": "bg-white"
+    },
+    {
+      "id": "warning",
+      "type": "warning",
+      "title": "주의사항",
+      "subtitle": "혼용 · 희석 · 보관",
+      "content": "혼용 가능 여부, 고온기 사용 주의, 보관 방법, 사용 전 확인사항을 별도 카드로 분리합니다.",
+      "bg": "bg-orange-100"
+    },
+    {
+      "id": "comic",
+      "type": "comic",
+      "title": "4컷 만화형 광고",
+      "subtitle": "박씨 · 영희 · 이장님 · 몽몽이",
+      "content": "1컷: 아이고 또 망했네 / 2컷: 옆집은 멀쩡한디? / 3컷: 문제는 원인이여 / 4컷: 그럼 나도 끼워줘유!",
+      "bg": "bg-purple-100"
+    },
+    {
+      "id": "cta",
+      "type": "cta",
+      "title": "오늘까지여~",
+      "subtitle": "공동구매 신청",
+      "content": "공동구매 마감, 가격 혜택, 신청 버튼을 크게 배치합니다. 이 버튼은 기존 주문·택배 시스템으로 연결됩니다.",
+      "buttonText": "무료 샘플 받기",
+      "bg": "bg-black"
+    }
+  ],
+  "lastChange": {
+    "cardTitle": "문제도 모르면서 약만 친다고? 약쟁이",
+    "field": "title",
+    "before": "문제도 모르면서 약만 친다고? 약쟁이",
+    "after": "약만 쓰지 말고, 뿌리부터 살펴보세요!"
+  },
+  "html": "<!doctype html>\n<html lang=\"ko\">\n<head>\n<meta charset=\"utf-8\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<title>test 상세페이지</title>\n</head>\n<body style=\"margin:0;background:#f4f7f2;font-family:system-ui,Apple SD Gothic Neo,sans-serif;color:#111;\">\n<main style=\"max-width:960px;margin:0 auto;padding:24px;\">\n  <header style=\"background:#000;color:#fff;border-radius:28px;padding:36px;margin-bottom:24px;\">\n    <p style=\"color:#86efac;font-weight:900;font-size:18px;\">K-Agri Expo 상세페이지</p>\n    <h1 style=\"font-size:42px;margin:8px 0 0;font-weight:950;\">test 상세페이지</h1>\n  </header>\n  \n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#dbeafe;color:#111;\">\n  <p style=\"font-weight:900;opacity:.65;\">solution</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">농민의 고민을 한 번에 해결하는 스마트 농자재!</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">당신의 농작물에 힘을 불어넣는 해결책</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">이 제품은 작물별 맞춤형 성분으로 구성되어 있으며, 각 작물의 성장에 최적화된 사용 시기를 제공합니다. 이해하기 쉬운 설명으로, 당신의 농작물에 어떤 이점이 있는지 한눈에 확인하세요.</p>\n  <button style=\"margin-top:18px;border:0;border-radius:16px;background:#15803d;color:white;padding:16px 24px;font-size:22px;font-weight:900;\">지금 체험단에 신청하세요!</button>\n</section>\n\n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#fef9c3;color:#111;\">\n  <p style=\"font-weight:900;opacity:.65;\">reason</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">약만 쓰지 말고, 뿌리부터 살펴보세요!</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">이성준 회장형 신뢰 카드로 농업의 기본을 다지세요</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">병해, 뿌리, 영양, 토양 상태를 정확히 파악하고 그에 맞는 솔루션을 찾아야 진정한 농업의 성공이 가능합니다. 무조건 약을 사용하는 것이 아니라, 문제의 근본을 이해하고 해결하는 것이 중요합니다.</p>\n  <button style=\"margin-top:18px;border:0;border-radius:16px;background:#15803d;color:white;padding:16px 24px;font-size:22px;font-weight:900;\">지금 바로 진단받기!</button>\n</section>\n\n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#fee2e2;color:#111;\">\n  <p style=\"font-weight:900;opacity:.65;\">problem</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">옆집은 멀쩡한데, 우리 밭만 왜 이래?</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">농민이 바로 공감하는 첫 문제</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">잎이 이상하고, 비료를 줘도 작물이 힘이 없고, 병인지 영양문제인지 헷갈리는 상황을 크게 보여줍니다.</p>\n  \n</section>\n\n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#dbeafe;color:#111;\">\n  <p style=\"font-weight:900;opacity:.65;\">compare</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">사용 전 / 사용 후</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">비포애프터 이미지 자리</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">제품을 쓰기 전 문제 장면과 사용 후 기대 장면을 한눈에 비교하는 이미지 블록입니다.</p>\n  \n</section>\n\n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#ffffff;color:#111;\">\n  <p style=\"font-weight:900;opacity:.65;\">usage</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">작물별 사용법</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">고추 · 마늘 · 딸기 · 오이</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">작물별 사용량, 희석배수, 사용시기, 반복횟수를 표처럼 쉽게 정리합니다.</p>\n  \n</section>\n\n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#ffedd5;color:#111;\">\n  <p style=\"font-weight:900;opacity:.65;\">warning</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">주의사항</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">혼용 · 희석 · 보관</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">혼용 가능 여부, 고온기 사용 주의, 보관 방법, 사용 전 확인사항을 별도 카드로 분리합니다.</p>\n  \n</section>\n\n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#f3e8ff;color:#111;\">\n  <p style=\"font-weight:900;opacity:.65;\">comic</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">4컷 만화형 광고</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">박씨 · 영희 · 이장님 · 몽몽이</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">1컷: 아이고 또 망했네 / 2컷: 옆집은 멀쩡한디? / 3컷: 문제는 원인이여 / 4컷: 그럼 나도 끼워줘유!</p>\n  \n</section>\n\n<section style=\"border:3px solid #111;border-radius:24px;padding:28px;margin:18px 0;background:#000000;color:#fff;\">\n  <p style=\"font-weight:900;opacity:.65;\">cta</p>\n  <h2 style=\"font-size:34px;margin:8px 0;font-weight:950;\">오늘까지여~</h2>\n  <h3 style=\"font-size:22px;margin:8px 0;font-weight:900;\">공동구매 신청</h3>\n  <p style=\"font-size:19px;line-height:1.6;font-weight:700;\">공동구매 마감, 가격 혜택, 신청 버튼을 크게 배치합니다. 이 버튼은 기존 주문·택배 시스템으로 연결됩니다.</p>\n  <button style=\"margin-top:18px;border:0;border-radius:16px;background:#15803d;color:white;padding:16px 24px;font-size:22px;font-weight:900;\">무료 샘플 받기</button>\n</section>\n</main>\n</body>\n</html>",
+  "updatedAt": "2026-06-08T03:10:18.171Z"
+}

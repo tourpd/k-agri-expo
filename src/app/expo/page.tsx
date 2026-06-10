@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAutoHeroData } from "@/lib/expo/hero-auto";
 import { getMonthlyConsultQuestions } from "@/lib/expo/consult-queries";
@@ -328,6 +329,33 @@ type HomeSlotWithLink = HomeSlot & {
   meta_1?: string | null;
   meta_2?: string | null;
 };
+
+function JointGroupBuyBanner() {
+  return (
+    <section className="expo-section" style={{ padding: "18px 20px 0" }}>
+      <Link
+        href="/expo/health/joint"
+        style={{
+          maxWidth: 1160,
+          margin: "0 auto",
+          display: "block",
+          textDecoration: "none",
+        }}
+      >
+        <img
+          src="/images/health-joint-gonggu.png"
+          alt="농민 관절건강 공동구매"
+          style={{
+            width: "100%",
+            display: "block",
+            borderRadius: 28,
+            boxShadow: "0 18px 45px rgba(15,23,42,0.18)",
+          }}
+        />
+      </Link>
+    </section>
+  );
+}
 
 function safe(v: unknown, fallback = "") {
   const s = String(v || "").trim();
@@ -1095,6 +1123,9 @@ export default async function ExpoIndexPage() {
         heroSubtitle={heroSubtitle}
         heroDescription={heroDescription}
       />
+
+      <JointGroupBuyBanner />
+
 
       <section className="expo-section" style={{ padding: "16px 20px 0" }}>
         <ExpoCategoryEntrySection />
