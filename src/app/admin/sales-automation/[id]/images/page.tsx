@@ -108,7 +108,7 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
 
         <h1 className="mt-4 text-5xl font-black">Gemini 이미지 생성센터</h1>
 
-        <p className="mt-3 text-xl font-bold text-stone-600">
+        <p className="mt-3 text-xl font-bold text-black">
           광고 훅과 상세페이지 섹션을 이미지 장면으로 바꿔 농민 구매욕구와 업체 만족도를 높입니다.
         </p>
 
@@ -132,14 +132,14 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
                     <span
                       className={`rounded-full px-3 py-1 text-sm font-black ${
                         item.status === "generated"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          ? "bg-white text-green-800"
+                          : "bg-white text-yellow-800"
                       }`}
                     >
                       {item.status === "generated" ? "생성완료" : "대기"}
                     </span>
                   </div>
-                  <p className="mt-2 text-base font-bold text-stone-600">
+                  <p className="mt-2 text-base font-bold text-black">
                     {item.hook}
                   </p>
                 </button>
@@ -157,7 +157,7 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => navigator.clipboard.writeText(selected.prompt)}
-                  className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-white"
+                  className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-black"
                 >
                   프롬프트 복사
                 </button>
@@ -202,7 +202,7 @@ export default function ImagesPage({ params }: { params: { id: string } }) {
               <div className="mt-5 flex min-h-[360px] items-center justify-center rounded-3xl bg-white p-8 text-center text-3xl font-black">
                 {selected.title}
                 <br />
-                <span className="mt-3 block text-xl text-stone-500">
+                <span className="mt-3 block text-xl text-black">
                   Gemini 생성 이미지가 여기에 들어갈 예정
                 </span>
               </div>

@@ -148,8 +148,16 @@ export default async function CropNutritionHallPage() {
                     {brand.main_category || "추천 브랜드관"}
                   </div>
 
-                  <div className="flex h-20 items-center justify-center rounded-2xl bg-stone-100 text-center text-xl font-extrabold text-stone-700">
-                    {brand.logo_url ? "브랜드 로고" : brand.brand_name}
+                  <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl bg-stone-100 p-4 text-center text-xl font-extrabold text-stone-700">
+                    {brand.logo_url ? (
+                      <img
+                        src={brand.logo_url}
+                        alt={`${brand.brand_name} 로고`}
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      brand.brand_name
+                    )}
                   </div>
 
                   <h3 className="mt-4 text-xl font-extrabold text-stone-900">

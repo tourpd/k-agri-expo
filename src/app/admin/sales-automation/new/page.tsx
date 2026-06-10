@@ -214,7 +214,7 @@ export default function SalesAutomationNewPage() {
         <section className="mt-8 rounded-3xl bg-white p-8 shadow-xl">
           <p className="text-lg font-black text-green-700">STEP 1</p>
           <h2 className="mt-2 text-4xl font-black">제품 자료 업로드</h2>
-          <p className="mt-3 text-xl font-bold text-stone-600">
+          <p className="mt-3 text-xl font-bold text-black">
             사진과 PDF에서 상품이미지, 비포애프터, 주의사항, 작물별 시비법,
             성분표를 분리하고 광고 훅에 맞는 구매욕구 이미지를 생성합니다.
           </p>
@@ -362,7 +362,7 @@ function UploadBox({
     <div className="rounded-3xl border-4 border-black bg-stone-50 p-8 text-center shadow-lg">
       <div className="text-5xl">{icon}</div>
       <h3 className="mt-4 text-2xl font-black">{title}</h3>
-      <p className="mt-3 text-lg font-bold text-stone-600">{desc}</p>
+      <p className="mt-3 text-lg font-bold text-black">{desc}</p>
 
       <input
         type="file"

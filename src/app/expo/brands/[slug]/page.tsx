@@ -218,7 +218,7 @@ return (
               <EmptyBox text="아직 노출 중인 제품이 없습니다." />
             ) : (
               productRows.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} brandId={brandRow.id} />
               ))
             )}
           </div>
@@ -255,7 +255,7 @@ return (
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({ product, brandId }: { product: Product; brandId: string }) {
   const orderHref = `/expo/brand-order?product_id=${encodeURIComponent(
     product.id
   )}`;
