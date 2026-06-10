@@ -88,7 +88,7 @@ export default function SalesAutomationPreviewPage({
               상세페이지 미리보기
             </h1>
 
-            <p className="mt-3 text-xl font-bold text-stone-600">
+            <p className="mt-3 text-xl font-bold text-black">
               업체가 보는 최종 상세페이지 느낌을 확인합니다.
             </p>
           </div>
@@ -118,7 +118,7 @@ export default function SalesAutomationPreviewPage({
 
             <Link
               href={`/admin/sales-automation/${params.id}/publish`}
-              className="rounded-2xl bg-stone-900 px-6 py-4 text-xl font-black text-white"
+              className="rounded-2xl bg-stone-900 px-6 py-4 text-xl font-black text-black"
             >
               저장/공개
             </Link>

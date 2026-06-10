@@ -28,19 +28,11 @@ function num(v: unknown) {
 export default async function BrandOrderPage({ searchParams }: Props) {
   const params = await searchParams;
 
-  const brandId = String(params.brand_id || "").trim();
+  const rawBrandId = String(params.brand_id || "").trim();
   const productId = String(params.product_id || "").trim();
   const eventId = String(params.event_id || "").trim();
 
   const supabase = createSupabaseAdminClient();
-
-  const { data: brand } = brandId
-    ? await supabase
-        .from("expo_brands")
-        .select("*")
-        .eq("id", brandId)
-        .maybeSingle()
-    : { data: null };
 
   const { data: product } = productId
     ? await supabase
@@ -60,6 +52,22 @@ export default async function BrandOrderPage({ searchParams }: Props) {
 
   const item = product || event;
   const isEvent = !!event && !product;
+
+  const resolvedBrandId =
+    rawBrandId ||
+    product?.brand_id ||
+    event?.brand_id ||
+    "";
+
+  const { data: brand } = resolvedBrandId
+    ? await supabase
+        .from("expo_brands")
+        .select("*")
+        .eq("id", resolvedBrandId)
+        .maybeSingle()
+    : { data: null };
+
+  const brandId = resolvedBrandId;
 
   if (!brand || !item) {
     return (

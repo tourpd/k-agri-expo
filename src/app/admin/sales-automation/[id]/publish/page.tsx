@@ -28,7 +28,7 @@ export default function PublishPage({
           AI 콘텐츠 발행센터
         </h1>
 
-        <p className="mt-3 text-xl font-bold text-stone-600">
+        <p className="mt-3 text-xl font-bold text-black">
           상세페이지 · 쇼츠 · 이미지 · 공동구매를
           최종 발행합니다.
         </p>
@@ -85,7 +85,7 @@ export default function PublishPage({
                 }
                 className={`rounded-2xl px-5 py-4 font-black ${
                   publishStatus === "draft"
-                    ? "bg-yellow-500 text-white"
+                    ? "bg-yellow-500 text-black"
                     : "bg-stone-100"
                 }`}
               >
@@ -111,7 +111,7 @@ export default function PublishPage({
                 }
                 className={`rounded-2xl px-5 py-4 font-black ${
                   publishStatus === "private"
-                    ? "bg-red-700 text-white"
+                    ? "bg-red-700 text-black"
                     : "bg-stone-100"
                 }`}
               >
@@ -226,7 +226,7 @@ function PublishCard({
   color: string;
 }) {
   return (
-    <div className={`${color} rounded-3xl p-6 text-white`}>
+    <div className={`${color} rounded-3xl p-6 text-black`}>
       <h3 className="text-2xl font-black">
         {title}
       </h3>

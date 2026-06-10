@@ -199,7 +199,7 @@ export default function SalesAutomationWorkspacePage({
               AI 상세페이지 편집 작업실
             </h1>
 
-            <p className="mt-3 text-xl font-bold text-stone-600">
+            <p className="mt-3 text-xl font-bold text-black">
               작업 ID: {params.id} / 이미지·문구·표·광고훅을 업체가 원하는 방향으로
               이동·수정·삭제·재구성합니다.
             </p>
@@ -208,7 +208,7 @@ export default function SalesAutomationWorkspacePage({
           <div className="grid gap-3 md:grid-cols-3">
             <Link
               href={`/admin/sales-automation/${params.id}/preview`}
-              className="rounded-2xl bg-stone-900 px-6 py-4 text-center text-xl font-black text-white"
+              className="rounded-2xl bg-stone-900 px-6 py-4 text-center text-xl font-black text-black"
             >
               미리보기
             </Link>
@@ -276,14 +276,14 @@ export default function SalesAutomationWorkspacePage({
                     <span
                       className={`rounded-full px-3 py-1 text-sm font-black ${
                         section.isVisible
-                          ? "bg-green-100 text-green-800"
-                          : "bg-stone-200 text-stone-500"
+                          ? "bg-white text-green-800"
+                          : "bg-stone-200 text-black"
                       }`}
                     >
                       {section.isVisible ? "노출" : "숨김"}
                     </span>
                   </div>
-                  <p className="mt-2 line-clamp-2 text-base font-bold text-stone-600">
+                  <p className="mt-2 line-clamp-2 text-base font-bold text-black">
                     {section.headline}
                   </p>
                 </button>
@@ -382,13 +382,13 @@ export default function SalesAutomationWorkspacePage({
                           : "bg-stone-50"
                     }`}
                   >
-                    <p className="text-sm font-black text-stone-500">
+                    <p className="text-sm font-black text-black">
                       {section.title}
                     </p>
                     <h4 className="mt-2 text-2xl font-black">
                       {section.headline}
                     </h4>
-                    <p className="mt-3 whitespace-pre-wrap text-lg font-bold leading-relaxed text-stone-700">
+                    <p className="mt-3 whitespace-pre-wrap text-lg font-bold leading-relaxed text-black">
                       {section.body}
                     </p>
                   </div>
@@ -447,7 +447,7 @@ function EditArea({
 
 function ActionButton({ label }: { label: string }) {
   return (
-    <button className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-white">
+    <button className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-black">
       {label}
     </button>
   );
@@ -463,7 +463,7 @@ function SmallButton({
   return (
     <button
       onClick={onClick}
-      className="rounded-xl bg-stone-900 px-4 py-3 text-base font-black text-white"
+      className="rounded-xl bg-stone-900 px-4 py-3 text-base font-black text-black"
     >
       {label}
     </button>

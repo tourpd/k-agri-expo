@@ -81,8 +81,8 @@ const sampleItems = [
 
 const statusClass: Record<Status, string> = {
   대기: "bg-stone-100 text-stone-800",
-  진행중: "bg-blue-100 text-blue-800",
-  완료: "bg-green-100 text-green-800",
+  진행중: "bg-white text-blue-800",
+  완료: "bg-white text-green-800",
 };
 
 export default function SalesAutomationPage() {
@@ -108,12 +108,12 @@ export default function SalesAutomationPage() {
   return (
     <main className="min-h-screen bg-[#f4f7f2] p-5 text-stone-950">
       <div className="mx-auto max-w-[1900px]">
-        <section className="rounded-3xl bg-gradient-to-r from-green-950 via-green-800 to-green-600 p-8 text-white shadow-2xl">
+        <section className="rounded-3xl bg-gradient-to-r from-green-950 via-green-800 to-green-600 p-8 text-black shadow-2xl">
           <p className="text-lg font-black text-green-100">K-Agri Expo</p>
 
           <div className="mt-3 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <h1 className="text-5xl font-black leading-tight">
+              <h1 className="text-5xl font-black leading-tight text-white">
                 🚜 K-Agri Expo AI 컨설팅
               </h1>
 
@@ -122,7 +122,7 @@ export default function SalesAutomationPage() {
                 AI가 기업, 제품, 사람, 콘텐츠, 매출 구조를 단계적으로 진단합니다.
               </p>
 
-              <p className="mt-5 rounded-2xl bg-white/15 p-4 text-2xl font-black">
+              <p className="mt-5 rounded-2xl bg-white/15 p-4 text-2xl font-black text-white">
                 회사 → 사람 → 콘텐츠 → 제품 → 광고 → 매출 → 브랜드
               </p>
             </div>
@@ -150,7 +150,7 @@ export default function SalesAutomationPage() {
 
         <section className="mt-8 rounded-3xl bg-white p-6 shadow-xl ring-1 ring-black/5">
           <h2 className="text-4xl font-black">🧭 AI 컨설팅 9단계</h2>
-          <p className="mt-2 text-xl font-bold text-stone-600">
+          <p className="mt-2 text-xl font-bold text-black">
             광고는 마지막 결과물입니다. 먼저 회사를 진단하고, 사람과 콘텐츠와 제품을 분석한 뒤 실행전략으로 넘어갑니다.
           </p>
 
@@ -169,7 +169,7 @@ export default function SalesAutomationPage() {
                 >
                   <p className="text-lg font-black">STEP {step.no}</p>
                   <p className="mt-2 text-2xl font-black">{step.title}</p>
-                  <p className={`mt-2 text-sm font-bold ${selected ? "text-green-50" : "text-stone-600"}`}>
+                  <p className={`mt-2 text-sm font-bold ${selected ? "text-green-50" : "text-black"}`}>
                     {step.desc}
                   </p>
                 </button>
@@ -185,7 +185,7 @@ export default function SalesAutomationPage() {
               <h2 className="mt-2 text-5xl font-black">
                 STEP {active.no}. {active.title}
               </h2>
-              <p className="mt-3 text-2xl font-bold text-stone-700">{active.desc}</p>
+              <p className="mt-3 text-2xl font-bold text-black">{active.desc}</p>
             </div>
 
             <Link
@@ -361,7 +361,7 @@ function UploadBox({ title, accept }: { title: string; accept: string }) {
 function SummaryCard({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-black/5">
-      <p className="text-lg font-black text-stone-500">{title}</p>
+      <p className="text-lg font-black text-black">{title}</p>
       <p className="mt-2 text-4xl font-black">{value}</p>
     </div>
   );
@@ -369,7 +369,7 @@ function SummaryCard({ title, value }: { title: string; value: string }) {
 
 function ActionButton({ label }: { label: string }) {
   return (
-    <button className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-white">
+    <button className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-black">
       {label}
     </button>
   );
@@ -378,7 +378,7 @@ function ActionButton({ label }: { label: string }) {
 function Result({ title, value, desc }: { title: string; value: string; desc: string }) {
   return (
     <div className="rounded-3xl bg-green-50 p-5">
-      <p className="text-xl font-black text-stone-700">{title}</p>
+      <p className="text-xl font-black text-black">{title}</p>
       <p className="mt-2 text-4xl font-black text-green-700">{value}</p>
       <p className="mt-3 text-lg font-bold">{desc}</p>
     </div>
