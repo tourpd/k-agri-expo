@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI PDF temporary job files
+data/ai-pdf-jobs/
+uploads/
+tmp/
+temp/
+*.pdf
