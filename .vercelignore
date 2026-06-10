@@ -1,0 +1,15 @@
+.next
+node_modules
+.git
+.DS_Store
+.env.local
+.env
+npm-debug.log
+yarn-error.log
+.pnpm-store
+.vercel/output
+tmp
+temp
+uploads
+public/uploads
+*.log
