@@ -432,17 +432,30 @@ export default async function VendorManagePage() {
             </div>
 
             <div style={S.actionRow}>
-              <Link href={boothEditorHref} style={S.primaryBtn}>
-                부스 편집하기 →
-              </Link>
-              <Link href={publicBoothHref} style={S.secondaryBtn}>
-                공개 부스 보기
-              </Link>
-              <Link href={hallHref} style={S.secondaryBtn}>
-                전시장 보기
-              </Link>
-            </div>
-          </div>
+  <Link
+    href="/vendor/auto-import"
+    style={{
+      ...S.primaryBtn,
+      background: "#16a34a",
+    }}
+  >
+    🤖 AI 자동입점센터
+  </Link>
+
+  <Link href={boothEditorHref} style={S.primaryBtn}>
+    부스 편집하기 →
+  </Link>
+
+  <Link href={publicBoothHref} style={S.secondaryBtn}>
+    공개 부스 보기
+  </Link>
+
+  <Link href={hallHref} style={S.secondaryBtn}>
+    전시장 보기
+  </Link>
+</div>
+
+</div>
 
           <div style={S.boothHeroRight}>
             {boothImage ? (

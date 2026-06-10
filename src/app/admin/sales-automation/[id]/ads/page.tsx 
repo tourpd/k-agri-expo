@@ -1,0 +1,767 @@
+"use client";
+
+import Link from "next/link";
+
+import { useState } from "react";
+
+export const dynamic = "force-dynamic";
+
+type ShortsItem = {
+
+  id: string;
+
+  title: string;
+
+  concept: string;
+
+  hook: string;
+
+  scene1: string;
+
+  scene2: string;
+
+  scene3: string;
+
+  cta: string;
+
+  veoPrompt: string;
+
+  status: "draft" | "selected" | "rejected";
+
+};
+
+const initialShorts: ShortsItem[] = [
+
+  {
+
+    id: "SHORTS_01",
+
+    title: "오늘까지여",
+
+    concept: "공동구매 마감형",
+
+    hook: "오늘까지여~",
+
+    scene1: "이장님이 급하게 마을회관 앞에서 손짓한다.",
+
+    scene2: "박씨가 놀라서 묻는다. “뭐가 오늘까진디유?”",
+
+    scene3: "이장님이 제품을 들어 보인다. 박씨가 바로 반응한다.",
+
+    cta: "그럼 나도 끼워줘유!",
+
+    veoPrompt:
+
+      "9:16 vertical, 8K ultra realistic, Korean rural village hall, village chief holding agricultural product, funny rural sitcom mood, cinematic camera, no subtitles, no watermark, product appears naturally in last 3 seconds",
+
+    status: "selected",
+
+  },
+
+  {
+
+    id: "SHORTS_02",
+
+    title: "옆집은 멀쩡한디",
+
+    concept: "옆집 비교형",
+
+    hook: "옆집은 멀쩡한디...",
+
+    scene1: "박씨가 자기 밭과 옆집 밭을 번갈아 본다.",
+
+    scene2: "영희 아줌마가 옆에서 한마디 한다. “말 안 들으니께 그렇쥬~”",
+
+    scene3: "이성준 회장이 원인을 짚어준다.",
+
+    cta: "비교되기 전에 준비하슈.",
+
+    veoPrompt:
+
+      "9:16 vertical, split comparison of two Korean crop fields, one weak and one healthy, funny but realistic farmer reaction, rural sitcom tone, no subtitles, no watermark",
+
+    status: "draft",
+
+  },
+
+  {
+
+    id: "SHORTS_03",
+
+    title: "몽몽이 사고쳤슈",
+
+    concept: "코믹 반전형",
+
+    hook: "몽몽아! 거긴 왜 들어갔슈!",
+
+    scene1: "몽몽이가 밭 사이를 뛰어다닌다.",
+
+    scene2: "박씨가 쫓아가다 병든 잎을 발견한다.",
+
+    scene3: "영희가 말한다. “개도 아는 걸 박씨만 몰랐네유.”",
+
+    cta: "병 오기 전에 보셔유.",
+
+    veoPrompt:
+
+      "9:16 vertical, cute mischievous dog running through Korean pepper field, farmer surprised, rural sitcom comedy, warm cinematic look, no subtitles, no watermark",
+
+    status: "draft",
+
+  },
+
+  {
+
+    id: "SHORTS_04",
+
+    title: "전문가 등장",
+
+    concept: "갑자기 전문가형",
+
+    hook: "뿌리가 못 먹으면 끝이여.",
+
+    scene1: "박씨가 비료포대를 들고 고민한다.",
+
+    scene2: "갑자기 이성준 회장이 등장해 원인을 설명한다.",
+
+    scene3: "밭 상태를 보며 관리 포인트를 짚는다.",
+
+    cta: "원인부터 확인하슈.",
+
+    veoPrompt:
+
+      "9:16 vertical, Korean agricultural expert suddenly appears in field, explains crop root problem to farmer, documentary plus shorts meme style, no subtitles, no watermark",
+
+    status: "draft",
+
+  },
+
+  {
+
+    id: "SHORTS_05",
+
+    title: "몬드리안 상세페이지",
+
+    concept: "상세페이지 이미지형",
+
+    hook: "글보다 그림이 빨라유.",
+
+    scene1: "복잡한 PDF가 화면에 쌓여 있다.",
+
+    scene2: "AI가 제품사진, 주의사항, 시비법을 카드로 나눈다.",
+
+    scene3: "몬드리안 스타일 상세페이지가 완성된다.",
+
+    cta: "업체가 좋아하는 상세페이지로 바꾸슈.",
+
+    veoPrompt:
+
+      "9:16 vertical, Mondrian inspired ecommerce detail page blocks, agricultural product image cards, before-after card, dosage guide card, premium commercial design, no text, no watermark",
+
+    status: "draft",
+
+  },
+
+];
+
+export default function ShortsPage({ params }: { params: { id: string } }) {
+
+  const [items, setItems] = useState<ShortsItem[]>(initialShorts);
+
+  const [selectedId, setSelectedId] = useState(items[0].id);
+
+  const [request, setRequest] = useState(
+
+    "더 짧게 / 더 웃기게 / 첫 2초 강하게 / 제품은 마지막에 / 자막 없이 영상 먼저"
+
+  );
+
+  const selected = items.find((item) => item.id === selectedId) || items[0];
+
+  function updateItem(id: string, patch: Partial<ShortsItem>) {
+
+    setItems((prev) =>
+
+      prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
+
+    );
+
+  }
+
+  function addShorts() {
+
+    const id = `SHORTS_${Date.now()}`;
+
+    const next: ShortsItem = {
+
+      id,
+
+      title: "새 쇼츠",
+
+      concept: "새 컨셉",
+
+      hook: "첫 2초 후킹 문구",
+
+      scene1: "0~3초 장면",
+
+      scene2: "3~10초 장면",
+
+      scene3: "10~17초 장면",
+
+      cta: "17~20초 CTA",
+
+      veoPrompt:
+
+        "9:16 vertical, 8K ultra realistic, Korean agriculture commercial shorts, cinematic, no subtitles, no watermark",
+
+      status: "draft",
+
+    };
+
+    setItems((prev) => [...prev, next]);
+
+    setSelectedId(id);
+
+  }
+
+  function removeShorts(id: string) {
+
+    setItems((prev) => prev.filter((item) => item.id !== id));
+
+    setSelectedId(items[0]?.id || "");
+
+  }
+
+  return (
+
+    <main className="min-h-screen bg-[#f4f7f2] p-5 text-stone-950">
+
+      <div className="mx-auto max-w-[1800px]">
+
+        <Link
+
+          href={`/admin/sales-automation/${params.id}/workspace`}
+
+          className="text-xl font-black text-green-700"
+
+        >
+
+          ← 편집 작업실
+
+        </Link>
+
+        <div className="mt-4 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+
+          <div>
+
+            <h1 className="text-5xl font-black">쇼츠 제작센터</h1>
+
+            <p className="mt-3 text-xl font-bold text-stone-600">
+
+              0~3초 후킹, 장면 구성, CTA, Veo 프롬프트를 편집합니다.
+
+            </p>
+
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+
+            <Link
+
+              href={`/admin/sales-automation/${params.id}/ads`}
+
+              className="rounded-2xl bg-red-700 px-6 py-4 text-xl font-black text-white"
+
+            >
+
+              광고센터
+
+            </Link>
+
+            <Link
+
+              href={`/admin/sales-automation/${params.id}/videos`}
+
+              className="rounded-2xl bg-purple-700 px-6 py-4 text-xl font-black text-white"
+
+            >
+
+              영상센터
+
+            </Link>
+
+          </div>
+
+        </div>
+
+        <section className="mt-8 rounded-3xl bg-white p-6 shadow-xl">
+
+          <h2 className="text-3xl font-black">쇼츠 수정 요청</h2>
+
+          <textarea
+
+            value={request}
+
+            onChange={(e) => setRequest(e.target.value)}
+
+            rows={4}
+
+            className="mt-4 w-full rounded-3xl border border-stone-300 bg-yellow-50 p-5 text-xl font-bold"
+
+            placeholder="예: 더 웃기게 / 첫 2초 강하게 / 농민 말투로 / 제품은 마지막에 / 자막 없이"
+
+          />
+
+          <div className="mt-4 flex flex-wrap gap-3">
+
+            <ActionButton label="선택 쇼츠 재작성" />
+
+            <ActionButton label="후킹만 다시" />
+
+            <ActionButton label="Veo 프롬프트 강화" />
+
+            <ActionButton label="15초 버전" />
+
+            <ActionButton label="30초 버전" />
+
+          </div>
+
+        </section>
+
+        <div className="mt-8 grid gap-6 xl:grid-cols-[420px_1fr_480px]">
+
+          <section className="rounded-3xl bg-white p-5 shadow-xl">
+
+            <div className="flex items-center justify-between">
+
+              <h2 className="text-3xl font-black">쇼츠 목록</h2>
+
+              <button
+
+                onClick={addShorts}
+
+                className="rounded-2xl bg-green-700 px-4 py-3 text-lg font-black text-white"
+
+              >
+
+                + 추가
+
+              </button>
+
+            </div>
+
+            <div className="mt-5 grid gap-3">
+
+              {items.map((item) => (
+
+                <button
+
+                  key={item.id}
+
+                  onClick={() => setSelectedId(item.id)}
+
+                  className={`rounded-2xl border-2 p-4 text-left ${
+
+                    selectedId === item.id
+
+                      ? "border-black bg-stone-100"
+
+                      : "border-stone-200 bg-stone-50"
+
+                  }`}
+
+                >
+
+                  <div className="flex items-center justify-between gap-3">
+
+                    <p className="text-lg font-black">{item.title}</p>
+
+                    <span
+
+                      className={`rounded-full px-3 py-1 text-sm font-black ${
+
+                        item.status === "selected"
+
+                          ? "bg-green-100 text-green-800"
+
+                          : item.status === "rejected"
+
+                            ? "bg-red-100 text-red-800"
+
+                            : "bg-yellow-100 text-yellow-800"
+
+                      }`}
+
+                    >
+
+                      {item.status === "selected"
+
+                        ? "채택"
+
+                        : item.status === "rejected"
+
+                          ? "탈락"
+
+                          : "초안"}
+
+                    </span>
+
+                  </div>
+
+                  <p className="mt-2 text-base font-bold text-stone-600">
+
+                    {item.hook}
+
+                  </p>
+
+                </button>
+
+              ))}
+
+            </div>
+
+          </section>
+
+          <section className="rounded-3xl bg-white p-6 shadow-xl">
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+
+              <h2 className="text-3xl font-black">쇼츠 편집</h2>
+
+              <div className="flex flex-wrap gap-2">
+
+                <SmallButton
+
+                  label="채택"
+
+                  onClick={() => updateItem(selected.id, { status: "selected" })}
+
+                />
+
+                <SmallButton
+
+                  label="탈락"
+
+                  onClick={() => updateItem(selected.id, { status: "rejected" })}
+
+                />
+
+                <SmallButton label="삭제" onClick={() => removeShorts(selected.id)} />
+
+              </div>
+
+            </div>
+
+            <div className="mt-6 grid gap-5">
+
+              <EditField
+
+                label="제목"
+
+                value={selected.title}
+
+                onChange={(v) => updateItem(selected.id, { title: v })}
+
+              />
+
+              <EditField
+
+                label="컨셉"
+
+                value={selected.concept}
+
+                onChange={(v) => updateItem(selected.id, { concept: v })}
+
+              />
+
+              <EditField
+
+                label="0~3초 후킹"
+
+                value={selected.hook}
+
+                onChange={(v) => updateItem(selected.id, { hook: v })}
+
+              />
+
+              <EditArea
+
+                label="0~3초 장면"
+
+                value={selected.scene1}
+
+                onChange={(v) => updateItem(selected.id, { scene1: v })}
+
+              />
+
+              <EditArea
+
+                label="3~10초 장면"
+
+                value={selected.scene2}
+
+                onChange={(v) => updateItem(selected.id, { scene2: v })}
+
+              />
+
+              <EditArea
+
+                label="10~17초 장면"
+
+                value={selected.scene3}
+
+                onChange={(v) => updateItem(selected.id, { scene3: v })}
+
+              />
+
+              <EditField
+
+                label="17~20초 CTA"
+
+                value={selected.cta}
+
+                onChange={(v) => updateItem(selected.id, { cta: v })}
+
+              />
+
+              <EditArea
+
+                label="Veo 영상 프롬프트"
+
+                value={selected.veoPrompt}
+
+                onChange={(v) => updateItem(selected.id, { veoPrompt: v })}
+
+              />
+
+            </div>
+
+          </section>
+
+          <section className="rounded-3xl bg-white p-5 shadow-xl">
+
+            <h2 className="text-3xl font-black">세로 쇼츠 미리보기</h2>
+
+            <div className="mx-auto mt-5 max-w-[360px] overflow-hidden rounded-[2rem] border-4 border-black bg-black text-white shadow-2xl">
+
+              <div className="bg-yellow-300 p-5 text-black">
+
+                <p className="text-sm font-black">{selected.concept}</p>
+
+                <h3 className="mt-2 text-3xl font-black leading-tight">
+
+                  {selected.hook}
+
+                </h3>
+
+              </div>
+
+              <PreviewScene label="0~3초" text={selected.scene1} />
+
+              <PreviewScene label="3~10초" text={selected.scene2} />
+
+              <PreviewScene label="10~17초" text={selected.scene3} />
+
+              <div className="bg-green-700 p-5 text-center">
+
+                <p className="text-2xl font-black">{selected.cta}</p>
+
+              </div>
+
+            </div>
+
+            <div className="mt-5 grid gap-3">
+
+              <button
+
+                onClick={() => navigator.clipboard.writeText(selected.veoPrompt)}
+
+                className="rounded-2xl bg-purple-700 px-5 py-4 text-lg font-black text-white"
+
+              >
+
+                Veo 프롬프트 복사
+
+              </button>
+
+              <button
+
+                onClick={() =>
+
+                  navigator.clipboard.writeText(
+
+                    `${selected.hook}\n\n${selected.scene1}\n\n${selected.scene2}\n\n${selected.scene3}\n\n${selected.cta}`
+
+                  )
+
+                }
+
+                className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-white"
+
+              >
+
+                쇼츠 대본 복사
+
+              </button>
+
+            </div>
+
+          </section>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  );
+
+}
+
+function PreviewScene({ label, text }: { label: string; text: string }) {
+
+  return (
+
+    <div className="border-t-4 border-white/20 p-5">
+
+      <p className="text-sm font-black text-yellow-300">{label}</p>
+
+      <p className="mt-2 whitespace-pre-wrap text-lg font-bold leading-relaxed">
+
+        {text}
+
+      </p>
+
+    </div>
+
+  );
+
+}
+
+function EditField({
+
+  label,
+
+  value,
+
+  onChange,
+
+}: {
+
+  label: string;
+
+  value: string;
+
+  onChange: (v: string) => void;
+
+}) {
+
+  return (
+
+    <label className="block">
+
+      <p className="mb-2 text-xl font-black">{label}</p>
+
+      <input
+
+        value={value}
+
+        onChange={(e) => onChange(e.target.value)}
+
+        className="w-full rounded-2xl border border-stone-300 p-4 text-xl font-bold"
+
+      />
+
+    </label>
+
+  );
+
+}
+
+function EditArea({
+
+  label,
+
+  value,
+
+  onChange,
+
+}: {
+
+  label: string;
+
+  value: string;
+
+  onChange: (v: string) => void;
+
+}) {
+
+  return (
+
+    <label className="block">
+
+      <p className="mb-2 text-xl font-black">{label}</p>
+
+      <textarea
+
+        value={value}
+
+        onChange={(e) => onChange(e.target.value)}
+
+        rows={5}
+
+        className="w-full rounded-2xl border border-stone-300 p-4 text-lg font-bold leading-relaxed"
+
+      />
+
+    </label>
+
+  );
+
+}
+
+function ActionButton({ label }: { label: string }) {
+
+  return (
+
+    <button className="rounded-2xl bg-stone-900 px-5 py-4 text-lg font-black text-white">
+
+      {label}
+
+    </button>
+
+  );
+
+}
+
+function SmallButton({
+
+  label,
+
+  onClick,
+
+}: {
+
+  label: string;
+
+  onClick: () => void;
+
+}) {
+
+  return (
+
+    <button
+
+      onClick={onClick}
+
+      className="rounded-xl bg-stone-900 px-4 py-3 text-base font-black text-white"
+
+    >
+
+      {label}
+
+    </button>
+
+  );
+
+}

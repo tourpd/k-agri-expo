@@ -28,11 +28,13 @@ type RequestBody = {
   representative_name?: string;
   ceo_name?: string;
   contact_name?: string;
+
   email?: string;
   contact_email?: string;
   phone?: string;
   contact_phone?: string;
   tax_email?: string;
+
   business_number?: string;
   open_date?: string;
   business_address?: string;
@@ -42,27 +44,9 @@ type RequestBody = {
   biz_item?: string;
   business_item?: string;
 
-  category_primary?: string;
-  company_intro?: string;
-  website_url?: string;
-  youtube_url?: string;
-  brochure_url?: string;
-
   preferred_hall_1?: string;
   preferred_hall_2?: string | null;
-  preferred_category?: string;
-
-  placement_preference?: string;
-  placementPreference?: string;
-  position_preference?: string;
-  positionPreference?: string;
-
-  promotion_preference?: string;
-  promotionPreference?: string;
-  exposure_preference?: string;
-  exposurePreference?: string;
-  featured_preference?: string;
-  featuredPreference?: string;
+  preferred_category?: string | null;
 
   source_file_name?: string;
   source_file_mime?: string;
@@ -90,9 +74,7 @@ const PLAN_MONTHS_MAP: Record<ProductCode, number> = {
 
 function getEnv(name: string) {
   const value = process.env[name]?.trim();
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
+  if (!value) throw new Error(`Missing environment variable: ${name}`);
   return value;
 }
 
@@ -158,8 +140,10 @@ function buildApplicationCode() {
   return `VAP-${yyyy}${mm}${dd}-${rand}`;
 }
 
-function buildStoragePublicUrl(bucket: string, path: string) {
-  return `${getEnv("NEXT_PUBLIC_SUPABASE_URL")}/storage/v1/object/public/${bucket}/${path}`;
+function buildStoragePublicUrl(bucket: string, filePath: string) {
+  return `${getEnv(
+    "NEXT_PUBLIC_SUPABASE_URL"
+  )}/storage/v1/object/public/${bucket}/${filePath}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -192,16 +176,15 @@ export async function POST(req: NextRequest) {
         ? body.amount_krw
         : PLAN_AMOUNT_MAP[planCode] ?? 0;
 
-    const userId = nullableTrim(body.user_id);
-
     const companyName = safeTrim(body.company_name);
+
     const representativeName =
       safeTrim(body.representative_name) || safeTrim(body.ceo_name);
+
     const contactName =
       safeTrim(body.contact_name) || representativeName || companyName;
 
-    const contactEmail =
-      safeTrim(body.contact_email) || safeTrim(body.email);
+    const contactEmail = safeTrim(body.contact_email) || safeTrim(body.email);
 
     const contactPhone =
       digitsOnly(body.contact_phone) || digitsOnly(body.phone);
@@ -209,61 +192,17 @@ export async function POST(req: NextRequest) {
     const taxEmail =
       nullableTrim(body.tax_email) ||
       nullableTrim(body.contact_email) ||
-      nullableTrim(body.email) ||
-      "temp@no-email.com";
+      nullableTrim(body.email);
 
     const businessNumber = digitsOnly(body.business_number).slice(0, 10);
-    const openDate = nullableTrim(body.open_date);
-
     const businessAddress =
-      safeTrim(body.business_address) || safeTrim(body.address);
+      nullableTrim(body.business_address) || nullableTrim(body.address);
 
     const bizType =
-      safeTrim(body.biz_type) ||
-      safeTrim(body.business_type) ||
-      "기타";
+      nullableTrim(body.biz_type) || nullableTrim(body.business_type);
 
     const bizItem =
-      nullableTrim(body.biz_item) ||
-      nullableTrim(body.business_item) ||
-      bizType ||
-      "기타";
-
-    const categoryPrimary =
-      nullableTrim(body.category_primary) ||
-      nullableTrim(body.preferred_category) ||
-      "other";
-
-    const companyIntro =
-      nullableTrim(body.company_intro) || "회사 소개 미입력";
-
-    const websiteUrl = nullableTrim(body.website_url);
-    const youtubeUrl = nullableTrim(body.youtube_url);
-    const brochureUrl = nullableTrim(body.brochure_url);
-
-    const preferredHall1 = nullableTrim(body.preferred_hall_1);
-    const preferredHall2 = nullableTrim(body.preferred_hall_2);
-    const preferredCategory = nullableTrim(body.preferred_category);
-
-    const placementPreference =
-      safeTrim(body.placement_preference) ||
-      safeTrim(body.placementPreference) ||
-      safeTrim(body.position_preference) ||
-      safeTrim(body.positionPreference) ||
-      "category_cluster";
-
-    const promotionPreference =
-      safeTrim(body.promotion_preference) ||
-      safeTrim(body.promotionPreference) ||
-      safeTrim(body.exposure_preference) ||
-      safeTrim(body.exposurePreference) ||
-      safeTrim(body.featured_preference) ||
-      safeTrim(body.featuredPreference) ||
-      "standard";
-
-    const sourceFileName = nullableTrim(body.source_file_name);
-    const sourceFileMime = nullableTrim(body.source_file_mime);
-    const sourceExtractedJson = body.source_extracted_json ?? null;
+      nullableTrim(body.biz_item) || nullableTrim(body.business_item);
 
     const businessLicenseBucket = nullableTrim(body.business_license_bucket);
     const businessLicensePath = nullableTrim(body.business_license_path);
@@ -296,7 +235,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!taxEmail || !isValidEmail(taxEmail)) {
+    if (taxEmail && !isValidEmail(taxEmail)) {
       return NextResponse.json(
         { success: false, error: "세금계산서 이메일 형식이 올바르지 않습니다." },
         { status: 400 }
@@ -317,9 +256,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!bizType) {
+      return NextResponse.json(
+        { success: false, error: "업태는 필수입니다." },
+        { status: 400 }
+      );
+    }
+
+    if (!bizItem) {
+      return NextResponse.json(
+        { success: false, error: "종목은 필수입니다." },
+        { status: 400 }
+      );
+    }
+
     if (!businessLicenseBucket || !businessLicensePath) {
       return NextResponse.json(
-        { success: false, error: "사업자등록증 업로드 정보가 없습니다." },
+        { success: false, error: "사업자등록증 업로드는 필수입니다." },
         { status: 400 }
       );
     }
@@ -327,9 +280,13 @@ export async function POST(req: NextRequest) {
     const applicationCode = buildApplicationCode();
     const nowIso = new Date().toISOString();
 
+    const businessLicenseUrl = buildStoragePublicUrl(
+      businessLicenseBucket,
+      businessLicensePath
+    );
+
     const insertPayload = {
-      // UUID 컬럼 application_id는 넣지 않음
-      user_id: userId,
+      user_id: nullableTrim(body.user_id),
 
       application_code: applicationCode,
       order_code: applicationCode,
@@ -350,10 +307,10 @@ export async function POST(req: NextRequest) {
       contact_email: contactEmail,
       phone: contactPhone,
       contact_phone: contactPhone,
-      tax_email: taxEmail,
+      tax_email: taxEmail || contactEmail,
 
       business_number: businessNumber,
-      open_date: openDate,
+      open_date: nullableTrim(body.open_date),
       business_address: businessAddress,
 
       biz_type: bizType,
@@ -361,33 +318,34 @@ export async function POST(req: NextRequest) {
       biz_item: bizItem,
       business_item: bizItem,
 
-      category_primary: categoryPrimary,
-      company_intro: companyIntro,
-      intro: companyIntro,
+      category_primary: nullableTrim(body.preferred_category) || "other",
+      company_intro: "입점 신청 단계에서는 회사소개 미입력",
+      intro: "입점 신청 단계에서는 회사소개 미입력",
 
-      website_url: websiteUrl,
-      youtube_url: youtubeUrl,
-      brochure_url: brochureUrl,
+      website_url: null,
+      youtube_url: null,
+      brochure_url: null,
 
-      source_file_name: sourceFileName,
-      source_file_mime: sourceFileMime,
-      source_extracted_json: sourceExtractedJson,
+      source_file_name: nullableTrim(body.source_file_name),
+      source_file_mime: nullableTrim(body.source_file_mime),
+      source_extracted_json: {
+        ...(body.source_extracted_json ?? {}),
+        application_type: "vendor_apply",
+        onboarding_after_approval: true,
+      },
 
       business_license_bucket: businessLicenseBucket,
       business_license_path: businessLicensePath,
-      business_license_url: buildStoragePublicUrl(
-        businessLicenseBucket,
-        businessLicensePath
-      ),
+      business_license_url: businessLicenseUrl,
 
-      preferred_hall_1: preferredHall1,
-      preferred_hall_2: preferredHall2,
-      preferred_category: preferredCategory,
+      preferred_hall_1: nullableTrim(body.preferred_hall_1),
+      preferred_hall_2: nullableTrim(body.preferred_hall_2),
+      preferred_category: nullableTrim(body.preferred_category) || "other",
 
-      placement_preference: placementPreference,
-      promotion_preference: promotionPreference,
-      position_preference: placementPreference,
-      exposure_preference: promotionPreference,
+      placement_preference: "operator_recommended",
+      promotion_preference: "standard",
+      position_preference: "operator_recommended",
+      exposure_preference: "standard",
 
       status: "pending",
       application_status: "pending",
@@ -414,8 +372,8 @@ export async function POST(req: NextRequest) {
       provisioned_vendor_id: null,
       provisioned_booth_id: null,
 
-      admin_note: null,
-      hall_preference: null,
+      admin_note: "K-Agri Expo 입점 신청",
+      hall_preference: nullableTrim(body.preferred_hall_1),
 
       created_at: nowIso,
       updated_at: nowIso,
@@ -425,7 +383,8 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from("vendor_applications_v2")
       .insert(insertPayload)
-      .select(`
+      .select(
+        `
         application_id,
         application_code,
         order_code,
@@ -435,7 +394,8 @@ export async function POST(req: NextRequest) {
         payment_status,
         booth_progress_status,
         user_id
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -473,9 +433,7 @@ export async function POST(req: NextRequest) {
       {
         success: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "서버 오류가 발생했습니다.",
+          error instanceof Error ? error.message : "서버 오류가 발생했습니다.",
       },
       { status: 500 }
     );

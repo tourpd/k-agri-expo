@@ -1,8 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+
+type SourceExtractedJson = {
+  plan_type?: string;
+  plan_name?: string;
+  billing_cycle?: string;
+  billing_label?: string;
+  product_limit?: string;
+  [key: string]: unknown;
+};
 
 type OrderStatusItem = {
   application_id: string;
@@ -24,6 +33,7 @@ type OrderStatusItem = {
   provision_result: string | null;
   provisioned_booth_id: string | null;
   created_at: string | null;
+  source_extracted_json?: SourceExtractedJson | null;
 };
 
 const OPERATIONS = {
@@ -42,35 +52,123 @@ function formatDateTime(value?: string | null) {
   return d.toLocaleString("ko-KR");
 }
 
-function getBoothLabel(boothType?: string | null) {
-  switch (boothType) {
+function getPlanTypeLabel(planType?: string | null) {
+  switch (planType) {
     case "free":
       return "무료 체험";
-    case "basic":
-      return "일반 부스";
-    case "premium":
-      return "프리미엄 부스";
+    case "bronze":
+      return "브론즈";
+    case "silver":
+      return "실버";
+    case "gold":
+      return "골드";
+    case "enterprise":
+      return "엔터프라이즈";
     default:
-      return "-";
+      return "";
   }
 }
 
-function getDurationLabel(durationKey?: string | null) {
-  switch (durationKey) {
-    case "1m":
-      return "1개월";
-    case "3m":
-      return "3개월";
-    default:
-      return "-";
+function inferPlanType(result?: OrderStatusItem | null) {
+  if (!result) return "";
+
+  const source = result.source_extracted_json || {};
+  const sourcePlanType = String(source.plan_type || "").trim();
+
+  if (sourcePlanType) return sourcePlanType;
+
+  const sourcePlanName = String(source.plan_name || "").trim();
+
+  if (sourcePlanName.includes("엔터프라이즈")) return "enterprise";
+  if (sourcePlanName.includes("무료")) return "free";
+  if (sourcePlanName.includes("브론즈")) return "bronze";
+  if (sourcePlanName.includes("실버")) return "silver";
+  if (sourcePlanName.includes("골드")) return "gold";
+
+  if (result.booth_type === "free") return "free";
+
+  if (result.booth_type === "basic" && result.amount_krw === 50000) {
+    return "bronze";
   }
+
+  if (result.booth_type === "basic" && result.amount_krw === 120000) {
+    return "silver";
+  }
+
+  if (result.booth_type === "premium" && Number(result.amount_krw || 0) > 0) {
+    return "gold";
+  }
+
+  if (result.booth_type === "premium" && Number(result.amount_krw || 0) === 0) {
+    return "enterprise";
+  }
+
+  return "";
 }
 
-function getProductLabel(boothType?: string | null, durationKey?: string | null) {
-  const booth = getBoothLabel(boothType);
-  const duration = getDurationLabel(durationKey);
-  if (booth === "-" || duration === "-") return "-";
-  return `${booth} · ${duration}`;
+function getDisplayPlan(result?: OrderStatusItem | null) {
+  if (!result) {
+    return {
+      planType: "",
+      planName: "-",
+      billingLabel: "-",
+      productLimit: "",
+      productLabel: "-",
+      amountLabel: "-",
+      isEnterprise: false,
+      isFree: false,
+    };
+  }
+
+  const source = result.source_extracted_json || {};
+  const planType = inferPlanType(result);
+  const planName =
+    String(source.plan_name || "").trim() ||
+    getPlanTypeLabel(planType) ||
+    "-";
+
+  const isEnterprise = planType === "enterprise";
+  const isFree = planType === "free";
+
+  const billingLabel = isEnterprise
+    ? "별도 협의"
+    : isFree
+    ? "30일 무료체험"
+    : String(source.billing_label || "").trim() ||
+      (source.billing_cycle === "yearly"
+        ? "1년 계약 일시불 · 20% 할인"
+        : "월결제");
+
+  const productLimit =
+    String(source.product_limit || "").trim() ||
+    (isEnterprise
+      ? "제품 무제한"
+      : isFree
+      ? "제품 1개"
+      : planType === "bronze"
+      ? "제품 5개"
+      : planType === "silver"
+      ? "제품 10개"
+      : planType === "gold"
+      ? "제품 20개"
+      : "");
+
+  const amountLabel = isEnterprise ? "별도 협의" : formatKrw(result.amount_krw);
+
+  const productLabel = isEnterprise
+    ? "엔터프라이즈 · 별도 협의"
+    : `${planName} · ${billingLabel}`;
+
+  return {
+    planType,
+    planName,
+    billingLabel,
+    productLimit,
+    productLabel,
+    amountLabel,
+    isEnterprise,
+    isFree,
+  };
 }
 
 function getStatusLabel(status?: string | null) {
@@ -97,15 +195,27 @@ function getStatusClass(status?: string | null) {
   }
 }
 
-function getPaymentLabel(paymentConfirmed?: boolean | null, amountKrw?: number | null) {
+function getPaymentLabel(
+  paymentConfirmed?: boolean | null,
+  amountKrw?: number | null,
+  isEnterprise?: boolean
+) {
+  if (isEnterprise) return "별도 협의";
   if (Number(amountKrw || 0) === 0) return "결제 없음";
   return paymentConfirmed ? "입금 확인 완료" : "입금 대기";
 }
 
-function getPaymentClass(paymentConfirmed?: boolean | null, amountKrw?: number | null) {
+function getPaymentClass(
+  paymentConfirmed?: boolean | null,
+  amountKrw?: number | null,
+  isEnterprise?: boolean
+) {
+  if (isEnterprise) return "bg-cyan-100 text-cyan-800 border-cyan-200";
+
   if (Number(amountKrw || 0) === 0) {
     return "bg-slate-100 text-slate-700 border-slate-200";
   }
+
   return paymentConfirmed
     ? "bg-emerald-100 text-emerald-800 border-emerald-200"
     : "bg-amber-100 text-amber-800 border-amber-200";
@@ -148,6 +258,13 @@ function VendorOrderStatusInner() {
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<OrderStatusItem | null>(null);
 
+  const display = useMemo(() => getDisplayPlan(result), [result]);
+
+  const canGoToBooth =
+    result?.status === "approved" &&
+    result?.provision_status === "completed" &&
+    !!result?.provisioned_booth_id;
+
   async function handleSearch() {
     setLoading(true);
     setMessage("");
@@ -171,6 +288,7 @@ function VendorOrderStatusInner() {
         qs ? `/api/vendor/order-status?${qs}` : "/api/vendor/order-status",
         { cache: "no-store" }
       );
+
       const json = await res.json();
 
       if (!res.ok || !json?.success) {
@@ -187,17 +305,20 @@ function VendorOrderStatusInner() {
     }
   }
 
-  const isFree = Number(result?.amount_krw || 0) === 0;
-  const canGoToBooth =
-    result?.status === "approved" &&
-    result?.provision_status === "completed" &&
-    !!result?.provisioned_booth_id;
+  useEffect(() => {
+    if (initialApplicationCode || initialApplicationId || initialPhone) {
+      handleSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-900">
       <div className="mx-auto max-w-4xl space-y-8">
         <section className="rounded-3xl bg-slate-900 p-8 text-white shadow-2xl">
-          <div className="text-sm font-black text-slate-300">APPLICATION STATUS</div>
+          <div className="text-sm font-black text-slate-300">
+            APPLICATION STATUS
+          </div>
           <h1 className="mt-3 text-4xl font-black">신청 상태 확인</h1>
           <p className="mt-4 text-base leading-8 text-slate-200">
             신청번호와 연락처를 입력하면 현재 진행 상태를 확인할 수 있습니다.
@@ -210,20 +331,21 @@ function VendorOrderStatusInner() {
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <label className="block">
-              <div className="mb-2 text-sm font-bold text-slate-700">신청번호</div>
+              <div className="mb-2 text-sm font-bold text-slate-700">
+                신청번호
+              </div>
               <input
                 value={applicationCode}
                 onChange={(e) => setApplicationCode(e.target.value)}
-                placeholder="예: V260330-0001"
+                placeholder="예: VAP-20260603-ABCDE"
                 className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-600"
               />
-              <div className="mt-2 text-xs text-slate-500">
-                짧은 신청번호가 없으면 아래 연락처와 함께 내부 신청번호로도 조회 가능합니다.
-              </div>
             </label>
 
             <label className="block">
-              <div className="mb-2 text-sm font-bold text-slate-700">연락처</div>
+              <div className="mb-2 text-sm font-bold text-slate-700">
+                연락처
+              </div>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -277,42 +399,37 @@ function VendorOrderStatusInner() {
         {result && (
           <>
             <section className="rounded-3xl bg-white p-6 shadow-lg">
-              <div className="text-sm font-black text-emerald-700">STATUS RESULT</div>
+              <div className="text-sm font-black text-emerald-700">
+                STATUS RESULT
+              </div>
               <h2 className="mt-2 text-2xl font-black">현재 신청 상태</h2>
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-sm font-bold text-slate-500">신청번호</div>
-                  <div className="mt-1 break-all text-xl font-black">
-                    {result.application_code || result.application_id || "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-sm font-bold text-slate-500">회사명</div>
-                  <div className="mt-1 text-xl font-black">
-                    {result.company_name || "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-sm font-bold text-slate-500">신청 상품</div>
-                  <div className="mt-1 text-xl font-black">
-                    {getProductLabel(result.booth_type, result.duration_key)}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-sm font-bold text-slate-500">신청 금액</div>
-                  <div className="mt-1 text-2xl font-black text-emerald-700">
-                    {formatKrw(result.amount_krw)}
-                  </div>
-                </div>
+                <InfoBox
+                  label="신청번호"
+                  value={result.application_code || result.application_id || "-"}
+                />
+                <InfoBox label="회사명" value={result.company_name || "-"} />
+                <InfoBox label="신청 플랜" value={display.planName} />
+                <InfoBox
+                  label="신청 금액"
+                  value={display.amountLabel}
+                  valueClass="text-emerald-700"
+                />
+                <InfoBox
+                  label="신청 상품"
+                  value={`${display.productLabel}${
+                    display.productLimit ? ` · ${display.productLimit}` : ""
+                  }`}
+                  className="md:col-span-2"
+                />
               </div>
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <div className="text-sm font-bold text-slate-500">신청 상태</div>
+                  <div className="text-sm font-bold text-slate-500">
+                    신청 상태
+                  </div>
                   <div className="mt-3">
                     <span
                       className={`inline-flex rounded-full border px-3 py-2 text-sm font-black ${getStatusClass(
@@ -332,19 +449,28 @@ function VendorOrderStatusInner() {
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <div className="text-sm font-bold text-slate-500">입금 상태</div>
+                  <div className="text-sm font-bold text-slate-500">
+                    입금 상태
+                  </div>
                   <div className="mt-3">
                     <span
                       className={`inline-flex rounded-full border px-3 py-2 text-sm font-black ${getPaymentClass(
                         result.payment_confirmed,
-                        result.amount_krw
+                        result.amount_krw,
+                        display.isEnterprise
                       )}`}
                     >
-                      {getPaymentLabel(result.payment_confirmed, result.amount_krw)}
+                      {getPaymentLabel(
+                        result.payment_confirmed,
+                        result.amount_krw,
+                        display.isEnterprise
+                      )}
                     </span>
                   </div>
                   <div className="mt-4 text-sm leading-7 text-slate-600">
-                    {isFree
+                    {display.isEnterprise
+                      ? "엔터프라이즈는 운영팀과 조건 협의 후 진행됩니다."
+                      : display.isFree
                       ? "무료 체험은 별도 입금 절차 없이 운영 검토 후 진행됩니다."
                       : "유료 부스는 입금 확인 후 승인 절차가 진행됩니다."}
                   </div>
@@ -385,7 +511,10 @@ function VendorOrderStatusInner() {
                     ["입금 확인 일시", formatDateTime(result.payment_confirmed_at)],
                     ["승인 일시", formatDateTime(result.approved_at)],
                     ["반려 일시", formatDateTime(result.rejected_at)],
-                    ["부스 진행 상태", getProvisionLabel(result.provision_status, result.status)],
+                    [
+                      "부스 진행 상태",
+                      getProvisionLabel(result.provision_status, result.status),
+                    ],
                     ["진행 결과", result.provision_result || "-"],
                   ]}
                 />
@@ -393,10 +522,15 @@ function VendorOrderStatusInner() {
 
               {result.status === "rejected" && (
                 <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5">
-                  <div className="text-sm font-black text-red-700">REJECTION</div>
-                  <div className="mt-2 text-lg font-black text-red-900">반려 사유</div>
+                  <div className="text-sm font-black text-red-700">
+                    REJECTION
+                  </div>
+                  <div className="mt-2 text-lg font-black text-red-900">
+                    반려 사유
+                  </div>
                   <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-red-800">
-                    {result.rejection_reason || "반려 사유가 등록되지 않았습니다."}
+                    {result.rejection_reason ||
+                      "반려 사유가 등록되지 않았습니다."}
                   </div>
                 </div>
               )}
@@ -404,24 +538,36 @@ function VendorOrderStatusInner() {
 
             <section
               className={`rounded-3xl p-6 shadow-lg ${
-                isFree
+                display.isEnterprise
+                  ? "border border-cyan-200 bg-cyan-50"
+                  : display.isFree
                   ? "border border-emerald-200 bg-emerald-50"
                   : "border border-amber-200 bg-amber-50"
               }`}
             >
-              <div
-                className={`text-sm font-black ${
-                  isFree ? "text-emerald-700" : "text-amber-700"
-                }`}
-              >
-                GUIDE
-              </div>
+              <div className="text-sm font-black text-emerald-700">GUIDE</div>
               <h2 className="mt-2 text-2xl font-black">
-                {isFree ? "무료 체험 진행 안내" : "유료 신청 진행 안내"}
+                {display.isEnterprise
+                  ? "엔터프라이즈 진행 안내"
+                  : display.isFree
+                  ? "무료 체험 진행 안내"
+                  : "유료 신청 진행 안내"}
               </h2>
 
               <div className="mt-5 rounded-2xl bg-white p-5 text-sm leading-8 text-slate-700">
-                {isFree ? (
+                {display.isEnterprise ? (
+                  <>
+                    <div>
+                      <b>1.</b> 운영팀이 신청 내용을 확인합니다.
+                    </div>
+                    <div>
+                      <b>2.</b> 전시관 구성, 제품 수, 마케팅 범위를 협의합니다.
+                    </div>
+                    <div>
+                      <b>3.</b> 조건 확정 후 부스 생성 또는 특별관 구성이 진행됩니다.
+                    </div>
+                  </>
+                ) : display.isFree ? (
                   <>
                     <div>
                       <b>1.</b> 운영팀이 신청 내용을 확인합니다.
@@ -503,6 +649,27 @@ function VendorOrderStatusInner() {
         </section>
       </div>
     </main>
+  );
+}
+
+function InfoBox({
+  label,
+  value,
+  className = "",
+  valueClass = "",
+}: {
+  label: string;
+  value: string;
+  className?: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className={`rounded-2xl bg-slate-50 p-4 ${className}`}>
+      <div className="text-sm font-bold text-slate-500">{label}</div>
+      <div className={`mt-1 break-words text-xl font-black ${valueClass}`}>
+        {value}
+      </div>
+    </div>
   );
 }
 

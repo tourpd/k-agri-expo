@@ -1,0 +1,42 @@
+"use client";
+
+import Link from "next/link";
+
+export default function VendorManualOnboardingPage() {
+  return (
+    <main className="min-h-screen bg-[#f7faf4] px-4 py-10">
+      <div className="mx-auto max-w-4xl rounded-3xl border bg-white p-8 shadow-sm">
+        <div className="text-sm font-black text-emerald-700">
+          MANUAL PRODUCT REGISTRATION
+        </div>
+
+        <h1 className="mt-3 text-3xl font-black">제품 직접 등록</h1>
+
+        <p className="mt-4 text-base font-bold leading-8 text-neutral-700">
+          홈페이지나 카탈로그가 없는 업체도 제품명, 제품사진, 효과, 사용방법만 입력해서
+          브랜드관에 등록할 수 있도록 만드는 화면입니다.
+        </p>
+
+        <div className="mt-6 rounded-2xl bg-emerald-50 p-5 font-bold text-emerald-900">
+          다음 단계에서 제품 직접 등록 폼을 붙이면 됩니다.
+        </div>
+
+        <div className="mt-8 flex gap-3">
+          <Link
+            href="/vendor/manage"
+            className="rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white"
+          >
+            업체 관리로 돌아가기
+          </Link>
+
+          <Link
+            href="/vendor/auto-import"
+            className="rounded-2xl border bg-white px-5 py-3 font-black text-neutral-900"
+          >
+            자동입점센터로 이동
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}

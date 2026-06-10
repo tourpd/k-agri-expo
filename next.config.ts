@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: path.resolve(__dirname),
+  experimental: {
+    proxyClientMaxBodySize: 100 * 1024 * 1024,
+    serverActions: {
+      bodySizeLimit: "100mb",
+    },
   },
 };
 

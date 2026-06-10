@@ -11,6 +11,12 @@ type CompleteSearchParams = {
   duration_key?: string;
   amount_krw?: string;
   phone?: string;
+
+  plan_type?: string;
+  plan_name?: string;
+  billing_cycle?: string;
+  billing_label?: string;
+  product_limit?: string;
 };
 
 type CompletePageProps = {
@@ -29,35 +35,62 @@ function formatKrw(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-function getBoothLabel(boothType: string) {
-  switch (boothType) {
+function normalizePlanType(planType: string, planName: string, amountKrw: number) {
+  const v = planType.trim().toLowerCase();
+  if (["free", "bronze", "silver", "gold", "enterprise"].includes(v)) return v;
+
+  if (planName.includes("엔터프라이즈")) return "enterprise";
+  if (planName.includes("브론즈")) return "bronze";
+  if (planName.includes("실버")) return "silver";
+  if (planName.includes("골드")) return "gold";
+  if (planName.includes("무료")) return "free";
+
+  if (amountKrw === 0) return "free";
+  return "";
+}
+
+function getPlanLabel(planType: string, fallback: string) {
+  switch (planType) {
     case "free":
       return "무료 체험";
-    case "basic":
-      return "일반 부스";
-    case "premium":
-      return "프리미엄 부스";
+    case "bronze":
+      return "브론즈";
+    case "silver":
+      return "실버";
+    case "gold":
+      return "골드";
+    case "enterprise":
+      return "엔터프라이즈";
     default:
-      return "-";
+      return fallback || "-";
   }
 }
 
-function getDurationLabel(durationKey: string) {
-  switch (durationKey) {
-    case "1m":
-      return "1개월";
-    case "3m":
-      return "3개월";
+function getBillingLabel(planType: string, billingCycle: string, fallback: string) {
+  if (planType === "free") return "30일 무료체험";
+  if (planType === "enterprise") return "별도 협의";
+  if (billingCycle === "yearly") return "1년 계약 일시불 · 20% 할인";
+  if (billingCycle === "monthly") return "월결제";
+  return fallback || "-";
+}
+
+function getProductLimit(planType: string, fallback: string) {
+  if (fallback) return fallback;
+
+  switch (planType) {
+    case "free":
+      return "제품 1개";
+    case "bronze":
+      return "제품 5개";
+    case "silver":
+      return "제품 10개";
+    case "gold":
+      return "제품 20개";
+    case "enterprise":
+      return "제품 무제한";
     default:
       return "-";
   }
-}
-
-function getProductLabel(boothType: string, durationKey: string) {
-  const booth = getBoothLabel(boothType);
-  const duration = getDurationLabel(durationKey);
-  if (booth === "-" || duration === "-") return "-";
-  return `${booth} · ${duration}`;
 }
 
 export default async function VendorApplyCompletePage({
@@ -70,31 +103,40 @@ export default async function VendorApplyCompletePage({
   const displayApplicationNo = applicationCode || applicationId || "-";
 
   const companyName = params.company_name?.trim() || "-";
-  const boothType = params.booth_type?.trim() || "";
-  const durationKey = params.duration_key?.trim() || "";
   const amountKrw = Number(params.amount_krw ?? "0");
   const phone = params.phone?.trim() || "";
 
-  const boothLabel = getBoothLabel(boothType);
-  const durationLabel = getDurationLabel(durationKey);
-  const productLabel = getProductLabel(boothType, durationKey);
-  const isFree = amountKrw === 0;
+  const planNameParam = params.plan_name?.trim() || "";
+  const rawPlanType = params.plan_type?.trim() || "";
+  const planType = normalizePlanType(rawPlanType, planNameParam, amountKrw);
+
+  const billingCycle = params.billing_cycle?.trim() || "";
+  const billingLabelParam = params.billing_label?.trim() || "";
+  const productLimitParam = params.product_limit?.trim() || "";
+
+  const planLabel = getPlanLabel(planType, planNameParam);
+  const billingLabel = getBillingLabel(planType, billingCycle, billingLabelParam);
+  const productLimit = getProductLimit(planType, productLimitParam);
+
+  const isEnterprise = planType === "enterprise";
+  const isFree = planType === "free";
+
+  const displayAmount = isEnterprise ? "별도 협의" : formatKrw(amountKrw);
+  const displayProductLabel =
+    planType === "enterprise"
+      ? "엔터프라이즈 · 별도 협의"
+      : `${planLabel} · ${billingLabel}`;
 
   const copyAccountText = `${OPERATIONS.bankName} ${OPERATIONS.accountNumber} / 예금주 ${OPERATIONS.accountHolder}`;
-  const copyApplicationText = `신청번호 ${displayApplicationNo} / 회사명 ${companyName} / 신청상품 ${productLabel} / 금액 ${formatKrw(amountKrw)}`;
+  const copyApplicationText = `신청번호 ${displayApplicationNo} / 회사명 ${companyName} / 신청상품 ${displayProductLabel} / 금액 ${displayAmount}`;
 
   const statusHref = (() => {
     const search = new URLSearchParams();
 
-    if (applicationCode) {
-      search.set("application_code", applicationCode);
-    } else if (applicationId) {
-      search.set("application_id", applicationId);
-    }
+    if (applicationCode) search.set("application_code", applicationCode);
+    else if (applicationId) search.set("application_id", applicationId);
 
-    if (phone.length > 0) {
-      search.set("phone", phone);
-    }
+    if (phone) search.set("phone", phone);
 
     const qs = search.toString();
     return qs ? `/vendor/order-status?${qs}` : "/vendor/order-status";
@@ -108,26 +150,16 @@ export default async function VendorApplyCompletePage({
             isFree ? "bg-emerald-700" : "bg-slate-900"
           }`}
         >
-          <div
-            className={`text-sm font-black ${
-              isFree ? "text-emerald-100" : "text-slate-300"
-            }`}
-          >
+          <div className="text-sm font-black text-slate-300">
             APPLICATION COMPLETE
           </div>
 
           <h1 className="mt-3 text-4xl font-black">
-            {isFree
-              ? "무료 체험 신청이 접수되었습니다"
-              : "입점 신청이 접수되었습니다"}
+            {isFree ? "무료 체험 신청이 접수되었습니다" : "입점 신청이 접수되었습니다"}
           </h1>
 
-          <p
-            className={`mt-4 text-base leading-8 ${
-              isFree ? "text-emerald-50" : "text-slate-200"
-            }`}
-          >
-            {isFree
+          <p className="mt-4 text-base leading-8 text-slate-200">
+            {isFree || isEnterprise
               ? "운영팀이 신청 내용을 확인한 뒤 부스 진행 절차를 안내드립니다. 신청번호와 연락처는 꼭 저장해 주세요."
               : "아래 안내에 따라 입금해 주시면 관리자가 확인 후 부스 진행을 시작합니다. 신청번호와 연락처는 꼭 저장해 주세요."}
           </p>
@@ -140,39 +172,25 @@ export default async function VendorApplyCompletePage({
           <h2 className="mt-2 text-2xl font-black">신청 내역</h2>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <div className="text-sm font-bold text-slate-500">신청번호</div>
-              <div className="mt-1 break-all text-xl font-black">
-                {displayApplicationNo}
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <div className="text-sm font-bold text-slate-500">회사명</div>
-              <div className="mt-1 text-xl font-black">{companyName}</div>
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <div className="text-sm font-bold text-slate-500">부스 유형</div>
-              <div className="mt-1 text-xl font-black">{boothLabel}</div>
-            </div>
-
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <div className="text-sm font-bold text-slate-500">신청 기간</div>
-              <div className="mt-1 text-xl font-black">{durationLabel}</div>
-            </div>
+            <InfoBox label="신청번호" value={displayApplicationNo} />
+            <InfoBox label="회사명" value={companyName} />
+            <InfoBox label="신청 플랜" value={planLabel} />
+            <InfoBox label="결제 방식" value={billingLabel} />
 
             <div className="rounded-2xl bg-slate-50 p-4 md:col-span-2">
               <div className="text-sm font-bold text-slate-500">신청 상품</div>
-              <div className="mt-1 text-xl font-black">{productLabel}</div>
+              <div className="mt-1 text-xl font-black">{displayProductLabel}</div>
+              <div className="mt-2 text-base font-black text-emerald-700">
+                {productLimit}
+              </div>
             </div>
 
             <div className="rounded-2xl bg-slate-50 p-4 md:col-span-2">
               <div className="text-sm font-bold text-slate-500">
-                {isFree ? "결제 금액" : "입금 금액"}
+                {isFree || isEnterprise ? "결제 금액" : "입금 금액"}
               </div>
               <div className="mt-1 text-2xl font-black text-emerald-700">
-                {formatKrw(amountKrw)}
+                {displayAmount}
               </div>
             </div>
           </div>
@@ -189,20 +207,17 @@ export default async function VendorApplyCompletePage({
             </div>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-           <div className="rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900">
-                신청정보 저장: {displayApplicationNo} / {companyName}
-           </div>
+          <div className="mt-5 rounded-2xl border border-slate-300 bg-white px-5 py-3 font-black text-slate-900">
+            신청정보 저장: {displayApplicationNo} / {companyName}
           </div>
-
         </section>
 
-        {isFree ? (
+        {isFree || isEnterprise ? (
           <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 shadow-lg">
             <div className="text-sm font-black text-emerald-700">
-              FREE TRIAL GUIDE
+              REVIEW GUIDE
             </div>
-            <h2 className="mt-2 text-2xl font-black">무료 체험 진행 안내</h2>
+            <h2 className="mt-2 text-2xl font-black">진행 안내</h2>
 
             <div className="mt-5 rounded-2xl bg-white p-5 text-sm leading-8 text-slate-700">
               <div>
@@ -224,33 +239,10 @@ export default async function VendorApplyCompletePage({
             <h2 className="mt-2 text-2xl font-black">입금 안내</h2>
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl bg-white p-4">
-                <div className="text-sm font-bold text-slate-500">은행명</div>
-                <div className="mt-1 text-xl font-black">
-                  {OPERATIONS.bankName}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-4">
-                <div className="text-sm font-bold text-slate-500">계좌번호</div>
-                <div className="mt-1 text-xl font-black">
-                  {OPERATIONS.accountNumber}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-4">
-                <div className="text-sm font-bold text-slate-500">예금주</div>
-                <div className="mt-1 text-xl font-black">
-                  {OPERATIONS.accountHolder}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-4">
-                <div className="text-sm font-bold text-slate-500">입금 금액</div>
-                <div className="mt-1 text-2xl font-black text-emerald-700">
-                  {formatKrw(amountKrw)}
-                </div>
-              </div>
+              <InfoBox label="은행명" value={OPERATIONS.bankName} white />
+              <InfoBox label="계좌번호" value={OPERATIONS.accountNumber} white />
+              <InfoBox label="예금주" value={OPERATIONS.accountHolder} white />
+              <InfoBox label="입금 금액" value={displayAmount} white green />
             </div>
 
             <div className="mt-5 rounded-2xl bg-white p-5 text-sm leading-8 text-slate-700">
@@ -272,6 +264,9 @@ export default async function VendorApplyCompletePage({
               <div>
                 <b>계좌 정보:</b> {copyAccountText}
               </div>
+              <div>
+                <b>신청 정보:</b> {copyApplicationText}
+              </div>
             </div>
           </section>
         )}
@@ -281,59 +276,25 @@ export default async function VendorApplyCompletePage({
           <h2 className="mt-2 text-2xl font-black">다음 진행 절차</h2>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {isFree ? (
-              <>
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="text-sm font-black text-emerald-700">01</div>
-                  <div className="mt-2 text-lg font-black">신청 접수</div>
-                  <div className="mt-2 text-sm leading-7 text-slate-600">
-                    무료 체험 신청이 정상 접수되었습니다.
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="text-sm font-black text-emerald-700">02</div>
-                  <div className="mt-2 text-lg font-black">운영 검토</div>
-                  <div className="mt-2 text-sm leading-7 text-slate-600">
-                    관리자가 신청 내용을 확인합니다.
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="text-sm font-black text-emerald-700">03</div>
-                  <div className="mt-2 text-lg font-black">부스 진행</div>
-                  <div className="mt-2 text-sm leading-7 text-slate-600">
-                    승인 완료 후 부스 생성 또는 연결이 진행됩니다.
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="text-sm font-black text-emerald-700">01</div>
-                  <div className="mt-2 text-lg font-black">입금 진행</div>
-                  <div className="mt-2 text-sm leading-7 text-slate-600">
-                    위 계좌로 정확한 금액을 입금해 주세요.
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="text-sm font-black text-emerald-700">02</div>
-                  <div className="mt-2 text-lg font-black">관리자 확인</div>
-                  <div className="mt-2 text-sm leading-7 text-slate-600">
-                    관리자가 입금 확인 후 신청을 승인합니다.
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <div className="text-sm font-black text-emerald-700">03</div>
-                  <div className="mt-2 text-lg font-black">부스 생성/오픈</div>
-                  <div className="mt-2 text-sm leading-7 text-slate-600">
-                    승인 완료 후 부스가 자동 생성되거나 연결됩니다.
-                  </div>
-                </div>
-              </>
-            )}
+            <StepCard
+              no="01"
+              title={isFree || isEnterprise ? "신청 접수" : "입금 진행"}
+              desc={
+                isFree || isEnterprise
+                  ? "신청이 정상 접수되었습니다."
+                  : "위 계좌로 정확한 금액을 입금해 주세요."
+              }
+            />
+            <StepCard
+              no="02"
+              title="관리자 확인"
+              desc="관리자가 신청 내용을 확인합니다."
+            />
+            <StepCard
+              no="03"
+              title="부스 생성/오픈"
+              desc="승인 완료 후 부스가 자동 생성되거나 연결됩니다."
+            />
           </div>
         </section>
 
@@ -378,5 +339,48 @@ export default async function VendorApplyCompletePage({
         </section>
       </div>
     </main>
+  );
+}
+
+function InfoBox({
+  label,
+  value,
+  white,
+  green,
+}: {
+  label: string;
+  value: string;
+  white?: boolean;
+  green?: boolean;
+}) {
+  return (
+    <div className={`rounded-2xl p-4 ${white ? "bg-white" : "bg-slate-50"}`}>
+      <div className="text-sm font-bold text-slate-500">{label}</div>
+      <div
+        className={`mt-1 break-all text-xl font-black ${
+          green ? "text-emerald-700" : "text-slate-900"
+        }`}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function StepCard({
+  no,
+  title,
+  desc,
+}: {
+  no: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 p-4">
+      <div className="text-sm font-black text-emerald-700">{no}</div>
+      <div className="mt-2 text-lg font-black">{title}</div>
+      <div className="mt-2 text-sm leading-7 text-slate-600">{desc}</div>
+    </div>
   );
 }

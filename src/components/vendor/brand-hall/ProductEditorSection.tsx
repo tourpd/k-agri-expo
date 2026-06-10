@@ -24,6 +24,19 @@ type ProductForm = {
   recommended_rounds: string;
   spray_interval: string;
   use_period: string;
+
+  future_business_type: string;
+  container_model: string;
+  container_size: string;
+  expected_monthly_production: string;
+  farm_sale_price: string;
+  education_program_name: string;
+  education_fee: string;
+  buyback_item: string;
+  buyback_price: string;
+  healing_program_name: string;
+  functional_claim: string;
+  patent_note: string;
 };
 
 type Props = {
@@ -63,9 +76,7 @@ export default function ProductEditorSection({
           }
           accept="image/*"
           previewUrl={productForm.image_url}
-          onChange={(file) =>
-            handleProductFileUpload(file, "product")
-          }
+          onChange={(file) => handleProductFileUpload(file, "product")}
         />
 
         {productForm.image_url ? (
@@ -91,9 +102,7 @@ export default function ProductEditorSection({
                 : "카탈로그 선택"
             }
             accept="application/pdf,image/*"
-            onChange={(file) =>
-              handleProductFileUpload(file, "catalog")
-            }
+            onChange={(file) => handleProductFileUpload(file, "catalog")}
           />
 
           <UploadBox
@@ -105,13 +114,11 @@ export default function ProductEditorSection({
                 : "설명서 선택"
             }
             accept="application/pdf,image/*"
-            onChange={(file) =>
-              handleProductFileUpload(file, "manual")
-            }
+            onChange={(file) => handleProductFileUpload(file, "manual")}
           />
         </div>
 
-        <Field label="제품명">
+        <Field label="제품명 / 사업명">
           <input
             value={productForm.product_name}
             onChange={(e) =>
@@ -174,7 +181,7 @@ export default function ProductEditorSection({
           AI 제품정보 자동 추출
         </button>
 
-        <Field label="제품 상세 설명">
+        <Field label="제품 / 사업 상세 설명">
           <textarea
             rows={5}
             value={productForm.detail_description}
@@ -204,7 +211,6 @@ function Field({
       <span className="mb-3 block text-lg font-extrabold text-stone-800">
         {label}
       </span>
-
       {children}
     </label>
   );
