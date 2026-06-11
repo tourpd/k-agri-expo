@@ -1,573 +1,349 @@
-import Link from "next/link";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+"use client";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import { useEffect, useMemo, useState } from "react";
 
-type PageProps = {
-  searchParams?: Promise<{
-    month?: string;
-    q?: string;
-    status?: string;
-    sort?: string;
-  }>;
-};
-
-type SourceTable = "expo_orders" | "photodoctor_orders";
-
-type SettlementOrder = {
+type Settlement = {
   id: string;
-  sourceTable: SourceTable;
-  brandName: string;
-  productName: string;
-  orderAmount: number;
-  platformFeeAmount: number;
-  vendorSettlementAmount: number;
-  settlementStatus: string;
-  createdAt: string;
-  hasError: boolean;
+  product_name?: string | null;
+  seller_name?: string | null;
+  seller_type?: string | null;
+  buyer_company_name?: string | null;
+  gross_amount?: number | null;
+  product_tax_type?: string | null;
+  platform_fee_payer?: string | null;
+  platform_fee_rate?: number | null;
+  seller_fee_amount?: number | null;
+  buyer_fee_amount?: number | null;
+  platform_revenue?: number | null;
+  vat_amount?: number | null;
+  seller_settlement_amount?: number | null;
+  settlement_status?: string | null;
+  memo?: string | null;
+  created_at?: string | null;
 };
 
-type VendorSettlement = {
-  brandName: string;
-  orderCount: number;
-  totalSales: number;
-  platformRevenue: number;
-  pendingAmount: number;
-  paidAmount: number;
-  totalSettlement: number;
-  errorCount: number;
-  status: "정산대기" | "정산완료" | "오류확인";
-};
-
-function num(v: unknown) {
-  const n = Number(v || 0);
-  return Number.isFinite(n) ? n : 0;
+function n(v: unknown) {
+  const num = Number(v || 0);
+  return Number.isFinite(num) ? num : 0;
 }
 
-function money(v: number) {
-  return Math.round(v).toLocaleString("ko-KR");
+function won(v: unknown) {
+  return `${n(v).toLocaleString()}원`;
 }
 
-function nowKst() {
-  return new Date(Date.now() + 9 * 60 * 60 * 1000);
+function sellerTypeLabel(v?: string | null) {
+  if (v === "individual_farmer") return "개인농가";
+  if (v === "corporation") return "법인";
+  if (v === "cooperative") return "조합";
+  if (v === "company") return "기업";
+  return v || "-";
 }
 
-function currentMonthKey() {
-  return nowKst().toISOString().slice(0, 7);
+function taxLabel(v?: string | null) {
+  if (v === "exempt") return "면세";
+  if (v === "taxable") return "과세";
+  if (v === "mixed") return "혼합";
+  return v || "-";
 }
 
-function validMonth(v?: string) {
-  return v && /^\d{4}-\d{2}$/.test(v) ? v : currentMonthKey();
+function payerLabel(v?: string | null) {
+  if (v === "seller") return "판매자";
+  if (v === "buyer") return "구매자";
+  if (v === "both") return "양쪽";
+  return v || "-";
 }
 
-function monthStartIso(month: string) {
-  return `${month}-01T00:00:00+09:00`;
+function statusLabel(v?: string | null) {
+  if (v === "waiting") return "정산대기";
+  if (v === "confirmed") return "정산확정";
+  if (v === "paid") return "정산완료";
+  if (v === "hold") return "보류";
+  return v || "-";
 }
 
-function nextMonthStartIso(month: string) {
-  const [y, m] = month.split("-").map(Number);
-  const d = new Date(Date.UTC(y, m, 1));
+export default function SettlementsPage() {
+  const [items, setItems] = useState<Settlement[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(
-    2,
-    "0"
-  )}-01T00:00:00+09:00`;
-}
+  async function load() {
+    setLoading(true);
+    setError("");
 
-function getAmount(row: any) {
-  return (
-    num(row.total_amount_krw) ||
-    num(row.amount_krw) ||
-    num(row.sale_price_krw) ||
-    num(row.price_krw) ||
-    num(row.order_amount_krw) ||
-    num(row.total_price_krw)
-  );
-}
+    try {
+      const res = await fetch("/api/admin/settlements?ts=" + Date.now(), {
+        cache: "no-store",
+      });
+      const json = await res.json();
 
-function getBrandName(row: any, fallback = "") {
-  return (
-    row.brand_name ||
-    row.vendor_name ||
-    row.company_name ||
-    row.brand_title ||
-    row.brand?.name ||
-    row.expo_brands?.name ||
-    row.vendor?.company_name ||
-    row.vendors?.company_name ||
-    fallback
-  );
-}
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "정산 조회 실패");
+      }
 
-function getProductName(row: any) {
-  return (
-    row.product_name ||
-    row.product_title ||
-    row.item_name ||
-    row.title ||
-    row.product?.name ||
-    row.products?.name ||
-    ""
-  );
-}
+      setItems(json.items || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "정산 조회 실패");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-function normalizeRate(row: any, fallback: number) {
-  const raw = num(row.platform_fee_rate ?? row.commission_rate);
+  useEffect(() => {
+    load();
+  }, []);
 
-  if (!raw) return fallback;
-  if (raw > 0 && raw <= 1) return raw;
-  if (raw > 1 && raw <= 100) return raw / 100;
-
-  return fallback;
-}
-
-function normalizeOrder(row: any, sourceTable: SourceTable): SettlementOrder {
-  const orderAmount = getAmount(row);
-  const orderType = row.order_type || row.commission_type || "general";
-
-  const fallbackRate =
-    sourceTable === "photodoctor_orders"
-      ? 0.12
-      : orderType === "live"
-        ? 0.3
-        : orderType === "photodoctor"
-          ? 0.12
-          : 0.18;
-
-  const rate = normalizeRate(row, fallbackRate);
-
-  const platformFeeAmount =
-    num(row.platform_fee_amount) || Math.round(orderAmount * rate);
-
-  const vendorSettlementAmount =
-    num(row.vendor_settlement_amount) ||
-    Math.max(orderAmount - platformFeeAmount, 0);
-
-  const brandName = getBrandName(
-    row,
-    sourceTable === "photodoctor_orders" ? "포토닥터" : "-"
-  );
-
-  const productName = getProductName(row);
-
-  const hasError =
-    !brandName ||
-    brandName === "-" ||
-    !productName ||
-    productName === "상품명 없음" ||
-    orderAmount <= 0;
-
-  return {
-    id: String(row.id),
-    sourceTable,
-    brandName,
-    productName: productName || "상품명 없음",
-    orderAmount,
-    platformFeeAmount,
-    vendorSettlementAmount,
-    settlementStatus: row.settlement_status || "pending",
-    createdAt: row.created_at || row.ordered_at || "",
-    hasError,
-  };
-}
-
-function sum<T>(list: T[], pick: (item: T) => number) {
-  return list.reduce((acc, item) => acc + pick(item), 0);
-}
-
-function LinkButton({
-  href,
-  children,
-  tone = "white",
-}: {
-  href: string;
-  children: React.ReactNode;
-  tone?: "white" | "blue" | "red" | "dark";
-}) {
-  const cls =
-    tone === "blue"
-      ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-      : tone === "red"
-        ? "bg-red-600 text-white border-red-600 hover:bg-red-700"
-        : tone === "dark"
-          ? "bg-slate-950 text-white border-slate-950 hover:bg-slate-800"
-          : "bg-white text-slate-950 border-slate-300 hover:bg-slate-100";
-
-  return (
-    <Link
-      href={href}
-      className={`inline-flex h-8 items-center justify-center rounded border px-3 text-xs font-black ${cls}`}
-    >
-      {children}
-    </Link>
-  );
-}
-
-export default async function AdminSettlementsPage({
-  searchParams,
-}: PageProps) {
-  const sp = (await searchParams) || {};
-  const month = validMonth(sp.month);
-  const q = String(sp.q || "").trim().toLowerCase();
-  const status = String(sp.status || "").trim();
-  const sort = String(sp.sort || "pending");
-
-  const supabase = createSupabaseAdminClient();
-
-  const [expoRes, photoRes] = await Promise.all([
-    supabase
-      .from("expo_orders")
-      .select("*")
-      .gte("created_at", monthStartIso(month))
-      .lt("created_at", nextMonthStartIso(month))
-      .order("created_at", { ascending: false })
-      .limit(10000),
-    supabase
-      .from("photodoctor_orders")
-      .select("*")
-      .gte("created_at", monthStartIso(month))
-      .lt("created_at", nextMonthStartIso(month))
-      .order("created_at", { ascending: false })
-      .limit(10000),
-  ]);
-
-  const orders: SettlementOrder[] = [
-    ...(expoRes.data || []).map((row: any) => normalizeOrder(row, "expo_orders")),
-    ...(photoRes.data || []).map((row: any) =>
-      normalizeOrder(row, "photodoctor_orders")
-    ),
-  ];
-
-  const vendorMap = new Map<string, VendorSettlement>();
-
-  function getVendor(name: string) {
-    const found = vendorMap.get(name);
-    if (found) return found;
-
-    const created: VendorSettlement = {
-      brandName: name,
-      orderCount: 0,
-      totalSales: 0,
-      platformRevenue: 0,
-      pendingAmount: 0,
-      paidAmount: 0,
-      totalSettlement: 0,
-      errorCount: 0,
-      status: "정산완료",
+  const stats = useMemo(() => {
+    return {
+      total: items.length,
+      gross: items.reduce((sum, x) => sum + n(x.gross_amount), 0),
+      platform: items.reduce((sum, x) => sum + n(x.platform_revenue), 0),
+      vat: items.reduce((sum, x) => sum + n(x.vat_amount), 0),
+      seller: items.reduce((sum, x) => sum + n(x.seller_settlement_amount), 0),
+      waiting: items.filter((x) => x.settlement_status === "waiting").length,
+      paid: items.filter((x) => x.settlement_status === "paid").length,
     };
-
-    vendorMap.set(name, created);
-    return created;
-  }
-
-  for (const order of orders) {
-    if (!order.brandName || order.brandName === "-") continue;
-
-    const vendor = getVendor(order.brandName);
-
-    if (order.hasError) {
-      vendor.errorCount += 1;
-      continue;
-    }
-
-    vendor.orderCount += 1;
-    vendor.totalSales += order.orderAmount;
-    vendor.platformRevenue += order.platformFeeAmount;
-    vendor.totalSettlement += order.vendorSettlementAmount;
-
-    if (order.settlementStatus === "paid") {
-      vendor.paidAmount += order.vendorSettlementAmount;
-    } else {
-      vendor.pendingAmount += order.vendorSettlementAmount;
-    }
-  }
-
-  let vendors = Array.from(vendorMap.values()).map((vendor) => ({
-    ...vendor,
-    status:
-      vendor.errorCount > 0
-        ? "오류확인"
-        : vendor.pendingAmount > 0
-          ? "정산대기"
-          : "정산완료",
-  })) as VendorSettlement[];
-
-  if (q) {
-    vendors = vendors.filter((vendor) =>
-      vendor.brandName.toLowerCase().includes(q)
-    );
-  }
-
-  if (status === "pending") {
-    vendors = vendors.filter((vendor) => vendor.pendingAmount > 0);
-  }
-
-  if (status === "paid") {
-    vendors = vendors.filter(
-      (vendor) => vendor.pendingAmount <= 0 && vendor.orderCount > 0
-    );
-  }
-
-  if (status === "error") {
-    vendors = vendors.filter((vendor) => vendor.errorCount > 0);
-  }
-
-  vendors.sort((a, b) => {
-    if (sort === "sales") return b.totalSales - a.totalSales;
-    if (sort === "revenue") return b.platformRevenue - a.platformRevenue;
-    if (sort === "orders") return b.orderCount - a.orderCount;
-    if (sort === "error") return b.errorCount - a.errorCount;
-    return b.pendingAmount - a.pendingAmount;
-  });
-
-  const totalSales = sum(vendors, (vendor) => vendor.totalSales);
-  const totalRevenue = sum(vendors, (vendor) => vendor.platformRevenue);
-  const totalPending = sum(vendors, (vendor) => vendor.pendingAmount);
-  const totalPaid = sum(vendors, (vendor) => vendor.paidAmount);
-  const totalSettlement = sum(vendors, (vendor) => vendor.totalSettlement);
-  const totalOrders = sum(vendors, (vendor) => vendor.orderCount);
-  const totalErrors = sum(vendors, (vendor) => vendor.errorCount);
-
-  const th =
-    "border border-slate-300 bg-slate-200 px-3 py-2 font-black text-slate-950";
-  const td = "border border-slate-300 px-3 py-2 text-slate-950";
+  }, [items]);
 
   return (
-    <main className="min-h-screen bg-slate-100 p-5 text-slate-950 dark:text-slate-950">
-      <div className="mx-auto max-w-[1700px] space-y-4 text-slate-950 dark:text-slate-950">
-        <header className="flex items-end justify-between border-b-2 border-slate-300 pb-4 text-slate-950">
+    <main className="min-h-screen bg-[#f3f4f6] p-4 text-black">
+      <div className="mx-auto max-w-[2800px]">
+        <div className="mb-3 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black text-slate-950">정산센터</h1>
-            <p className="mt-2 text-sm font-bold text-slate-700">
-              업체별 정산대기금, 정산완료금, 오류를 엑셀처럼 확인하고 처리합니다.
-            </p>
+            <p className="text-xs font-black text-green-700">K-AGRI SETTLEMENT CENTER</p>
+            <h1 className="text-4xl font-black">정산센터</h1>
           </div>
 
           <div className="flex gap-2">
-            <LinkButton href="/admin/revenue">수익센터</LinkButton>
-            <LinkButton href="/admin/revenue/vendors">업체별 현황</LinkButton>
-            <LinkButton href="/admin/revenue/orders">수익원장</LinkButton>
-            <LinkButton href={`/admin/settlements/errors?month=${month}`} tone="red">
-              오류정리
-            </LinkButton>
+            <button onClick={load} className="rounded bg-green-700 px-4 py-3 text-sm font-black text-white">
+              {loading ? "조회중" : "새로고침"}
+            </button>
+            <button className="rounded bg-blue-700 px-4 py-3 text-sm font-black text-white">
+              정산확정
+            </button>
+            <button className="rounded bg-orange-600 px-4 py-3 text-sm font-black text-white">
+              정산완료
+            </button>
+            <button className="rounded bg-black px-4 py-3 text-sm font-black text-white">
+              엑셀 다운로드
+            </button>
           </div>
-        </header>
-
-        <form
-          action="/admin/settlements"
-          className="flex flex-wrap items-center gap-2 rounded border border-slate-300 bg-white p-3 text-slate-950"
-        >
-          <input
-            name="month"
-            defaultValue={month}
-            className="h-9 w-28 rounded border border-slate-300 bg-white px-3 text-sm font-bold text-slate-950"
-          />
-
-          <input
-            name="q"
-            defaultValue={q}
-            className="h-9 w-60 rounded border border-slate-300 bg-white px-3 text-sm font-bold text-slate-950"
-            placeholder="업체명 검색"
-          />
-
-          <select
-            name="status"
-            defaultValue={status}
-            className="h-9 rounded border border-slate-300 bg-white px-3 text-sm font-bold text-slate-950"
-          >
-            <option value="">전체 상태</option>
-            <option value="pending">정산대기</option>
-            <option value="paid">정산완료</option>
-            <option value="error">오류확인</option>
-          </select>
-
-          <select
-            name="sort"
-            defaultValue={sort}
-            className="h-9 rounded border border-slate-300 bg-white px-3 text-sm font-bold text-slate-950"
-          >
-            <option value="pending">정산대기금순</option>
-            <option value="sales">매출순</option>
-            <option value="revenue">플랫폼수익순</option>
-            <option value="orders">주문건수순</option>
-            <option value="error">오류순</option>
-          </select>
-
-          <button className="h-9 rounded bg-slate-950 px-5 text-sm font-black text-white">
-            조회
-          </button>
-        </form>
-
-        <div className="overflow-x-auto rounded border border-slate-300 bg-white text-slate-950">
-          <table className="w-full min-w-[1450px] border-collapse text-sm text-slate-950">
-            <thead>
-              <tr>
-                <th className={`${th} text-left`}>구분</th>
-                <th className={`${th} text-right`}>업체 수</th>
-                <th className={`${th} text-right`}>주문</th>
-                <th className={`${th} text-right`}>총매출</th>
-                <th className={`${th} text-right`}>플랫폼 수익</th>
-                <th className={`${th} text-right`}>정산대기</th>
-                <th className={`${th} text-right`}>정산완료</th>
-                <th className={`${th} text-right`}>총정산금</th>
-                <th className={`${th} text-right`}>오류</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr className="bg-blue-50 text-slate-950">
-                <td className={`${td} font-black`}>{month} 정산 합계</td>
-                <td className={`${td} text-right font-black`}>{vendors.length}</td>
-                <td className={`${td} text-right font-black`}>{totalOrders}</td>
-                <td className={`${td} text-right font-black`}>{money(totalSales)}</td>
-                <td className={`${td} text-right font-black text-blue-700`}>
-                  {money(totalRevenue)}
-                </td>
-                <td className={`${td} text-right font-black text-red-700`}>
-                  {money(totalPending)}
-                </td>
-                <td className={`${td} text-right font-black text-emerald-700`}>
-                  {money(totalPaid)}
-                </td>
-                <td className={`${td} text-right font-black`}>
-                  {money(totalSettlement)}
-                </td>
-                <td className={`${td} text-right font-black text-red-700`}>
-                  {totalErrors}
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
 
-        <div className="overflow-x-auto rounded border border-slate-300 bg-white text-slate-950">
-          <table className="w-full min-w-[1650px] border-collapse text-sm text-slate-950">
-            <thead className="sticky top-0 z-10">
-              <tr>
-                <th className={`${th} text-left`}>상태</th>
-                <th className={`${th} text-left`}>업체명</th>
-                <th className={`${th} text-right`}>주문</th>
-                <th className={`${th} text-right`}>총매출</th>
-                <th className={`${th} text-right`}>플랫폼 수익</th>
-                <th className={`${th} text-right`}>정산대기</th>
-                <th className={`${th} text-right`}>정산완료</th>
-                <th className={`${th} text-right`}>총정산금</th>
-                <th className={`${th} text-right`}>오류</th>
-                <th className={`${th} text-center`}>원장</th>
-                <th className={`${th} text-center`}>정산</th>
-                <th className={`${th} text-center`}>오류</th>
-              </tr>
-            </thead>
+        {error ? (
+          <section className="mb-3 border border-red-300 bg-red-50 p-3 font-black text-red-700">
+            {error}
+          </section>
+        ) : null}
 
-            <tbody>
-              {vendors.map((vendor) => (
-                <tr
-                  key={vendor.brandName}
-                  className="text-slate-950 hover:bg-yellow-50"
-                >
-                  <td className={`${td} whitespace-nowrap font-black`}>
-                    <span
-                      className={
-                        vendor.status === "오류확인"
-                          ? "text-red-700"
-                          : vendor.status === "정산대기"
-                            ? "text-blue-700"
-                            : "text-emerald-700"
-                      }
-                    >
-                      {vendor.status}
-                    </span>
-                  </td>
+        <section className="mb-3 grid grid-cols-7 gap-2">
+          <Stat title="정산건수" value={`${stats.total}건`} />
+          <Stat title="총거래금액" value={won(stats.gross)} />
+          <Stat title="플랫폼수익" value={won(stats.platform)} />
+          <Stat title="부가세예상" value={won(stats.vat)} />
+          <Stat title="판매자정산" value={won(stats.seller)} />
+          <Stat title="대기" value={`${stats.waiting}건`} />
+          <Stat title="완료" value={`${stats.paid}건`} />
+        </section>
 
-                  <td className={`${td} whitespace-nowrap font-black`}>
-                    {vendor.brandName}
-                  </td>
+        <section className="mb-3 border bg-white p-3">
+          <div className="grid grid-cols-8 gap-2">
+            <input className="h-10 border px-3 text-sm font-bold" placeholder="품목·판매자·바이어 검색" />
+            <select className="h-10 border px-3 text-sm font-bold">
+              <option>전체 판매자유형</option>
+              <option>개인농가</option>
+              <option>법인</option>
+              <option>조합</option>
+              <option>기업</option>
+            </select>
+            <select className="h-10 border px-3 text-sm font-bold">
+              <option>전체 세금구분</option>
+              <option>면세</option>
+              <option>과세</option>
+              <option>혼합</option>
+            </select>
+            <select className="h-10 border px-3 text-sm font-bold">
+              <option>전체 수수료부담</option>
+              <option>판매자</option>
+              <option>구매자</option>
+              <option>양쪽</option>
+            </select>
+            <select className="h-10 border px-3 text-sm font-bold">
+              <option>전체 상태</option>
+              <option>정산대기</option>
+              <option>정산확정</option>
+              <option>정산완료</option>
+              <option>보류</option>
+            </select>
+            <input className="h-10 border px-3 text-sm font-bold" placeholder="최소 거래금액" />
+            <input className="h-10 border px-3 text-sm font-bold" placeholder="최소 수수료" />
+            <button className="h-10 bg-neutral-900 px-4 text-sm font-black text-white">검색</button>
+          </div>
+        </section>
 
-                  <td className={`${td} text-right font-bold`}>
-                    {vendor.orderCount}
-                  </td>
+        <section className="border bg-white">
+          <div className="border-b bg-neutral-100 px-3 py-2 text-sm font-black">
+            표시 {items.length}건 / 전체 거래금액과 플랫폼 수수료 매출을 분리해 관리합니다.
+          </div>
 
-                  <td className={`${td} text-right font-bold`}>
-                    {money(vendor.totalSales)}
-                  </td>
-
-                  <td className={`${td} text-right font-black text-blue-700`}>
-                    {money(vendor.platformRevenue)}
-                  </td>
-
-                  <td className={`${td} text-right font-black text-red-700`}>
-                    {money(vendor.pendingAmount)}
-                  </td>
-
-                  <td className={`${td} text-right font-black text-emerald-700`}>
-                    {money(vendor.paidAmount)}
-                  </td>
-
-                  <td className={`${td} text-right font-bold`}>
-                    {money(vendor.totalSettlement)}
-                  </td>
-
-                  <td className={`${td} text-right font-black text-red-700`}>
-                    {vendor.errorCount}
-                  </td>
-
-                  <td className="border border-slate-300 px-2 py-1 text-center text-slate-950">
-                    <LinkButton
-                      href={`/admin/revenue/orders?brand=${encodeURIComponent(
-                        vendor.brandName
-                      )}&month=${month}`}
-                    >
-                      원장
-                    </LinkButton>
-                  </td>
-
-                  <td className="border border-slate-300 px-2 py-1 text-center text-slate-950">
-                    {vendor.pendingAmount > 0 ? (
-                      <LinkButton
-                        href={`/admin/settlements/${encodeURIComponent(
-                          vendor.brandName
-                        )}?month=${month}`}
-                        tone="blue"
-                      >
-                        정산
-                      </LinkButton>
-                    ) : (
-                      <span className="font-black text-slate-950">-</span>
-                    )}
-                  </td>
-
-                  <td className="border border-slate-300 px-2 py-1 text-center text-slate-950">
-                    {vendor.errorCount > 0 ? (
-                      <LinkButton
-                        href={`/admin/settlements/errors?month=${month}&q=${encodeURIComponent(
-                          vendor.brandName
-                        )}`}
-                        tone="red"
-                      >
-                        오류정리
-                      </LinkButton>
-                    ) : (
-                      <span className="font-black text-slate-950">-</span>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[2800px] border-collapse text-[13px]">
+              <thead>
+                <tr className="bg-neutral-200">
+                  <Th><input type="checkbox" /></Th>
+                  <Th>번호</Th>
+                  <Th>상태</Th>
+                  <Th>품목</Th>
+                  <Th>판매자</Th>
+                  <Th>판매자유형</Th>
+                  <Th>바이어</Th>
+                  <Th>총거래금액</Th>
+                  <Th>세금구분</Th>
+                  <Th>수수료부담</Th>
+                  <Th>수수료율</Th>
+                  <Th>판매자수수료</Th>
+                  <Th>구매자수수료</Th>
+                  <Th>플랫폼수익</Th>
+                  <Th>부가세예상</Th>
+                  <Th>판매자정산</Th>
+                  <Th>등록일</Th>
+                  <Th>메모</Th>
+                  <Th>관리</Th>
                 </tr>
-              ))}
+              </thead>
 
-              {vendors.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={12}
-                    className="border border-slate-300 p-10 text-center font-black text-slate-700"
-                  >
-                    정산할 업체 데이터가 없습니다.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              <tbody>
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={19} className="border p-8 text-center font-black text-neutral-500">
+                      정산 데이터가 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((x, i) => (
+                    <tr key={x.id} className="hover:bg-green-50">
+                      <Td><input type="checkbox" /></Td>
+                      <Td>{i + 1}</Td>
+                      <Td strong>{statusLabel(x.settlement_status)}</Td>
+                      <Td strong>{x.product_name || "-"}</Td>
+                      <Td>{x.seller_name || "-"}</Td>
+                      <Td>{sellerTypeLabel(x.seller_type)}</Td>
+                      <Td strong>{x.buyer_company_name || "-"}</Td>
+                      <Td strong>{won(x.gross_amount)}</Td>
+                      <Td>{taxLabel(x.product_tax_type)}</Td>
+                      <Td>{payerLabel(x.platform_fee_payer)}</Td>
+                      <Td>{`${Math.round(n(x.platform_fee_rate) * 10000) / 100}%`}</Td>
+                      <Td>{won(x.seller_fee_amount)}</Td>
+                      <Td>{won(x.buyer_fee_amount)}</Td>
+                      <Td strong>{won(x.platform_revenue)}</Td>
+                      <Td>{won(x.vat_amount)}</Td>
+                      <Td strong>{won(x.seller_settlement_amount)}</Td>
+                      <Td>{String(x.created_at || "").slice(0, 10)}</Td>
+                      <Td>{x.memo || "-"}</Td>
+                      <Td>
+                        <SettlementStatusButtons id={x.id} onDone={load} />
+                      </Td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </main>
+  );
+}
+
+
+function SettlementStatusButtons({
+  id,
+  onDone,
+}: {
+  id: string;
+  onDone: () => void;
+}) {
+  const [loading, setLoading] = useState("");
+
+  async function update(status: string, label: string) {
+    if (!confirm(`정산 상태를 ${label}(으)로 변경할까요?`)) return;
+
+    setLoading(status);
+
+    try {
+      const res = await fetch(`/api/admin/settlements/${id}/status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.ok) {
+        alert(json.error || "상태 변경 실패");
+        return;
+      }
+
+      alert(`${label} 처리 완료`);
+      onDone();
+    } catch (e) {
+      alert("상태 변경 중 오류가 발생했습니다.");
+    } finally {
+      setLoading("");
+    }
+  }
+
+  return (
+    <div className="flex gap-1">
+      <button
+        onClick={() => update("confirmed", "정산확정")}
+        disabled={!!loading}
+        className="rounded bg-blue-700 px-2 py-1 text-xs font-black text-white disabled:opacity-50"
+      >
+        확정
+      </button>
+
+      <button
+        onClick={() => update("paid", "정산완료")}
+        disabled={!!loading}
+        className="rounded bg-green-700 px-2 py-1 text-xs font-black text-white disabled:opacity-50"
+      >
+        완료
+      </button>
+
+      <button
+        onClick={() => update("hold", "보류")}
+        disabled={!!loading}
+        className="rounded bg-orange-600 px-2 py-1 text-xs font-black text-white disabled:opacity-50"
+      >
+        보류
+      </button>
+    </div>
+  );
+}
+
+function Stat({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="border bg-white p-4">
+      <p className="text-xs font-black text-neutral-500">{title}</p>
+      <p className="mt-1 text-2xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="whitespace-nowrap border border-neutral-300 bg-neutral-200 px-2 py-2 text-left font-black">
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, strong = false }: { children: React.ReactNode; strong?: boolean }) {
+  return (
+    <td className={`whitespace-nowrap border border-neutral-200 px-2 py-2 ${strong ? "font-black" : "font-bold text-neutral-700"}`}>
+      {children}
+    </td>
   );
 }

@@ -15,6 +15,42 @@ function safeJsonParse(text: string): FarmerMartResult {
   return JSON.parse(cleaned) as FarmerMartResult;
 }
 
+
+
+export async function GET() {
+
+  return NextResponse.json({
+
+    ok: true,
+
+    name: "K-Agri Expo AI Farmer Mart API",
+
+    method: "POST",
+
+    message: "이 API는 브라우저 주소창이 아니라 POST 요청으로 농민마트 분석을 실행합니다.",
+
+    sampleBody: {
+
+      homepageUrl: "https://example.com",
+
+      youtubeUrl: "https://youtube.com/@channel",
+
+      blogUrl: "https://blog.naver.com/example",
+
+      cafeUrl: "",
+
+      storeUrl: "",
+
+      productImageUrls: [],
+
+      memo: "제품명, 대상작물, 효능, 사용법 등 추가 메모",
+
+    },
+
+  });
+
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();

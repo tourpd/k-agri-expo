@@ -50,6 +50,7 @@ export default function AnalysisPage() {
   const [editableProducts, setEditableProducts] = useState<Product[]>([]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [productFilter, setProductFilter] = useState<"all" | "selected">("all");
 
   const products = useMemo(() => {
     return job?.result?.analysis?.allProducts ?? job?.partialProducts ?? [];
@@ -105,7 +106,7 @@ export default function AnalysisPage() {
         currentChunk: 0,
         totalChunks: 0,
         progress: 20,
-        message: "URL 자료를 실제로 읽고 제품을 분석중입니다.",
+        message: "회사 홈페이지·유튜브·블로그·제품자료를 읽고 농민마트용 제품을 분석중입니다.",
         result: null,
         error: null,
         logs: [
@@ -120,7 +121,7 @@ export default function AnalysisPage() {
 
       setDisplayProgress(25);
 
-      const res = await fetch("/api/ai/analyze-url", {
+      const res = await fetch("/api/ai/create-farmer-mart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -145,11 +146,11 @@ export default function AnalysisPage() {
           currentChunk: 0,
           totalChunks: 0,
           progress: 100,
-          message: "URL 분석 실패",
+          message: "AI 농민마트 분석 실패",
           result: null,
-          error: data.error ?? "URL 분석 실패",
+          error: data.error ?? "AI 농민마트 분석 실패",
           logs: [
-            `${new Date().toLocaleTimeString()} 오류: ${data.error ?? "URL 분석 실패"}`,
+            `${new Date().toLocaleTimeString()} 오류: ${data.error ?? "AI 농민마트 분석 실패"}`,
           ],
           partialProducts: [],
         });
@@ -168,7 +169,7 @@ export default function AnalysisPage() {
         currentChunk: 1,
         totalChunks: 1,
         progress: 100,
-        message: `URL 분석 완료 / 발견 제품 ${found.length}개`,
+        message: `AI 농민마트 분석 완료 / 발견 제품 ${found.length}개`,
         result: {
           fileName: "URL 자료 분석",
           pageCount: data.pageCount,
@@ -177,20 +178,35 @@ export default function AnalysisPage() {
         },
         error: null,
         logs: [
-          `${new Date().toLocaleTimeString()} URL 분석 완료 / 발견 제품 ${found.length}개`,
-          `${new Date().toLocaleTimeString()} 제품 통합 및 추천 구성 생성 완료`,
+          `${new Date().toLocaleTimeString()} AI 농민마트 분석 완료 / 발견 제품 ${found.length}개`,
+          `${new Date().toLocaleTimeString()} 제품 카드·농민마트 추천 구성 생성 완료`,
         ],
         partialProducts: found,
       });
 
       setEditableProducts(
-        found.map((p: Product) => ({
+        found.map((p: any) => ({
           ...p,
+          name: p.name ?? p.productName ?? "제품명 미확인",
+          category: p.category ?? "미분류",
+          reason:
+            p.reason ??
+            p.sellingPoint ??
+            p.farmerProblem ??
+            "농민 문제 해결 관점에서 추가 확인이 필요합니다.",
+          crops: p.crops ?? p.targetCrops ?? [],
+          problems: p.problems ?? (p.farmerProblem ? [p.farmerProblem] : []),
           selected: true,
-          detailUsage: "",
-          detailMethod: "",
-          detailTable: "",
-          detailWarning: "",
+          detailUsage: p.detailUsage ?? p.usageSummary ?? "",
+          detailMethod:
+            p.detailMethod ??
+            (Array.isArray(p.keyBenefits) ? p.keyBenefits.join("\n") : ""),
+          detailTable: p.detailTable ?? "",
+          detailWarning:
+            p.detailWarning ??
+            (Array.isArray(p.evidenceNeeded)
+              ? `추가 근거 필요: ${p.evidenceNeeded.join(", ")}`
+              : ""),
         }))
       );
 
@@ -549,26 +565,63 @@ export default function AnalysisPage() {
             <div>
               <h2 className="text-5xl font-black">AI 제품 발견 보드</h2>
               <p className="mt-4 text-2xl font-black text-stone-700">
-                제품을 선택·삭제·수정하고 상세페이지 콘텐츠로 넘깁니다.
+                PDF에서 발견된 전체 제품을 먼저 로드하고, 이번 상세페이지에 쓸 제품만 선택합니다.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={() => setViewMode("card")}
+                onClick={() => {
+                  setProductFilter("all");
+                  setViewMode("list");
+                }}
                 className={`rounded-2xl px-5 py-3 text-xl font-black ${
-                  viewMode === "card" ? "bg-green-700 text-white" : "bg-stone-200 text-black"
+                  productFilter === "all" ? "bg-green-700 text-white" : "bg-stone-200 text-black"
                 }`}
               >
-                아이콘형
+                전체 제품 로드
+              </button>
+              <button
+                onClick={() => {
+                  setProductFilter("selected");
+                  setViewMode("card");
+                }}
+                className={`rounded-2xl px-5 py-3 text-xl font-black ${
+                  productFilter === "selected" ? "bg-green-700 text-white" : "bg-stone-200 text-black"
+                }`}
+              >
+                선택 제품만 보기
+              </button>
+              <button
+                onClick={() => setViewMode("card")}
+                className={`rounded-2xl px-5 py-3 text-xl font-black ${
+                  viewMode === "card" ? "bg-black text-white" : "bg-stone-200 text-black"
+                }`}
+              >
+                카드형
               </button>
               <button
                 onClick={() => setViewMode("list")}
                 className={`rounded-2xl px-5 py-3 text-xl font-black ${
-                  viewMode === "list" ? "bg-green-700 text-white" : "bg-stone-200 text-black"
+                  viewMode === "list" ? "bg-black text-white" : "bg-stone-200 text-black"
                 }`}
               >
-                목록형
+                표형
+              </button>
+              <button
+                onClick={() => {
+                  const firstSelected = editableProducts.findIndex((p) => p.selected);
+                  setActiveIndex(firstSelected >= 0 ? firstSelected : editableProducts.length > 0 ? 0 : null);
+                }}
+                className="rounded-2xl bg-green-700 px-5 py-3 text-xl font-black text-white"
+              >
+                상세페이지 만들기
+              </button>
+              <button
+                onClick={() => alert("다음 단계에서 4컷만화·8컷웹툰·쇼츠·홈쇼핑 대본 생성기를 연결합니다.")}
+                className="rounded-2xl bg-purple-700 px-5 py-3 text-xl font-black text-white"
+              >
+                콘텐츠 확장
               </button>
               <button
                 onClick={exportProductsCsv}
@@ -614,7 +667,7 @@ export default function AnalysisPage() {
 
             {!activeProduct ? (
               <p className="mt-6 text-2xl font-black text-stone-500">
-                제품 카드를 눌러 수정하세요.
+                전체 제품 중 선택한 제품만 여기서 편집하고 상세페이지·콘텐츠 확장으로 넘깁니다.
               </p>
             ) : (
               <div className="mt-6 space-y-4">

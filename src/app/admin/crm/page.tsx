@@ -1,240 +1,282 @@
+"use client";
+
 import Link from "next/link";
-import { listCrmLeads, listIssueKeysForCrm } from "@/lib/admin/crm";
+import { useEffect, useMemo, useState } from "react";
 
-export const dynamic = "force-dynamic";
+type Customer = {
+  id: string;
+  name?: string | null;
+  phone?: string | null;
+  region?: string | null;
+  crop?: string | null;
+  customer_type?: string | null;
+  customer_stage?: string | null;
+  joint_score?: number | null;
+  blood_score?: number | null;
+  eye_score?: number | null;
+  interest_products?: string | null;
+  order_count?: number | null;
+  consult_count?: number | null;
+  total_revenue_krw?: number | null;
+  total_purchase_amount?: number | null;
+  education_count?: number | null;
+  groupbuy_count?: number | null;
+  memo?: string | null;
+};
 
-export default async function AdminCrmPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ issue_key?: string }>;
-}) {
-  const params = await searchParams;
-  const issueKey = params?.issue_key?.trim() || "";
+type Log = {
+  id: string;
+  customer_id?: string | null;
+  phone?: string | null;
+  activity_type?: string | null;
+  activity_title?: string | null;
+};
 
-  const [rows, issueKeys] = await Promise.all([
-    listCrmLeads({
-      sourceChannel: "ai_consult",
-      issueKey: issueKey || undefined,
-    }),
-    listIssueKeysForCrm("ai_consult"),
-  ]);
+function n(v: unknown) {
+  const num = Number(v || 0);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function typeLabel(v?: string | null) {
+  if (v === "garden") return "텃밭";
+  if (v === "balcony") return "베란다";
+  if (v === "plant_parent") return "식집사";
+  if (v === "consumer") return "일반소비자";
+  if (v === "health") return "건강고객";
+  if (v === "creator") return "크리에이터";
+  return "농민";
+}
+
+function scoreCustomer(c: Customer, logs: Log[]) {
+  const myLogs = logs.filter((l) => l.customer_id === c.id || (c.phone && l.phone === c.phone));
+  let score = 0;
+
+  score += myLogs.filter((l) => l.activity_type === "video_watch").length * 10;
+  score += myLogs.filter((l) => l.activity_type === "product_click").length * 20;
+  score += myLogs.filter((l) => l.activity_type === "consult").length * 30;
+  score += myLogs.filter((l) => l.activity_type === "education").length * 20;
+  score += myLogs.filter((l) => l.activity_type === "groupbuy").length * 40;
+  score += myLogs.filter((l) => l.activity_type === "order").length * 50;
+
+  score += n(c.order_count) * 8;
+  score += n(c.consult_count) * 5;
+  score += n(c.groupbuy_count) * 10;
+  score += n(c.education_count) * 5;
+
+  const revenue = n(c.total_revenue_krw || c.total_purchase_amount);
+  if (revenue >= 1000000) score += 20;
+  else if (revenue >= 500000) score += 10;
+
+  return Math.min(score, 100);
+}
+
+function status(score: number) {
+  if (score >= 90) return "HOT";
+  if (score >= 70) return "WARM";
+  if (score >= 50) return "관심";
+  return "관찰";
+}
+
+function recommend(c: Customer) {
+  const recs: string[] = [];
+  if (n(c.joint_score) >= 70 || String(c.interest_products || "").includes("MSM")) recs.push("MSM");
+  if (n(c.eye_score) >= 70 || String(c.interest_products || "").includes("루테인")) recs.push("루테인");
+  if (n(c.blood_score) >= 70 || String(c.interest_products || "").includes("혈행")) recs.push("혈행");
+  if (String(c.crop || "").includes("마늘")) recs.push("마늘교육");
+  if (String(c.crop || "").includes("딸기")) recs.push("딸기교육");
+  return recs.length ? recs.join("·") : "추천대기";
+}
+
+export default function CrmPage() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function load() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/crm?ts=" + Date.now(), { cache: "no-store" });
+      const text = await res.text();
+
+      if (!res.ok) {
+        throw new Error(`CRM API 오류: ${res.status} ${text.slice(0, 120)}`);
+      }
+
+      const json = JSON.parse(text);
+
+      if (!json.ok) throw new Error(json.error || "CRM 조회 실패");
+
+      setCustomers(json.customers || []);
+      setLogs(json.logs || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "CRM 조회 실패");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const rows = useMemo(() => {
+    return customers.map((c) => {
+      const score = scoreCustomer(c, logs);
+      const myLogs = logs.filter((l) => l.customer_id === c.id || (c.phone && l.phone === c.phone));
+      const latest = myLogs[0];
+
+      return {
+        ...c,
+        crmScore: score,
+        crmStatus: status(score),
+        recommendText: recommend(c),
+        latestAction: latest?.activity_title || "-",
+        latestType: latest?.activity_type || "-",
+      };
+    });
+  }, [customers, logs]);
+
+  const stats = useMemo(() => {
+    return {
+      total: rows.length,
+      hot: rows.filter((x) => x.crmStatus === "HOT").length,
+      warm: rows.filter((x) => x.crmStatus === "WARM").length,
+      buyer: rows.filter((x) => n(x.order_count) > 0).length,
+      logs: logs.length,
+    };
+  }, [rows, logs]);
 
   return (
-    <main style={S.page}>
-      <div style={S.container}>
-        <div style={S.header}>
+    <main className="min-h-screen bg-[#f3f4f6] p-4 text-black">
+      <div className="mx-auto max-w-[2300px]">
+        <div className="mb-3 flex items-center justify-between">
           <div>
-            <div style={S.eyebrow}>ADMIN CRM</div>
-            <h1 style={S.title}>AI 상담 CRM</h1>
-            <p style={S.desc}>
-              AI 상담 유입 리드를 모아서 보고, HOT 리드와 추천 딜까지 바로 확인하는 관리 화면입니다.
-            </p>
+            <p className="text-xs font-black text-green-700">K-AGRI AI CRM CENTER</p>
+            <h1 className="text-3xl font-black">통합 CRM 센터</h1>
+          </div>
+
+          <div className="flex gap-2">
+            <button onClick={load} className="h-10 rounded bg-green-700 px-4 text-sm font-black text-white">
+              {loading ? "조회중" : "새로고침"}
+            </button>
+            <button className="h-10 rounded bg-blue-700 px-4 text-sm font-black text-white">문자발송</button>
+            <button className="h-10 rounded bg-orange-600 px-4 text-sm font-black text-white">공동구매 추출</button>
+            <button className="h-10 rounded bg-black px-4 text-sm font-black text-white">엑셀 다운로드</button>
           </div>
         </div>
 
-        <section style={S.card}>
-          <div style={S.filterHeader}>
-            <div style={S.sectionTitle}>필터</div>
-            <Link href="/admin/crm" style={S.resetLink}>
-              전체 보기
-            </Link>
-          </div>
+        {error ? (
+          <section className="mb-3 border border-red-300 bg-red-50 p-3 font-black text-red-700">
+            {error}
+          </section>
+        ) : null}
 
-          <div style={S.filterRow}>
-            <Link
-              href="/admin/crm"
-              style={!issueKey ? S.filterChipActive : S.filterChip}
-            >
-              전체
-            </Link>
+        <section className="mb-3 grid grid-cols-5 gap-2">
+          <MiniStat title="전체고객" value={`${stats.total}명`} />
+          <MiniStat title="HOT" value={`${stats.hot}명`} />
+          <MiniStat title="WARM" value={`${stats.warm}명`} />
+          <MiniStat title="구매고객" value={`${stats.buyer}명`} />
+          <MiniStat title="행동로그" value={`${stats.logs}건`} />
+        </section>
 
-            {issueKeys.map((key) => (
-              <Link
-                key={key}
-                href={`/admin/crm?issue_key=${encodeURIComponent(key)}`}
-                style={issueKey === key ? S.filterChipActive : S.filterChip}
-              >
-                {key}
-              </Link>
-            ))}
+        <section className="mb-3 border bg-white p-3">
+          <div className="grid grid-cols-7 gap-2">
+            <input className="h-10 border px-3 text-sm font-bold" placeholder="이름·전화·관심사 검색" />
+            <select className="h-10 border px-3 text-sm font-bold">
+              <option>전체 유형</option>
+              <option>농민</option>
+              <option>텃밭</option>
+              <option>식집사</option>
+              <option>일반소비자</option>
+              <option>건강고객</option>
+            </select>
+            <select className="h-10 border px-3 text-sm font-bold">
+              <option>전체 상태</option>
+              <option>HOT</option>
+              <option>WARM</option>
+              <option>관심</option>
+              <option>관찰</option>
+            </select>
+            <input className="h-10 border px-3 text-sm font-bold" placeholder="추천상품" />
+            <input className="h-10 border px-3 text-sm font-bold" placeholder="지역" />
+            <input className="h-10 border px-3 text-sm font-bold" placeholder="작목" />
+            <button className="h-10 bg-neutral-900 px-4 text-sm font-black text-white">검색</button>
           </div>
         </section>
 
-        <section style={S.card}>
-          <div style={S.summaryRow}>
-            <div style={S.summaryBox}>
-              <div style={S.summaryLabel}>총 AI 상담 리드</div>
-              <div style={S.summaryValue}>{rows.length}</div>
-            </div>
-
-            <div style={S.summaryBox}>
-              <div style={S.summaryLabel}>HOT 이상</div>
-              <div style={S.summaryValue}>
-                {rows.filter((r) => r.priority_rank === "HOT" || r.priority_rank === "VERY_HOT").length}
-              </div>
-            </div>
-
-            <div style={S.summaryBox}>
-              <div style={S.summaryLabel}>현재 필터</div>
-              <div style={S.summaryValueSmall}>{issueKey || "전체"}</div>
-            </div>
+        <section className="border bg-white">
+          <div className="border-b bg-neutral-100 px-3 py-2 text-sm font-black">
+            표시 {rows.length}명 / CRM 점수 기준: 영상 +10, 클릭 +20, 상담 +30, 공동구매 +40, 주문 +50
           </div>
-        </section>
 
-        <section style={S.card}>
-          <div style={S.sectionTitle}>리드 목록</div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[2300px] border-collapse text-[13px]">
+              <thead>
+                <tr className="bg-neutral-200">
+                  <Th><input type="checkbox" /></Th>
+                  <Th>번호</Th>
+                  <Th>상태</Th>
+                  <Th>점수</Th>
+                  <Th>고객명</Th>
+                  <Th>유형</Th>
+                  <Th>전화</Th>
+                  <Th>지역</Th>
+                  <Th>작목</Th>
+                  <Th>관심제품</Th>
+                  <Th>추천상품</Th>
+                  <Th>최근행동</Th>
+                  <Th>행동유형</Th>
+                  <Th>주문</Th>
+                  <Th>상담</Th>
+                  <Th>매출</Th>
+                  <Th>다음 액션</Th>
+                  <Th>메모</Th>
+                </tr>
+              </thead>
 
-          <div style={S.leadList}>
-            {rows.length === 0 ? (
-              <div style={S.emptyBox}>표시할 AI 상담 리드가 없습니다.</div>
-            ) : (
-              rows.map((row) => {
-                const isHot =
-                  row.priority_rank === "HOT" || row.priority_rank === "VERY_HOT";
-
-                return (
-                  <div
-                    key={row.id}
-                    style={isHot ? S.leadCardHot : S.leadCard}
-                  >
-                    <div style={S.leadTop}>
-                      <div style={S.leadMetaLeft}>
-                        <div style={S.badgeRow}>
-                          <span style={S.sourceBadge}>
-                            {row.source_channel ?? "unknown"}
-                          </span>
-                          <span
-                            style={
-                              row.priority_rank === "VERY_HOT"
-                                ? S.priorityVeryHot
-                                : row.priority_rank === "HOT"
-                                ? S.priorityHot
-                                : row.priority_rank === "WARM"
-                                ? S.priorityWarm
-                                : S.priorityLow
-                            }
-                          >
-                            {row.priority_rank ?? "LOW"}
-                          </span>
-                          {row.issue_key ? (
-                            <span style={S.issueBadge}>{row.issue_key}</span>
-                          ) : null}
-                          {row.crop_key ? (
-                            <span style={S.cropBadge}>{row.crop_key}</span>
-                          ) : null}
-                        </div>
-
-                        <div style={S.leadTitle}>
-                          {row.name || "AI 상담 사용자"}
-                        </div>
-
-                        <div style={S.leadSubMeta}>
-                          점수 {row.lead_score ?? 0} · 상태 {row.status ?? "new"} · CTA{" "}
-                          {row.clicked_cta ?? "-"}
-                        </div>
-                      </div>
-
-                      <div style={S.leadTime}>
-                        {formatDateTime(row.created_at)}
-                      </div>
-                    </div>
-
-                    <div style={S.consultBox}>
-                      <div style={S.consultLabel}>상담 입력 내용</div>
-                      <div style={S.consultText}>
-                        {row.consult_text || "입력된 상담 내용이 없습니다."}
-                      </div>
-                    </div>
-
-                    <div style={S.recommendGrid}>
-                      <div style={S.recommendPanel}>
-                        <div style={S.recommendTitle}>추천 딜</div>
-                        {Array.isArray(row.recommended_deals) && row.recommended_deals.length > 0 ? (
-                          <div style={S.recommendList}>
-                            {row.recommended_deals.map((item: any, idx: number) => (
-                              <div key={`${row.id}-deal-${idx}`} style={S.recommendItem}>
-                                <div>
-                                  <div style={S.recommendName}>
-                                    {item?.deal_title ?? "추천 딜"}
-                                  </div>
-                                  <div style={S.recommendReason}>
-                                    {item?.reason ?? ""}
-                                  </div>
-                                </div>
-                                <Link
-                                  href={item?.deal_url ?? "/expo/deals"}
-                                  style={S.recommendLinkDeal}
-                                >
-                                  바로 보기 →
-                                </Link>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div style={S.recommendEmpty}>추천 딜이 없습니다.</div>
-                        )}
-                      </div>
-
-                      <div style={S.recommendPanel}>
-                        <div style={S.recommendTitle}>추천 부스</div>
-                        {Array.isArray(row.recommended_booths) && row.recommended_booths.length > 0 ? (
-                          <div style={S.recommendList}>
-                            {row.recommended_booths.map((item: any, idx: number) => (
-                              <div key={`${row.id}-booth-${idx}`} style={S.recommendItem}>
-                                <div>
-                                  <div style={S.recommendName}>
-                                    {item?.booth_name ?? "추천 부스"}
-                                  </div>
-                                  <div style={S.recommendReason}>
-                                    {item?.reason ?? ""}
-                                  </div>
-                                </div>
-                                <Link
-                                  href={item?.booth_url ?? "/expo/booths"}
-                                  style={S.recommendLink}
-                                >
-                                  보기 →
-                                </Link>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div style={S.recommendEmpty}>추천 부스가 없습니다.</div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ ...S.recommendPanel, marginTop: 14 }}>
-                      <div style={S.recommendTitle}>추천 제품</div>
-                      {Array.isArray(row.recommended_products) && row.recommended_products.length > 0 ? (
-                        <div style={S.recommendList}>
-                          {row.recommended_products.map((item: any, idx: number) => (
-                            <div key={`${row.id}-product-${idx}`} style={S.recommendItem}>
-                              <div>
-                                <div style={S.recommendName}>
-                                  {item?.product_name ?? "추천 제품"}
-                                </div>
-                                <div style={S.recommendReason}>
-                                  {item?.reason ?? ""}
-                                </div>
-                              </div>
-                              <Link
-                                href={item?.product_url ?? "/expo/consult"}
-                                style={S.recommendLinkGhost}
-                              >
-                                보기 →
-                              </Link>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div style={S.recommendEmpty}>추천 제품이 없습니다.</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={18} className="border p-8 text-center font-black text-neutral-500">
+                      CRM 대상 고객이 없습니다.
+                    </td>
+                  </tr>
+                ) : (
+                  rows.map((x, i) => (
+                    <tr key={x.id} className="hover:bg-green-50">
+                      <Td><input type="checkbox" /></Td>
+                      <Td>{i + 1}</Td>
+                      <Td strong>{x.crmStatus}</Td>
+                      <Td strong>{x.crmScore}점</Td>
+                      <Td strong>
+                        <Link
+                          href={`/admin/crm/${x.id}`}
+                          className="font-black text-green-700 underline"
+                        >
+                          {x.name || "-"}
+                        </Link>
+                      </Td>
+                      <Td>{typeLabel(x.customer_type)}</Td>
+                      <Td>{x.phone || "-"}</Td>
+                      <Td>{x.region || "-"}</Td>
+                      <Td>{x.crop || "-"}</Td>
+                      <Td>{x.interest_products || "-"}</Td>
+                      <Td strong>{x.recommendText}</Td>
+                      <Td>{x.latestAction}</Td>
+                      <Td>{x.latestType}</Td>
+                      <Td>{n(x.order_count)}회</Td>
+                      <Td>{n(x.consult_count)}회</Td>
+                      <Td strong>{n(x.total_revenue_krw || x.total_purchase_amount).toLocaleString()}원</Td>
+                      <Td>맞춤 문자·공동구매 안내</Td>
+                      <Td>{x.memo || "-"}</Td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
       </div>
@@ -242,350 +284,27 @@ export default async function AdminCrmPage({
   );
 }
 
-function formatDateTime(value: string | null) {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(
-    d.getMinutes()
-  ).padStart(2, "0")}`;
+function MiniStat({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="border bg-white px-4 py-3">
+      <p className="text-xs font-black text-neutral-500">{title}</p>
+      <p className="mt-1 text-xl font-black">{value}</p>
+    </div>
+  );
 }
 
-const S: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#f8fafc",
-    color: "#0f172a",
-    padding: "24px 16px 40px",
-  },
-  container: {
-    maxWidth: 1360,
-    margin: "0 auto",
-    display: "grid",
-    gap: 20,
-  },
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "end",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  eyebrow: {
-    fontSize: 12,
-    fontWeight: 900,
-    color: "#16a34a",
-    letterSpacing: 0.5,
-  },
-  title: {
-    margin: "8px 0 0",
-    fontSize: 34,
-    fontWeight: 950,
-    letterSpacing: -0.8,
-  },
-  desc: {
-    marginTop: 10,
-    fontSize: 15,
-    color: "#64748b",
-    lineHeight: 1.7,
-  },
-  card: {
-    background: "#fff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 24,
-    padding: 20,
-    boxShadow: "0 10px 24px rgba(15,23,42,0.04)",
-  },
-  filterHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 900,
-  },
-  resetLink: {
-    textDecoration: "none",
-    fontSize: 14,
-    fontWeight: 800,
-    color: "#475569",
-  },
-  filterRow: {
-    marginTop: 14,
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  filterChip: {
-    textDecoration: "none",
-    padding: "10px 14px",
-    borderRadius: 999,
-    border: "1px solid #cbd5e1",
-    background: "#fff",
-    color: "#334155",
-    fontSize: 14,
-    fontWeight: 800,
-  },
-  filterChipActive: {
-    textDecoration: "none",
-    padding: "10px 14px",
-    borderRadius: 999,
-    border: "1px solid #16a34a",
-    background: "#f0fdf4",
-    color: "#166534",
-    fontSize: 14,
-    fontWeight: 900,
-  },
-  summaryRow: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 14,
-  },
-  summaryBox: {
-    borderRadius: 18,
-    border: "1px solid #e2e8f0",
-    background: "#f8fafc",
-    padding: 16,
-  },
-  summaryLabel: {
-    fontSize: 13,
-    color: "#64748b",
-    fontWeight: 800,
-  },
-  summaryValue: {
-    marginTop: 8,
-    fontSize: 28,
-    fontWeight: 950,
-    color: "#0f172a",
-  },
-  summaryValueSmall: {
-    marginTop: 8,
-    fontSize: 20,
-    fontWeight: 900,
-    color: "#0f172a",
-  },
-  leadList: {
-    marginTop: 16,
-    display: "grid",
-    gap: 16,
-  },
-  leadCard: {
-    borderRadius: 22,
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    padding: 18,
-  },
-  leadCardHot: {
-    borderRadius: 22,
-    border: "1px solid #f59e0b",
-    background: "linear-gradient(180deg, #fffdf5 0%, #ffffff 100%)",
-    padding: 18,
-    boxShadow: "0 12px 30px rgba(245,158,11,0.12)",
-  },
-  leadTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "start",
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  leadMetaLeft: {
-    minWidth: 0,
-    flex: 1,
-  },
-  badgeRow: {
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  sourceBadge: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#e0f2fe",
-    color: "#075985",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  priorityVeryHot: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#fee2e2",
-    color: "#991b1b",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  priorityHot: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#fef3c7",
-    color: "#92400e",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  priorityWarm: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#ecfccb",
-    color: "#3f6212",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  priorityLow: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#e2e8f0",
-    color: "#334155",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  issueBadge: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#ede9fe",
-    color: "#5b21b6",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  cropBadge: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: 999,
-    background: "#dcfce7",
-    color: "#166534",
-    fontSize: 12,
-    fontWeight: 900,
-  },
-  leadTitle: {
-    marginTop: 12,
-    fontSize: 20,
-    fontWeight: 900,
-    color: "#0f172a",
-  },
-  leadSubMeta: {
-    marginTop: 8,
-    fontSize: 13,
-    color: "#64748b",
-    lineHeight: 1.7,
-  },
-  leadTime: {
-    fontSize: 13,
-    color: "#64748b",
-    fontWeight: 700,
-    whiteSpace: "nowrap",
-  },
-  consultBox: {
-    marginTop: 16,
-    borderRadius: 18,
-    background: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    padding: 14,
-  },
-  consultLabel: {
-    fontSize: 13,
-    fontWeight: 900,
-    color: "#334155",
-  },
-  consultText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#0f172a",
-    lineHeight: 1.8,
-    whiteSpace: "pre-wrap",
-  },
-  recommendGrid: {
-    marginTop: 16,
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 14,
-  },
-  recommendPanel: {
-    borderRadius: 18,
-    border: "1px solid #e5e7eb",
-    background: "#fff",
-    padding: 14,
-  },
-  recommendTitle: {
-    fontSize: 15,
-    fontWeight: 900,
-    color: "#0f172a",
-  },
-  recommendList: {
-    marginTop: 12,
-    display: "grid",
-    gap: 10,
-  },
-  recommendItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "start",
-    gap: 12,
-    padding: "12px 0",
-    borderTop: "1px solid #f1f5f9",
-  },
-  recommendName: {
-    fontSize: 14,
-    fontWeight: 900,
-    color: "#0f172a",
-  },
-  recommendReason: {
-    marginTop: 6,
-    fontSize: 13,
-    color: "#64748b",
-    lineHeight: 1.6,
-  },
-  recommendLink: {
-    textDecoration: "none",
-    background: "#15803d",
-    color: "#fff",
-    padding: "10px 12px",
-    borderRadius: 12,
-    fontSize: 13,
-    fontWeight: 800,
-    whiteSpace: "nowrap",
-  },
-  recommendLinkGhost: {
-    textDecoration: "none",
-    background: "#fff",
-    color: "#0f172a",
-    padding: "10px 12px",
-    borderRadius: 12,
-    fontSize: 13,
-    fontWeight: 800,
-    border: "1px solid #cbd5e1",
-    whiteSpace: "nowrap",
-  },
-  recommendLinkDeal: {
-    textDecoration: "none",
-    background: "#f59e0b",
-    color: "#fff",
-    padding: "10px 12px",
-    borderRadius: 12,
-    fontSize: 13,
-    fontWeight: 800,
-    whiteSpace: "nowrap",
-  },
-  recommendEmpty: {
-    marginTop: 12,
-    fontSize: 13,
-    color: "#64748b",
-  },
-  emptyBox: {
-    borderRadius: 20,
-    padding: 24,
-    background: "#f8fafc",
-    border: "1px dashed #cbd5e1",
-    color: "#64748b",
-    textAlign: "center",
-  },
-};
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="sticky top-0 whitespace-nowrap border border-neutral-300 bg-neutral-200 px-2 py-2 text-left font-black">
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, strong = false }: { children: React.ReactNode; strong?: boolean }) {
+  return (
+    <td className={`whitespace-nowrap border border-neutral-200 px-2 py-2 ${strong ? "font-black" : "font-bold text-neutral-700"}`}>
+      {children}
+    </td>
+  );
+}
