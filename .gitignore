@@ -46,3 +46,7 @@ uploads/
 tmp/
 temp/
 *.pdf
+
+.next
+backup-videos
+data
