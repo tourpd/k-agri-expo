@@ -13,3 +13,8 @@ temp
 uploads
 public/uploads
 *.log
+.next
+backup-videos
+data
+node_modules
+.git
