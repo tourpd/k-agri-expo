@@ -90,6 +90,13 @@ const RESPONSIVE_CSS = `
   }
 }
 
+@media (max-width: 900px) {
+  .expo-agri-trade-entry {
+    grid-template-columns: 1fr !important;
+    padding: 20px !important;
+  }
+}
+
 @media (max-width: 768px) {
   .expo-section {
     padding: 14px 12px 0 !important;
@@ -329,6 +336,39 @@ type HomeSlotWithLink = HomeSlot & {
   meta_1?: string | null;
   meta_2?: string | null;
 };
+
+
+function AgriTradeCenterEntry() {
+  return (
+    <section className="expo-section" style={{ padding: "18px 20px 0" }}>
+      <div
+        style={{
+          maxWidth: 1160,
+          margin: "0 auto",
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: 28,
+          boxShadow: "0 18px 45px rgba(15,23,42,0.16)",
+        }}
+      >
+        <img
+          src="/images/agri-exchange-banner.png"
+          alt="K-Agri 농산물거래소"
+          style={{ width: "100%", display: "block" }}
+        />
+
+        <Link href="/expo/agri-exchange/register" aria-label="내 농산물 등록하기"
+          style={{ position: "absolute", left: "5%", top: "49%", width: "28%", height: "30%", borderRadius: 22 }} />
+
+        <Link href="/expo/agri-exchange/market" aria-label="전국 농산물 찾기"
+          style={{ position: "absolute", left: "36%", top: "49%", width: "28%", height: "30%", borderRadius: 22 }} />
+
+        <Link href="/expo/agri-exchange/my-trades" aria-label="내 거래 관리하기"
+          style={{ position: "absolute", left: "67%", top: "49%", width: "28%", height: "30%", borderRadius: 22 }} />
+      </div>
+    </section>
+  );
+}
 
 function JointGroupBuyBanner() {
   return (
@@ -1126,6 +1166,7 @@ export default async function ExpoIndexPage() {
 
       <JointGroupBuyBanner />
 
+      <AgriTradeCenterEntry />
 
       <section className="expo-section" style={{ padding: "16px 20px 0" }}>
         <ExpoCategoryEntrySection />
