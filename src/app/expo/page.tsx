@@ -1,3 +1,4 @@
+import CropValueSearchHero from "@/components/expo/CropValueSearchHero";
 import React from "react";
 import Link from "next/link";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -366,6 +367,7 @@ function AgriTradeCenterEntry() {
         <Link href="/expo/agri-exchange/my-trades" aria-label="내 거래 관리하기"
           style={{ position: "absolute", left: "67%", top: "49%", width: "28%", height: "30%", borderRadius: 22 }} />
       </div>
+      <CropValueSearchHero />
     </section>
   );
 }
@@ -1164,15 +1166,37 @@ export default async function ExpoIndexPage() {
         heroDescription={heroDescription}
       />
 
-      <JointGroupBuyBanner />
-
-      <AgriTradeCenterEntry />
-
       <section className="expo-section" style={{ padding: "16px 20px 0" }}>
         <ExpoCategoryEntrySection />
       </section>
 
+      <AgriTradeCenterEntry />
+
+
       <ExpoHotIssuesSection items={hotIssues} />
+
+      <section className="expo-section" style={{ padding: "18px 20px 0" }}>
+        <div
+          style={{
+            maxWidth: 1160,
+            margin: "0 auto",
+          }}
+        >
+          <Link href="/expo/hongsan-garlic">
+            <img
+              src="/images/hongsan-garlic-main.png"
+              alt="홍산마늘 긴급판매"
+              style={{
+                width: "100%",
+                display: "block",
+                borderRadius: 24,
+                boxShadow: "0 12px 30px rgba(0,0,0,.15)",
+              }}
+            />
+          </Link>
+        </div>
+      </section>
+
 
       {promotions.length > 0 ? (
   <ExpoPromotionHero
@@ -1190,6 +1214,8 @@ export default async function ExpoIndexPage() {
       <ExpoProblemSection contents={problemContents as any} />
 
       <ExpoNewProductsSection items={autoNewProducts} />
+
+      <JointGroupBuyBanner />
 
       <ExpoFooter />
     </main>

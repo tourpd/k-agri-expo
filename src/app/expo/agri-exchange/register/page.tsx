@@ -1,112 +1,138 @@
-"use client";
+import { redirect } from "next/navigation";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import RegisterFormClient from "./RegisterFormClient";
 
-import Link from "next/link";
-import { useState } from "react";
-
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default function RegisterPage() {
-  const [form, setForm] = useState({
-    asset_name: "",
-    product_name: "",
-    variety_name: "",
-    producer_name: "",
-    producer_region: "",
-    size_spec: "",
-    total_quantity: "",
-    unit: "톤",
-    expected_price: "",
-    storage_location: "",
-    memo: "",
-  });
+const BUCKET = "agri-assets";
 
-  function setField(k: keyof typeof form, v: string) {
-    setForm((p) => ({ ...p, [k]: v }));
-  }
+async function uploadFiles(assetId: string, files: File[], fileType: "photo" | "document") {
+  "use server";
 
-  async function submit() {
-    const res = await fetch("/api/expo/agri-exchange/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+  const supabase = createSupabaseAdminClient();
+  const saved = [];
 
-    const json = await res.json();
+  for (const file of files) {
+    if (!file || file.size === 0) continue;
 
-    if (!json.ok) {
-      alert(json.error || "등록 실패");
-      return;
+    const safeName = file.name.replace(/[^a-zA-Z0-9가-힣._-]/g, "_");
+    const path = `${assetId}/${fileType}/${Date.now()}-${safeName}`;
+
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: true,
+      });
+
+    if (error) {
+      throw new Error(`파일 업로드 실패: ${error.message}`);
     }
 
-    alert("농산물 등록이 접수되었습니다.");
-    location.href = "/expo/agri-exchange/market";
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+
+    saved.push({
+      agri_asset_id: assetId,
+      file_type: fileType,
+      file_url: data.publicUrl,
+      file_name: file.name,
+    });
   }
 
-  return (
-    <main className="min-h-screen bg-[#f4f7f2] p-5 text-black">
-      <div className="mx-auto max-w-5xl">
-        <Link href="/expo" className="inline-flex rounded-2xl bg-black px-5 py-3 font-black text-white no-underline">
-          ← K-Agri Expo
-        </Link>
-
-        <section className="mt-5 rounded-3xl border bg-white p-6 shadow">
-          <p className="text-sm font-black text-green-700">K-AGRI 농산물거래소</p>
-          <h1 className="mt-2 text-4xl font-black">내 농산물 등록하기</h1>
-          <p className="mt-2 text-lg font-bold text-neutral-600">
-            대량 판매 가능한 농산물을 등록하면 바이어가 검색하고 거래를 제안할 수 있습니다.
-          </p>
-
-          <div className="mt-6 grid gap-4">
-            <Input label="자산명" value={form.asset_name} onChange={(v) => setField("asset_name", v)} placeholder="예: 경북 영천 마늘 30톤" />
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input label="품목" value={form.product_name} onChange={(v) => setField("product_name", v)} placeholder="마늘" />
-              <Input label="품종" value={form.variety_name} onChange={(v) => setField("variety_name", v)} placeholder="대서, 홍산 등" />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input label="생산자명" value={form.producer_name} onChange={(v) => setField("producer_name", v)} placeholder="김용식" />
-              <Input label="산지/지역" value={form.producer_region} onChange={(v) => setField("producer_region", v)} placeholder="경북 영천" />
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Input label="규격" value={form.size_spec} onChange={(v) => setField("size_spec", v)} placeholder="대서 대과" />
-              <Input label="수량" value={form.total_quantity} onChange={(v) => setField("total_quantity", v)} placeholder="30" />
-              <div>
-                <label className="mb-2 block font-black">단위</label>
-                <select value={form.unit} onChange={(e) => setField("unit", e.target.value)} className="h-14 w-full rounded-xl border px-4 font-black">
-                  <option value="톤">톤</option>
-                  <option value="kg">kg</option>
-                  <option value="박스">박스</option>
-                  <option value="망">망</option>
-                </select>
-              </div>
-            </div>
-            <Input label="희망단가" value={form.expected_price} onChange={(v) => setField("expected_price", v)} placeholder="4000" />
-            <Input label="보관위치" value={form.storage_location} onChange={(v) => setField("storage_location", v)} placeholder="영천 저온창고" />
-
-            <div>
-              <label className="mb-2 block font-black">메모</label>
-              <textarea
-                value={form.memo}
-                onChange={(e) => setField("memo", e.target.value)}
-                className="min-h-36 w-full rounded-xl border p-4 font-bold"
-                placeholder="사진, 성적서, 유튜브 링크, 보관상태 등을 적어주세요."
-              />
-            </div>
-          </div>
-
-          <button onClick={submit} className="mt-6 w-full rounded-2xl bg-green-700 py-5 text-xl font-black text-white">
-            농산물 등록 접수
-          </button>
-        </section>
-      </div>
-    </main>
-  );
+  return saved;
 }
 
-function Input({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return (
-    <div>
-      <label className="mb-2 block font-black">{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="h-14 w-full rounded-xl border px-4 font-black" />
-    </div>
-  );
+async function createAsset(formData: FormData) {
+  "use server";
+
+  const supabase = createSupabaseAdminClient();
+
+  const total_quantity = Number(formData.get("total_quantity") ?? 0);
+  const expected_price = Number(formData.get("expected_price") ?? 0);
+  const estimated_value = total_quantity * expected_price;
+
+  const memo = String(formData.get("memo") ?? "").trim();
+
+  const specMemo = `
+[규격별 재고·가격]
+대: ${formData.get("spec_대_stock") ?? ""} / ${formData.get("spec_대_price") ?? ""} / ${formData.get("spec_대_value") ?? ""} / ${formData.get("spec_대_channel") ?? ""}
+중: ${formData.get("spec_중_stock") ?? ""} / ${formData.get("spec_중_price") ?? ""} / ${formData.get("spec_중_value") ?? ""} / ${formData.get("spec_중_channel") ?? ""}
+소: ${formData.get("spec_소_stock") ?? ""} / ${formData.get("spec_소_price") ?? ""} / ${formData.get("spec_소_value") ?? ""} / ${formData.get("spec_소_channel") ?? ""}
+`.trim();
+
+  const youtube_url = String(formData.get("youtube_url") ?? "").trim();
+  const storage_status = String(formData.get("storage_status") ?? "").trim();
+
+  const { data, error } = await supabase
+    .from("agri_assets")
+    .insert({
+      asset_name: String(formData.get("asset_name") ?? "").trim(),
+      product_name: String(formData.get("product_name") ?? "").trim(),
+      variety_name: String(formData.get("variety_name") ?? "").trim(),
+      producer_name: String(formData.get("producer_name") ?? "").trim(),
+      producer_region: String(formData.get("producer_region") ?? "").trim(),
+      harvest_date: String(formData.get("harvest_date") ?? "") || null,
+      main_grade: String(formData.get("main_grade") ?? "").trim(),
+      size_spec: String(formData.get("size_spec") ?? "").trim(),
+      total_quantity,
+      unit: String(formData.get("unit") ?? "톤").trim(),
+      expected_price,
+      estimated_value,
+      storage_location: String(formData.get("storage_location") ?? "").trim(),
+      storage_method: String(formData.get("storage_method") ?? "").trim(),
+      memo: `${storage_status}\n\n${memo}\n\n${specMemo}`.trim(),
+      youtube_url,
+      status: String(formData.get("status") ?? "거래가능"),
+      photo_count: 0,
+      certificate_count: 0,
+      video_count: youtube_url ? 1 : 0,
+      quality_score: 80,
+      ai_sales_score: 80,
+      recommended_channel: "K-Agri 농산물거래소",
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  const assetId = data.id;
+
+  const photos = formData.getAll("photos").filter((v): v is File => v instanceof File && v.size > 0);
+  const documents = formData.getAll("documents").filter((v): v is File => v instanceof File && v.size > 0);
+
+  const photoRows = await uploadFiles(assetId, photos, "photo");
+  const documentRows = await uploadFiles(assetId, documents, "document");
+
+  const fileRows = [
+    ...photoRows,
+    ...documentRows,
+    ...(youtube_url
+      ? [{
+          agri_asset_id: assetId,
+          file_type: "video",
+          file_url: youtube_url,
+          file_name: "유튜브 영상",
+        }]
+      : []),
+  ];
+
+  if (fileRows.length > 0) {
+    await supabase.from("agri_asset_files").insert(fileRows);
+  }
+
+  await supabase
+    .from("agri_assets")
+    .update({
+      photo_count: photoRows.length,
+      certificate_count: documentRows.length,
+      video_count: youtube_url ? 1 : 0,
+    })
+    .eq("id", assetId);
+
+  redirect(`/admin/agri-assets/${assetId}`);
+}
+
+export default function Page() {
+  return <RegisterFormClient createAsset={createAsset} />;
 }
