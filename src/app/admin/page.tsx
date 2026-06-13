@@ -26,6 +26,32 @@ export default async function AdminDashboardPage() {
 
   return (
     <main className="p-6 space-y-6">
+
+      <section style={{ margin: "16px 0 24px" }}>
+        <a
+          href="/admin/kagri-writers-room"
+          style={{
+            display: "block",
+            padding: "22px 26px",
+            borderRadius: 20,
+            background: "linear-gradient(135deg,#111827,#14532d)",
+            color: "#ffffff",
+            textDecoration: "none",
+            boxShadow: "0 14px 36px rgba(15,23,42,.18)",
+          }}
+        >
+          <div style={{ fontSize: 14, fontWeight: 900, color: "#86efac" }}>
+            K-AGRI CONTENT WAR ROOM
+          </div>
+          <div style={{ marginTop: 6, fontSize: 30, fontWeight: 950 }}>
+            ✍️ K-Agri 작가실 바로가기
+          </div>
+          <div style={{ marginTop: 8, fontSize: 16, fontWeight: 800, opacity: .9 }}>
+            홍산마늘 긴급판매 · 쇼츠 · 8컷 만화 · 보도자료 · 문자홍보 · 판매페이지 제작
+          </div>
+        </a>
+      </section>
+
       {/* KPI */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard title="총 주문" value={total} />
