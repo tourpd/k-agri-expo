@@ -121,7 +121,8 @@ ${input.raw_content}
   });
 
   if (!res.ok) {
-    return fallbackExtract(input);
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`OpenAI 추출 실패: ${res.status} ${errorText}`);
   }
 
   const data = await res.json();
@@ -130,10 +131,14 @@ ${input.raw_content}
     data.output?.[0]?.content?.[0]?.text ||
     "";
 
+  if (!text.trim()) {
+    throw new Error("OpenAI 응답이 비어 있습니다.");
+  }
+
   const parsed = safeJsonParse(text);
 
   if (!Array.isArray(parsed)) {
-    return fallbackExtract(input);
+    throw new Error("OpenAI 응답이 JSON 배열이 아닙니다.");
   }
 
   return parsed.map((r) => ({

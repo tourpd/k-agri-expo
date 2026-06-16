@@ -138,23 +138,31 @@ export async function POST(req: NextRequest) {
     }
 
     if (name.endsWith(".ppt") || name.endsWith(".pptx")) {
-      let pptxBuffer = buffer;
+      let extracted = { pageCount: 0, text: "" };
 
-      if (name.endsWith(".ppt")) {
-        const pptxPath = await convertWithSoffice(inputPath, tempDir, "pptx");
-        pptxBuffer = await readFile(pptxPath);
+      if (name.endsWith(".pptx")) {
+        extracted = await extractPptx(buffer);
       }
 
-      const extracted = await extractPptx(pptxBuffer);
       const pdfPath = await convertWithSoffice(inputPath, tempDir, "pdf");
+
+      const txtPath = path.join(tempDir, "ppt-out.txt");
+      let pdfText = "";
+      try {
+        await execFileAsync(pdftotext, ["-layout", pdfPath, txtPath]);
+        pdfText = await readFile(txtPath, "utf8");
+      } catch {}
+
       const imageUrls = await renderPdfToImages(pdfPath, assetDir);
+
+      const text = extracted.text || pdfText;
 
       return NextResponse.json({
         ok: true,
         fileName: originalName,
         fileType: name.endsWith(".ppt") ? "ppt" : "pptx",
         slideCount: imageUrls.length || extracted.pageCount,
-        text: extracted.text,
+        text,
         imageUrls,
       });
     }

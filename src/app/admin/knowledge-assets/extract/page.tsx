@@ -32,6 +32,7 @@ export default function KnowledgeExtractPage() {
   const [selectedText, setSelectedText] = useState("");
   const [msg, setMsg] = useState("대기");
   const [loading, setLoading] = useState(false);
+  const [extractingId, setExtractingId] = useState<string | null>(null);
 
   async function uploadFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files || []);
@@ -98,14 +99,27 @@ export default function KnowledgeExtractPage() {
     }
 
     setLoading(true);
-    setMsg("AI 판단규칙 추출 중");
+    setMsg(`${row?.name || "현재 원문"} AI 판단규칙 추출 중... 최대 60초 기다려주세요.`);
 
     try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60000);
+
       const res = await fetch("/api/admin/knowledge-assets/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        signal: controller.signal,
+        body: JSON.stringify({
+          mode: "extract",
+          title: row?.name || "현재 원문",
+          author: "안이영 자료",
+          crop: "고추",
+          month: "",
+          raw_content: text.slice(0, 12000),
+        }),
       });
+
+      clearTimeout(timer);
 
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "AI 추출 실패");
@@ -126,6 +140,7 @@ export default function KnowledgeExtractPage() {
       setMsg(err.message || "AI 추출 오류");
     } finally {
       setLoading(false);
+      setExtractingId(null);
     }
   }
 
@@ -153,6 +168,7 @@ export default function KnowledgeExtractPage() {
       setMsg(err.message || "DB 저장 오류");
     } finally {
       setLoading(false);
+      setExtractingId(null);
     }
   }
 
@@ -183,7 +199,9 @@ export default function KnowledgeExtractPage() {
               style={{ display: "none" }}
             />
           </label>
-          <button style={S.greenButton} onClick={() => extractRules()} disabled={loading}>현재 원문 AI 추출</button>
+          <button style={S.greenButton} onClick={() => extractRules()} disabled={loading}>
+            {extractingId === "current" ? "현재 원문 추출 중..." : "현재 원문 AI 추출"}
+          </button>
           <button style={S.darkButton} onClick={saveRules} disabled={loading}>현재 규칙 DB 저장</button>
           <b style={S.msg}>{msg}</b>
         </section>
@@ -219,7 +237,19 @@ export default function KnowledgeExtractPage() {
                     <td style={S.tdGood}>{f.imageCount}장</td>
                     <td style={S.td}>{f.ruleCount}건</td>
                     <td style={S.td}><button style={S.smallBtn} onClick={() => setSelectedText(f.text)}>열기</button></td>
-                    <td style={S.td}><button style={S.smallGreen} onClick={() => extractRules(f)} disabled={!f.text}>추출</button></td>
+                    <td style={S.td}>
+                      <button
+                        style={{
+                          ...S.smallGreen,
+                          opacity: extractingId === f.id ? 0.75 : 1,
+                          cursor: loading ? "wait" : "pointer",
+                        }}
+                        onClick={() => extractRules(f)}
+                        disabled={!f.text || loading}
+                      >
+                        {extractingId === f.id ? "추출 중..." : "추출"}
+                      </button>
+                    </td>
                     <td style={S.tdBad}>{f.error || "-"}</td>
                   </tr>
                 ))}
