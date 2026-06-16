@@ -1,0 +1,366 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+
+type Row = {
+  id: string;
+  source_name: string;
+  source_type?: string;
+  image_url: string;
+  page_no?: number;
+  visual_type?: string;
+  crop?: string;
+  disease_name?: string;
+  growth_stage?: string;
+  key_info?: string;
+  ai_summary?: string;
+  ai_action_guide?: string;
+  ai_crop?: string;
+  ai_disease?: string;
+  ai_growth_stage?: string;
+  ai_confidence?: number;
+  ai_status?: string;
+  use_case?: string;
+  confidence?: number;
+  compactBtn: { position: "absolute", right: 0, bottom: 0, background: "#0f172a", color: "#fff", border: 0, borderRadius: 10, padding: "9px 12px", fontWeight: 950 },
+};
+
+type SortKey =
+  | "page_no"
+  | "source_name"
+  | "visual_type"
+  | "crop"
+  | "disease_name"
+  | "growth_stage"
+  | "confidence";
+
+export default function VisualKnowledgePage() {
+  const [rows, setRows] = useState<Row[]>([]);
+  const [msg, setMsg] = useState("대기");
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("전체");
+  const [cropFilter, setCropFilter] = useState("전체");
+  const [sortKey, setSortKey] = useState<SortKey>("page_no");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [detail, setDetail] = useState<Row | null>(null);
+  const [compactTop, setCompactTop] = useState(false);
+
+  async function load() {
+    const res = await fetch("/api/admin/visual-knowledge");
+    const json = await res.json();
+    if (json.ok) {
+      setRows(json.data || []);
+      setMsg(`DB ${json.data?.length || 0}건`);
+    } else {
+      setMsg(json.error || "조회 실패");
+    }
+  }
+
+  async function scan() {
+    setMsg("자료화면 이미지 스캔 중...");
+    const res = await fetch("/api/admin/visual-knowledge", { method: "POST" });
+    const json = await res.json();
+    if (json.ok) {
+      setMsg(`스캔 완료 ${json.count}장`);
+      await load();
+    } else {
+      setMsg(json.error || "스캔 실패");
+    }
+  }
+
+  async function runAiAnalysis() {
+    setMsg("AI 정밀분석 실행 중...");
+    const res = await fetch("/api/admin/visual-knowledge/analyze", { method: "POST" });
+    const json = await res.json();
+    if (json.ok) {
+      setMsg(json.message || "AI 정밀분석 완료");
+      await load();
+    } else {
+      setMsg(json.message || "AI 정밀분석 실패");
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const types = useMemo(
+    () => ["전체", ...Array.from(new Set(rows.map((r) => r.visual_type || "미분류")))],
+    [rows]
+  );
+
+  const crops = useMemo(
+    () => ["전체", ...Array.from(new Set(rows.map((r) => r.ai_crop || r.crop || "분석대기")))],
+    [rows]
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
+    const data = rows.filter((r) => {
+      const crop = r.ai_crop || r.crop || "분석대기";
+      const disease = r.ai_disease || r.disease_name || "분석대기";
+      const text = [
+        r.source_name,
+        r.source_type,
+        r.page_no,
+        r.visual_type,
+        crop,
+        disease,
+        r.ai_growth_stage || r.growth_stage,
+        r.key_info,
+        r.ai_summary,
+        r.ai_action_guide,
+        r.use_case,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      if (q && !text.includes(q)) return false;
+      if (typeFilter !== "전체" && (r.visual_type || "미분류") !== typeFilter) return false;
+      if (cropFilter !== "전체" && crop !== cropFilter) return false;
+      return true;
+    });
+
+    data.sort((a, b) => {
+      function val(r: Row) {
+        if (sortKey === "crop") return r.ai_crop || r.crop || "";
+        if (sortKey === "disease_name") return r.ai_disease || r.disease_name || "";
+        if (sortKey === "growth_stage") return r.ai_growth_stage || r.growth_stage || "";
+        if (sortKey === "confidence") return Number(r.ai_confidence || r.confidence || 0);
+        return (r as any)[sortKey] ?? "";
+      }
+
+      const av = val(a);
+      const bv = val(b);
+
+      if (typeof av === "number" || typeof bv === "number") {
+        return sortDir === "asc" ? Number(av) - Number(bv) : Number(bv) - Number(av);
+      }
+
+      return sortDir === "asc"
+        ? String(av).localeCompare(String(bv), "ko")
+        : String(bv).localeCompare(String(av), "ko");
+    });
+
+    return data;
+  }, [rows, query, typeFilter, cropFilter, sortKey, sortDir]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  function sortMark(key: SortKey) {
+    if (sortKey !== key) return "";
+    return sortDir === "asc" ? " ▲" : " ▼";
+  }
+
+  function toggleAll() {
+    const allSelected = filtered.every((r) => selected[r.id]);
+    const next = { ...selected };
+    filtered.forEach((r) => {
+      next[r.id] = !allSelected;
+    });
+    setSelected(next);
+  }
+
+  function confidenceColor(v: number) {
+    if (v >= 80) return "#15803d";
+    if (v >= 50) return "#ca8a04";
+    return "#dc2626";
+  }
+
+  function downloadCsv() {
+    const header = ["출처", "형식", "페이지", "유형", "작물", "병해충", "생육단계", "핵심정보", "AI요약", "활용", "신뢰도"];
+    const lines = filtered.map((r) => [
+      r.source_name,
+      r.source_type || "",
+      r.page_no || "",
+      r.visual_type || "",
+      r.ai_crop || r.crop || "",
+      r.ai_disease || r.disease_name || "",
+      r.ai_growth_stage || r.growth_stage || "",
+      r.key_info || "",
+      r.ai_summary || "",
+      r.use_case || "",
+      r.ai_confidence || r.confidence || 0,
+    ]);
+    const csv = [header, ...lines]
+      .map((row) => row.map((x) => `"${String(x).replaceAll('"', '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "kagri-visual-knowledge.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <Link href="/admin/dashboard" style={S.back}>← 관리자 대시보드</Link>
+          <div style={S.eye}>K-AGRI VISUAL KNOWLEDGE CENTER</div>
+          <h1 style={S.title}>자료화면 AI DB센터</h1>
+          <p style={S.sub}>PDF·PPT에서 추출한 사진·표·그래프를 엑셀형으로 관리하고 AI 분석합니다.</p>
+          <button style={S.compactBtn} onClick={() => setCompactTop(!compactTop)}>
+            {compactTop ? "상단 펼치기" : "상단 접기"}
+          </button>
+        </header>
+
+        {!compactTop && <section style={S.kpis}>
+          <div style={S.kpi}><b>전체</b><strong>{rows.length.toLocaleString()}장</strong><span>자료화면</span></div>
+          <div style={S.kpi}><b>현재 표시</b><strong>{filtered.length.toLocaleString()}장</strong><span>검색·필터 결과</span></div>
+          <div style={S.kpi}><b>선택</b><strong>{Object.values(selected).filter(Boolean).length.toLocaleString()}장</strong><span>일괄처리 대상</span></div>
+          <div style={S.kpi}><b>상태</b><strong>{msg}</strong><span>DB 연결</span></div>
+        </section>}
+
+        <section style={S.toolbar}>
+          <button style={S.greenBtn} onClick={scan}>자료화면 이미지 DB 스캔</button>
+          <button style={S.greenBtn} onClick={runAiAnalysis}>AI 정밀분석</button>
+          <button style={S.darkBtn} onClick={load}>새로고침</button>
+          <button style={S.darkBtn} onClick={downloadCsv}>CSV 다운로드</button>
+          <Link href="/admin/knowledge-assets/extract" style={S.linkBtn}>자료 업로드</Link>
+          <Link href="/admin/knowledge-assets/rules" style={S.linkBtn}>판단규칙 DB</Link>
+        </section>
+
+        {!compactTop && <section style={S.filters}>
+          <input
+            style={S.search}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="전체검색: 출처, 작물, 병해충, 핵심정보, AI요약"
+          />
+          <select style={S.select} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+            {types.map((x) => <option key={x}>{x}</option>)}
+          </select>
+          <select style={S.select} value={cropFilter} onChange={(e) => setCropFilter(e.target.value)}>
+            {crops.map((x) => <option key={x}>{x}</option>)}
+          </select>
+        </section>}
+
+        <section style={S.panel}>
+          <div style={S.panelHead}>
+            <h2>자료화면 분석 엑셀표</h2>
+            <span>현재 {filtered.length.toLocaleString()}건</span>
+          </div>
+
+          <div style={S.tableWrap}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.thSticky}><input type="checkbox" onChange={toggleAll} /></th>
+                  <th style={S.thSticky}>이미지</th>
+                  <th style={S.thSticky} onClick={() => toggleSort("source_name")}>출처{sortMark("source_name")}</th>
+                  <th style={S.thSticky}>형식</th>
+                  <th style={S.thSticky} onClick={() => toggleSort("page_no")}>페이지{sortMark("page_no")}</th>
+                  <th style={S.thSticky} onClick={() => toggleSort("visual_type")}>유형{sortMark("visual_type")}</th>
+                  <th style={S.thSticky} onClick={() => toggleSort("crop")}>작물{sortMark("crop")}</th>
+                  <th style={S.thSticky} onClick={() => toggleSort("disease_name")}>병해충/이슈{sortMark("disease_name")}</th>
+                  <th style={S.thSticky} onClick={() => toggleSort("growth_stage")}>생육단계{sortMark("growth_stage")}</th>
+                  <th style={S.thWide}>핵심정보</th>
+                  <th style={S.thWide}>AI요약</th>
+                  <th style={S.thSticky}>활용</th>
+                  <th style={S.thSticky} onClick={() => toggleSort("confidence")}>신뢰도{sortMark("confidence")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((r) => {
+                  const conf = Number(r.ai_confidence || r.confidence || 0);
+                  return (
+                    <tr key={r.id}>
+                      <td style={S.td}><input type="checkbox" checked={!!selected[r.id]} onChange={() => setSelected({ ...selected, [r.id]: !selected[r.id] })} /></td>
+                      <td style={S.td}>
+                        <button style={S.imgBtn} onClick={() => setDetail(r)}>
+                          <img src={r.image_url} style={S.thumb} alt={r.source_name} />
+                        </button>
+                      </td>
+                      <td style={S.tdTitle}>{r.source_name}</td>
+                      <td style={S.td}>{r.source_type || "-"}</td>
+                      <td style={S.td}>{r.page_no || "-"}</td>
+                      <td style={S.tdGood}>{r.visual_type || "-"}</td>
+                      <td style={S.td}>{r.ai_crop || r.crop || "분석대기"}</td>
+                      <td style={S.td}>{r.ai_disease || r.disease_name || "분석대기"}</td>
+                      <td style={S.td}>{r.ai_growth_stage || r.growth_stage || "-"}</td>
+                      <td style={S.td}>{r.key_info || "-"}</td>
+                      <td style={S.td}>{r.ai_summary || "-"}</td>
+                      <td style={S.tdGood}>{r.use_case || "방송자료"}</td>
+                      <td style={{ ...S.td, color: confidenceColor(conf), fontWeight: 950 }}>{conf}</td>
+                    </tr>
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={13} style={S.empty}>검색 결과가 없습니다.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {detail && (
+          <div style={S.modalBg} onClick={() => setDetail(null)}>
+            <div style={S.modal} onClick={(e) => e.stopPropagation()}>
+              <button style={S.close} onClick={() => setDetail(null)}>닫기</button>
+              <h2>{detail.source_name} / {detail.page_no || "-"}페이지</h2>
+              <img src={detail.image_url} style={S.bigImage} alt={detail.source_name} />
+              <div style={S.detailGrid}>
+                <b>작물</b><span>{detail.ai_crop || detail.crop || "분석대기"}</span>
+                <b>병해충/이슈</b><span>{detail.ai_disease || detail.disease_name || "분석대기"}</span>
+                <b>생육단계</b><span>{detail.ai_growth_stage || detail.growth_stage || "-"}</span>
+                <b>핵심정보</b><span>{detail.key_info || "-"}</span>
+                <b>AI요약</b><span>{detail.ai_summary || "-"}</span>
+                <b>행동지시</b><span>{detail.ai_action_guide || "-"}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#eef4f2", color: "#0f172a", padding: "14px 18px" },
+  wrap: { maxWidth: 1900, margin: "0 auto" },
+  header: { marginBottom: 10, position: "relative" },
+  back: { color: "#15803d", textDecoration: "none", fontWeight: 950 },
+  eye: { marginTop: 14, color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "4px 0", fontSize: 42, fontWeight: 950, letterSpacing: "-.06em" },
+  sub: { color: "#475569", fontSize: 15, fontWeight: 850, margin: 0 },
+  kpis: { display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: 12, marginBottom: 14 },
+  kpi: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, padding: 18, display: "grid", gap: 8 },
+  toolbar: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 14, padding: 10, display: "flex", gap: 8, alignItems: "center", marginBottom: 10, flexWrap: "wrap" },
+  filters: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, padding: 14, display: "grid", gridTemplateColumns: "1fr 220px 220px", gap: 10, marginBottom: 14 },
+  search: { border: "1px solid #cbd5e1", borderRadius: 12, padding: 14, fontWeight: 850 },
+  select: { border: "1px solid #cbd5e1", borderRadius: 12, padding: 14, fontWeight: 850 },
+  greenBtn: { background: "#15803d", color: "#fff", border: 0, borderRadius: 12, padding: "14px 18px", fontWeight: 950 },
+  darkBtn: { background: "#0f172a", color: "#fff", border: 0, borderRadius: 12, padding: "14px 18px", fontWeight: 950 },
+  linkBtn: { background: "#0f172a", color: "#fff", borderRadius: 12, padding: "14px 18px", textDecoration: "none", fontWeight: 950 },
+  panel: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 20, overflow: "hidden" },
+  panelHead: { padding: 16, borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between" },
+  tableWrap: { overflow: "auto", height: "calc(100vh - 310px)", minHeight: 560 },
+  table: { width: "100%", minWidth: 2100, borderCollapse: "collapse" },
+  thSticky: { position: "sticky", top: 0, zIndex: 2, background: "#f1f5f9", padding: 12, textAlign: "left", fontWeight: 950, whiteSpace: "nowrap", cursor: "pointer" },
+  thWide: { position: "sticky", top: 0, zIndex: 2, background: "#f1f5f9", padding: 12, textAlign: "left", fontWeight: 950, minWidth: 420 },
+  td: { padding: "7px 10px", borderTop: "1px solid #edf2f7", fontWeight: 850, verticalAlign: "top", fontSize: 13 },
+  tdTitle: { padding: "7px 10px", borderTop: "1px solid #edf2f7", color: "#0f172a", fontWeight: 950, verticalAlign: "top", fontSize: 13 },
+  tdGood: { padding: "7px 10px", borderTop: "1px solid #edf2f7", color: "#15803d", fontWeight: 950, verticalAlign: "top", fontSize: 13 },
+  imgBtn: { border: 0, background: "transparent", padding: 0, cursor: "pointer" },
+  thumb: { width: 88, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #e5e7eb" },
+  empty: { padding: 30, textAlign: "center", color: "#64748b", fontWeight: 950 },
+  modalBg: { position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 50, display: "grid", placeItems: "center", padding: 24 },
+  modal: { width: "min(1100px, 95vw)", maxHeight: "92vh", overflow: "auto", background: "#fff", borderRadius: 20, padding: 20, position: "relative" },
+  close: { position: "absolute", right: 18, top: 18, background: "#0f172a", color: "#fff", border: 0, borderRadius: 10, padding: "10px 14px", fontWeight: 950 },
+  bigImage: { width: "100%", maxHeight: 560, objectFit: "contain", border: "1px solid #e5e7eb", borderRadius: 14, background: "#f8fafc" },
+  detailGrid: { display: "grid", gridTemplateColumns: "160px 1fr", gap: 10, marginTop: 16, fontWeight: 850 },
+  compactBtn: { position: "absolute", right: 0, bottom: 0, background: "#0f172a", color: "#fff", border: 0, borderRadius: 10, padding: "9px 12px", fontWeight: 950 },
+};
