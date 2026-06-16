@@ -1,0 +1,358 @@
+import Link from "next/link";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function safeCount(table: string) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { count } = await supabase
+      .from(table)
+      .select("id", { count: "exact", head: true });
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const [expoOrders, photoOrders, vendorApps, agriAssets, knowledgeAssets, videoCalls] =
+    await Promise.all([
+      safeCount("expo_brand_orders"),
+      safeCount("photodoctor_orders"),
+      safeCount("vendor_applications"),
+      safeCount("agri_assets"),
+      safeCount("agri_knowledge_assets"),
+      safeCount("agri_video_calls"),
+    ]);
+
+  const totalOrders = expoOrders + photoOrders;
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <div style={S.eyebrow}>K-AGRI CEO COMMAND CENTER</div>
+            <h1 style={S.title}>K-Agri 경영기획실</h1>
+            <p style={S.sub}>조PD가 오늘 결정해야 할 일만 먼저 보여줍니다.</p>
+          </div>
+          <div style={S.headerBtns}>
+            <Link href="/admin/kagri-writers-room" style={S.darkBtn}>작가실</Link>
+            <Link href="/expo" style={S.outlineBtn}>EXPO 보기</Link>
+          </div>
+        </header>
+
+        <section style={S.ceoBrief}>
+          <div>
+            <div style={S.redTag}>TODAY CEO BRIEFING</div>
+            <h2 style={S.ceoTitle}>오늘은 3가지만 결정하면 됩니다</h2>
+            <p style={S.ceoText}>
+              뉴스센터 · 홍산마늘 · 편성승인센터. 나머지는 열어볼 때만 확인합니다.
+            </p>
+          </div>
+
+          <div style={S.ceoCards}>
+            <TopCard rank="1" title="편성승인센터 만들기" desc="모든 콘텐츠 최종 승인 통로" tone="red" href="/admin/kagri-writers-room" />
+            <TopCard rank="2" title="농사뉴스센터 개편" desc="돈 되는 농사정보 TOP5" tone="green" href="/admin/kagri-writers-room/news" />
+            <TopCard rank="3" title="홍산마늘 11톤 판매" desc="B2B 문의·상담 전환" tone="orange" href="/expo/hongsan-garlic" />
+          </div>
+        </section>
+
+        <section style={S.moneyBox}>
+          <div>
+            <div style={S.moneyTag}>💰 오늘 돈 되는 순위</div>
+            <h2 style={S.moneyTitle}>홍산마늘 긴급판매가 최우선입니다</h2>
+            <p style={S.moneyText}>5,500원/kg · 최소 100kg · 택배비 자부담 · 대량 구매처 우선 상담</p>
+          </div>
+          <div style={S.moneyStats}>
+            <Mini title="재고" value="11톤" />
+            <Mini title="목표" value="2주" />
+            <Mini title="최소" value="100kg" />
+            <Mini title="전화" value="010-8556-1010" />
+          </div>
+          <div style={S.btnRow}>
+            <Link href="/expo/hongsan-garlic" style={S.redBtn}>판매페이지</Link>
+            <Link href="/admin/sms-generator" style={S.greenBtn}>영업문자</Link>
+            <Link href="/admin/product-orders" style={S.greenBtn}>주문센터</Link>
+          </div>
+        </section>
+
+        <section style={S.kpiGrid}>
+          <Kpi title="전체 주문" value={totalOrders} href="/admin/product-orders" />
+          <Kpi title="입점 신청" value={vendorApps} href="/admin/vendor-applications" />
+          <Kpi title="농산물 자산" value={agriAssets} href="/admin/agri-assets" />
+          <Kpi title="상담 예약" value={videoCalls} href="/admin/video-call-control" />
+          <Kpi title="지식 자료" value={knowledgeAssets} href="/admin/agri-data-hub" />
+        </section>
+
+        <section style={S.actionGrid}>
+          <ActionCard
+            icon="📝"
+            title="공동편집 · 편성승인"
+            desc="작가실·뉴스·웹툰·쇼츠는 여기서 최종 컨펌 후 발행합니다."
+            status="최우선 구축"
+            href="/admin/kagri-writers-room"
+          />
+          <ActionCard
+            icon="📰"
+            title="농사뉴스센터"
+            desc="농민에게 돈 되는 뉴스 5개만 뽑아 승인 후 발행합니다."
+            status="개편 필요"
+            href="/admin/kagri-writers-room/news"
+          />
+          <ActionCard
+            icon="🎬"
+            title="작가실"
+            desc="안이영 웹툰·홍산마늘 스토리·농촌쇼츠 대본을 생산합니다."
+            status="운영중"
+            href="/admin/kagri-writers-room"
+          />
+          <ActionCard
+            icon="🌾"
+            title="농산물 자산센터"
+            desc="저장농산물 등록·거래제안·가공센터 연결은 여기서 판단합니다."
+            status="운영중"
+            href="/admin/agri-assets"
+          />
+        </section>
+
+        <Accordion title="오늘 해야 할 일" open>
+          <TaskList
+            rows={[
+              ["🔴", "편성승인센터 만들기", "모든 콘텐츠 최종 승인 통로", "/admin/kagri-writers-room"],
+              ["🔴", "농사뉴스센터 개편", "돈 되는 농사정보 TOP5 구조", "/admin/kagri-writers-room/news"],
+              ["🟡", "홍산마늘 판매 보강", "최소물량·화물·B2B 상담 명확화", "/expo/hongsan-garlic"],
+              ["🟡", "안이영 웹툰 뼈대", "100부작 진행현황 관리", "/admin/kagri-writers-room/knowledge"],
+            ]}
+          />
+        </Accordion>
+
+        <Accordion title="방송국 구축 현황">
+          <DeptGrid />
+        </Accordion>
+
+        <Accordion title="주문센터 판단하기">
+          <ActionBox
+            title="주문 원자료는 여기서 보지 않습니다"
+            desc="입금확인, 출고대기, 송장등록, 배송완료, 문제주문은 주문센터에서 처리합니다."
+            actions={[
+              ["주문센터", "/admin/product-orders"],
+              ["송장 업로드", "/admin/tracking-upload"],
+              ["주문 로그", "/admin/order-logs"],
+            ]}
+          />
+        </Accordion>
+
+        <Accordion title="농산물 자산센터 판단하기">
+          <ActionBox
+            title="자산은 자산센터에서 거래·가공·판매 결정을 합니다"
+            desc="저장농산물, 가공센터, 거래제안, 판매전략은 해당 센터에서 판단합니다."
+            actions={[
+              ["농산물 자산센터", "/admin/agri-assets"],
+              ["가공센터", "/admin/processors"],
+              ["거래제안", "/admin/trade-offers"],
+            ]}
+          />
+        </Accordion>
+
+        <Accordion title="미래 프로젝트">
+          <FutureGrid />
+        </Accordion>
+      </div>
+    </main>
+  );
+}
+
+function TopCard({ rank, title, desc, href, tone }: { rank: string; title: string; desc: string; href: string; tone: "red" | "green" | "orange" }) {
+  const color = tone === "red" ? "#dc2626" : tone === "orange" ? "#f97316" : "#15803d";
+  return (
+    <Link href={href} style={{ ...S.topCard, borderColor: color }}>
+      <div style={{ ...S.rank, background: color }}>{rank}</div>
+      <div>
+        <h3 style={S.topTitle}>{title}</h3>
+        <p style={S.topDesc}>{desc}</p>
+      </div>
+    </Link>
+  );
+}
+
+function Kpi({ title, value, href }: { title: string; value: number; href: string }) {
+  return (
+    <Link href={href} style={S.kpi}>
+      <div style={S.kpiTitle}>{title}</div>
+      <div style={S.kpiValue}>{value.toLocaleString("ko-KR")}</div>
+      <div style={S.kpiMove}>관리하기 →</div>
+    </Link>
+  );
+}
+
+function ActionCard({ icon, title, desc, status, href }: { icon: string; title: string; desc: string; status: string; href: string }) {
+  return (
+    <Link href={href} style={S.actionCard}>
+      <div style={S.actionIcon}>{icon}</div>
+      <div>
+        <h3 style={S.actionTitle}>{title}</h3>
+        <p style={S.actionDesc}>{desc}</p>
+        <span style={S.status}>{status}</span>
+      </div>
+    </Link>
+  );
+}
+
+function Accordion({ title, children, open = false }: { title: string; children: React.ReactNode; open?: boolean }) {
+  return (
+    <details open={open} style={S.details}>
+      <summary style={S.summary}>{title}</summary>
+      <div style={S.detailBody}>{children}</div>
+    </details>
+  );
+}
+
+function TaskList({ rows }: { rows: string[][] }) {
+  return (
+    <div style={S.taskList}>
+      {rows.map(([level, task, goal, href]) => (
+        <Link key={task} href={href} style={S.taskRow}>
+          <div style={S.taskLevel}>{level}</div>
+          <div style={{ flex: 1 }}>
+            <div style={S.taskTitle}>{task}</div>
+            <div style={S.taskGoal}>{goal}</div>
+          </div>
+          <div style={S.moveBtn}>이동</div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function ActionBox({ title, desc, actions }: { title: string; desc: string; actions: string[][] }) {
+  return (
+    <div style={S.actionBox}>
+      <h3 style={S.boxTitle}>{title}</h3>
+      <p style={S.boxDesc}>{desc}</p>
+      <div style={S.btnRow}>
+        {actions.map(([label, href]) => (
+          <Link key={href} href={href} style={S.greenBtn}>{label} →</Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Mini({ title, value }: { title: string; value: string }) {
+  return (
+    <div style={S.mini}>
+      <div style={S.miniTitle}>{title}</div>
+      <div style={S.miniValue}>{value}</div>
+    </div>
+  );
+}
+
+function DeptGrid() {
+  const depts = [
+    ["📊 경영기획실", "전체 우선순위", "작업중"],
+    ["📝 편성승인센터", "최종 승인", "최우선"],
+    ["📰 농사뉴스센터", "돈 되는 뉴스", "개편중"],
+    ["🎬 작가실", "대본·웹툰·쇼츠", "운영"],
+    ["🎨 CG실", "인포그래픽·지도", "뼈대"],
+    ["🎙 오디오실", "성우·나레이션", "대기"],
+    ["🎞 영상실", "자막·효과·편집", "대기"],
+    ["📡 발행센터", "홈페이지·문자·SNS", "대기"],
+  ];
+
+  return (
+    <div style={S.deptGrid}>
+      {depts.map(([name, role, state]) => (
+        <div key={name} style={S.deptCard}>
+          <b>{name}</b>
+          <p>{role}</p>
+          <span>{state}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FutureGrid() {
+  const items = ["CG실 자동생성", "오디오실", "영상 자동생성", "AI 앵커", "립싱크 뉴스", "조PD 스타일 학습"];
+  return (
+    <div style={S.futureGrid}>
+      {items.map((x) => (
+        <div key={x} style={S.futureCard}>
+          <b>{x}</b>
+          <p>설계만 보관. 지금은 구현하지 않습니다.</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#f1f5f4", color: "#111827", padding: 24 },
+  wrap: { maxWidth: 1440, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 20 },
+  eyebrow: { color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "8px 0 0", fontSize: 54, lineHeight: 1, fontWeight: 950, letterSpacing: "-.06em" },
+  sub: { margin: "12px 0 0", color: "#64748b", fontWeight: 850, fontSize: 18 },
+  headerBtns: { display: "flex", gap: 10, alignItems: "flex-start" },
+  darkBtn: { background: "#111827", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950 },
+  outlineBtn: { background: "#fff", color: "#111827", border: "1px solid #cbd5e1", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950 },
+
+  ceoBrief: { background: "#ffffff", border: "2px solid #bbf7d0", borderRadius: 28, padding: 26, marginBottom: 18, boxShadow: "0 14px 34px rgba(15,23,42,.07)" },
+  redTag: { color: "#dc2626", fontWeight: 950 },
+  ceoTitle: { margin: "8px 0 0", fontSize: 42, fontWeight: 950, letterSpacing: "-.05em" },
+  ceoText: { margin: "10px 0 0", color: "#475569", fontSize: 19, fontWeight: 850, lineHeight: 1.55 },
+  ceoCards: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 14, marginTop: 20 },
+  topCard: { display: "flex", gap: 14, alignItems: "center", background: "#f8fafc", border: "2px solid #15803d", borderRadius: 20, padding: 18, color: "#111827", textDecoration: "none" },
+  rank: { width: 44, height: 44, borderRadius: 14, color: "#fff", display: "grid", placeItems: "center", fontWeight: 950, fontSize: 22 },
+  topTitle: { margin: 0, fontSize: 23, fontWeight: 950 },
+  topDesc: { margin: "6px 0 0", color: "#64748b", fontWeight: 850 },
+
+  moneyBox: { background: "#fff7ed", border: "2px solid #fdba74", borderRadius: 26, padding: 22, marginBottom: 18 },
+  moneyTag: { color: "#15803d", fontWeight: 950 },
+  moneyTitle: { margin: "8px 0 0", fontSize: 34, fontWeight: 950 },
+  moneyText: { margin: "8px 0 0", fontSize: 18, fontWeight: 900 },
+  moneyStats: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginTop: 16 },
+  mini: { background: "#fff", border: "1px solid #fed7aa", borderRadius: 16, padding: 14 },
+  miniTitle: { color: "#64748b", fontSize: 13, fontWeight: 900 },
+  miniValue: { marginTop: 6, fontSize: 23, fontWeight: 950 },
+
+  btnRow: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 },
+  redBtn: { background: "#dc2626", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+  greenBtn: { background: "#15803d", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+
+  kpiGrid: { display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 12, marginBottom: 18 },
+  kpi: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 18, color: "#111827", textDecoration: "none" },
+  kpiTitle: { color: "#64748b", fontWeight: 900 },
+  kpiValue: { marginTop: 8, fontSize: 38, fontWeight: 950 },
+  kpiMove: { marginTop: 6, color: "#166534", fontWeight: 950, fontSize: 13 },
+
+  actionGrid: { display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: 14, marginBottom: 18 },
+  actionCard: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 22, padding: 20, color: "#111827", textDecoration: "none", boxShadow: "0 10px 24px rgba(15,23,42,.05)" },
+  actionIcon: { fontSize: 36 },
+  actionTitle: { margin: "10px 0 0", fontSize: 24, fontWeight: 950 },
+  actionDesc: { margin: "8px 0 12px", color: "#475569", fontWeight: 850, lineHeight: 1.5 },
+  status: { background: "#ecfdf5", color: "#15803d", padding: "7px 10px", borderRadius: 999, fontWeight: 950, fontSize: 13 },
+
+  details: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, marginBottom: 12, overflow: "hidden", boxShadow: "0 8px 20px rgba(15,23,42,.04)" },
+  summary: { cursor: "pointer", padding: "18px 20px", background: "#ffffff", color: "#111827", borderBottom: "1px solid #e5e7eb", fontSize: 22, fontWeight: 950 },
+  detailBody: { padding: 0 },
+
+  taskList: { padding: 14 },
+  taskRow: { display: "flex", alignItems: "center", gap: 14, padding: 14, border: "1px solid #e5e7eb", borderRadius: 16, marginBottom: 10, color: "#111827", textDecoration: "none", background: "#fff" },
+  taskLevel: { width: 44, fontSize: 20 },
+  taskTitle: { fontSize: 19, fontWeight: 950 },
+  taskGoal: { marginTop: 4, color: "#64748b", fontWeight: 850 },
+  moveBtn: { background: "#15803d", color: "#fff", borderRadius: 10, padding: "9px 12px", fontWeight: 950 },
+
+  actionBox: { padding: 24 },
+  boxTitle: { margin: 0, fontSize: 26, fontWeight: 950 },
+  boxDesc: { margin: "10px 0 0", color: "#475569", fontSize: 17, fontWeight: 850, lineHeight: 1.6 },
+
+  deptGrid: { display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: 12, padding: 16 },
+  deptCard: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, fontWeight: 850 },
+  futureGrid: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 12, padding: 16 },
+  futureCard: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, color: "#475569" },
+};

@@ -1,0 +1,345 @@
+import Link from "next/link";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function safeCount(table: string, filter?: (q: any) => any) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    let q = supabase.from(table).select("id", { count: "exact", head: true });
+    if (filter) q = filter(q);
+    const { count } = await q;
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function safeRows(table: string, limit = 8) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data } = await supabase
+      .from(table)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [
+    expoOrders,
+    photoOrders,
+    vendorApps,
+    agriAssets,
+    knowledgeAssets,
+    hongsanLeads,
+    videoCalls,
+  ] = await Promise.all([
+    safeCount("expo_brand_orders"),
+    safeCount("photodoctor_orders"),
+    safeCount("vendor_applications"),
+    safeCount("agri_assets"),
+    safeCount("agri_knowledge_assets"),
+    safeCount("hongsan_leads"),
+    safeCount("agri_video_calls"),
+  ]);
+
+  const recentOrders = await safeRows("expo_brand_orders", 8);
+  const recentAssets = await safeRows("agri_assets", 8);
+  const recentKnowledge = await safeRows("agri_knowledge_assets", 8);
+
+  const totalOrders = expoOrders + photoOrders;
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <div style={S.eyebrow}>K-AGRI COMMAND CENTER</div>
+            <h1 style={S.title}>K-Agri 운영관제센터</h1>
+            <p style={S.sub}>주문 · 거래 · 작가실 · 지식자산 · 긴급판매를 한 화면에서 관리합니다.</p>
+          </div>
+          <Link href="/expo" style={S.darkBtn}>EXPO 보기</Link>
+        </header>
+
+        <section style={S.kpiGrid}>
+          <Kpi title="전체 주문" value={totalOrders} href="/admin/product-orders" />
+          <Kpi title="입점 신청" value={vendorApps} href="/admin/vendor-applications" />
+          <Kpi title="농산물 자산" value={agriAssets} href="/admin/agri-assets" />
+          <Kpi title="상담 예약" value={videoCalls} href="/admin/video-call-control" />
+          <Kpi title="지식 자료" value={knowledgeAssets} href="/admin/agri-data-hub" />
+          <Kpi title="홍산 문의" value={hongsanLeads} href="/admin/hongsan-leads" />
+        </section>
+
+        <section style={S.alert}>
+          <div>
+            <div style={S.alertTag}>🚨 긴급 상황판</div>
+            <h2 style={S.alertTitle}>홍산마늘 깐마늘 11톤 긴급판매</h2>
+            <p style={S.alertText}>
+              5,500원/kg · 최소 100kg · 택배비 자부담 · 대량 구매처 우선 상담
+            </p>
+          </div>
+          <div style={S.alertStats}>
+            <Mini title="재고" value="11톤" />
+            <Mini title="목표기간" value="2주" />
+            <Mini title="최소물량" value="100kg" />
+            <Mini title="상담전화" value="010-8556-1010" />
+          </div>
+          <div style={S.alertBtns}>
+            <Link href="/expo/hongsan-garlic" style={S.redBtn}>판매페이지</Link>
+            <Link href="/admin/kagri-writers-room" style={S.greenBtn}>작가실</Link>
+            <Link href="/admin/agri-data-hub" style={S.greenBtn}>자료센터</Link>
+          </div>
+        </section>
+
+
+        <section style={S.planBox}>
+          <div style={S.planHead}>
+            <div>
+              <div style={S.eyebrow}>MANAGEMENT PLANNING OFFICE</div>
+              <h2 style={S.planTitle}>📊 경영기획실 · K-AGRI 방송국 구축 현황</h2>
+              <p style={S.planSub}>
+                지금은 새 기능을 늘리는 단계가 아니라, 흩어진 작가실·뉴스센터·자료센터를 편성승인센터로 연결하는 단계입니다.
+              </p>
+            </div>
+            <div style={S.progressBox}>
+              <div style={S.progressNum}>18%</div>
+              <div style={S.progressText}>전체 구축률</div>
+            </div>
+          </div>
+
+          <div style={S.pipelineGrid}>
+            <div style={S.pipelineCard}>
+              <b>✅ 이미 있음</b>
+              <p>작가실 · 뉴스센터 · 캐릭터센터 · 농업지식센터 · 농산물 자산센터</p>
+            </div>
+            <div style={S.pipelineCard}>
+              <b>🔴 지금 할 일</b>
+              <p>경영기획실 정리 · 편성승인센터 구축 · 농사뉴스센터 개편</p>
+            </div>
+            <div style={S.pipelineCard}>
+              <b>🟡 대기</b>
+              <p>CG실 · 오디오실 · 영상실 · 캐릭터 유지 시스템</p>
+            </div>
+            <div style={S.pipelineCard}>
+              <b>🚫 오늘 하지 말 것</b>
+              <p>AI앵커 · 립싱크 · 자동영상 · 오디오 자동생성</p>
+            </div>
+          </div>
+        </section>
+
+        <Grid2>
+          <Panel title="오늘 해야 할 일">
+            <ExcelTable
+              headers={["우선순위", "업무", "목표", "상태", "이동"]}
+              rows={[
+                ["1", "편성승인센터 만들기", "모든 콘텐츠 최종 승인 통로", "최우선", "/admin/kagri-writers-room"],
+                ["2", "농사뉴스센터 개편", "돈 되는 농사정보 TOP5 구조", "진행예정", "/admin/kagri-writers-room/news"],
+                ["3", "농민 브리핑 상세페이지 정리", "메인 유입 후 보여줄 상세정보", "진행예정", "/expo/farmer-briefing"],
+                ["4", "안이영 웹툰 프로젝트 뼈대", "100부작 진행현황 관리", "대기", "/admin/kagri-writers-room/knowledge"],
+              ]}
+            />
+          </Panel>
+
+          <Panel title="콘텐츠 생산현황">
+            <ExcelTable
+              headers={["구분", "목표", "현재", "상태", "이동"]}
+              rows={[
+                ["안이영 고추웹툰", "100부작", "0부", "기획중", "/admin/kagri-writers-room/knowledge"],
+                ["농사뉴스 TOP5", "매일 5건", "구조개편중", "진행중", "/admin/kagri-writers-room/news"],
+                ["홍산마늘 콘텐츠", "판매지원", "페이지 완료", "보강필요", "/expo/hongsan-garlic"],
+                ["편성승인 대기열", "전체 콘텐츠 통합", "미구축", "최우선", "/admin/kagri-writers-room"],
+              ]}
+            />
+          </Panel>
+        </Grid2>
+
+
+        <Grid2>
+          <Panel title="오늘 긴급업무">
+            <ExcelTable
+              headers={["등급", "업무", "상태", "이동"]}
+              rows={[
+                ["🔴 긴급", "홍산마늘 11톤 판매", "진행중", "/expo/hongsan-garlic"],
+                ["🔴 긴급", "홍산마늘 B2B 상담접수", "다음작업", "/admin/hongsan-leads"],
+                ["🟡 중요", "홍산마늘 8컷 웹툰", "작가실", "/admin/kagri-writers-room"],
+                ["🟡 중요", "김치공장·급식업체 영업문자", "준비중", "/admin/sms-generator"],
+              ]}
+            />
+          </Panel>
+
+          <Panel title="운영센터 바로가기">
+            <ExcelTable
+              headers={["센터", "역할", "상태", "이동"]}
+              rows={[
+                ["✍️ 작가실", "콘텐츠·웹툰·쇼츠", "운영", "/admin/kagri-writers-room"],
+                ["📂 농업 지식자산", "안이영 PPT·병해충 DB", "운영", "/admin/agri-data-hub"],
+                ["📦 주문센터", "주문·입금·출고", "운영", "/admin/product-orders"],
+                ["🌾 농산물 자산", "저장농산물·거래", "운영", "/admin/agri-assets"],
+                ["🐛 KFFR", "폭락작물 원료기회", "운영", "/admin/kffr-opportunity-center"],
+              ]}
+            />
+          </Panel>
+        </Grid2>
+
+        <Panel title="최근 주문 관제실">
+          <SimpleData rows={recentOrders} empty="최근 주문 데이터가 없거나 테이블 연결 전입니다." />
+        </Panel>
+
+        <Panel title="최근 농산물 자산">
+          <SimpleData rows={recentAssets} empty="농산물 자산 데이터가 없거나 테이블 연결 전입니다." />
+        </Panel>
+
+        <Panel title="농업 지식자산 현황">
+          <SimpleData rows={recentKnowledge} empty="안이영 자료·병해충 자료를 등록하면 여기에 표시됩니다." />
+        </Panel>
+
+        <section style={S.aiBox}>
+          <div style={S.aiTitle}>🤖 AI 관제센터</div>
+          <div style={S.aiGrid}>
+            <Mini title="홍산마늘 위험도" value="92%" />
+            <Mini title="추천행동" value="B2B 영업" />
+            <Mini title="우선대상" value="김치공장" />
+            <Mini title="다음기능" value="상담DB" />
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function Kpi({ title, value, href }: { title: string; value: number; href: string }) {
+  return (
+    <Link href={href} style={S.kpi}>
+      <div style={S.kpiTitle}>{title}</div>
+      <div style={S.kpiValue}>{value.toLocaleString("ko-KR")}</div>
+      <div style={S.kpiMove}>관리하기 →</div>
+    </Link>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section style={S.panel}>
+      <div style={S.panelHead}>{title}</div>
+      {children}
+    </section>
+  );
+}
+
+function Grid2({ children }: { children: React.ReactNode }) {
+  return <div style={S.grid2}>{children}</div>;
+}
+
+function ExcelTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div style={S.tableWrap}>
+      <table style={S.table}>
+        <thead>
+          <tr>{headers.map((h) => <th key={h} style={S.th}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              {r.map((c, j) => (
+                <td key={j} style={S.td}>
+                  {c.startsWith("/") ? <Link href={c} style={S.openBtn}>이동</Link> : c}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SimpleData({ rows, empty }: { rows: any[]; empty: string }) {
+  if (!rows.length) return <div style={S.empty}>{empty}</div>;
+
+  return (
+    <div style={S.tableWrap}>
+      <table style={S.table}>
+        <thead>
+          <tr>
+            {Object.keys(rows[0]).slice(0, 6).map((h) => <th key={h} style={S.th}>{h}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={r.id ?? i}>
+              {Object.keys(r).slice(0, 6).map((k) => (
+                <td key={k} style={S.td}>{String(r[k] ?? "-").slice(0, 80)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Mini({ title, value }: { title: string; value: string }) {
+  return (
+    <div style={S.mini}>
+      <div style={S.miniTitle}>{title}</div>
+      <div style={S.miniValue}>{value}</div>
+    </div>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+
+  planBox: { background: "#ffffff", border: "3px solid #166534", borderRadius: 26, padding: 24, marginBottom: 18, boxShadow: "0 18px 45px rgba(15,23,42,.08)" },
+  planHead: { display: "flex", justifyContent: "space-between", gap: 20, alignItems: "flex-start", marginBottom: 18 },
+  planTitle: { margin: "8px 0 0", fontSize: 34, fontWeight: 950, letterSpacing: "-.04em" },
+  planSub: { margin: "10px 0 0", fontSize: 17, lineHeight: 1.55, color: "#475569", fontWeight: 800 },
+  progressBox: { minWidth: 160, background: "#ecfdf5", border: "1px solid #bbf7d0", borderRadius: 20, padding: 18, textAlign: "center" },
+  progressNum: { fontSize: 46, fontWeight: 950, color: "#166534", letterSpacing: "-.06em" },
+  progressText: { marginTop: 4, color: "#166534", fontWeight: 950 },
+  pipelineGrid: { display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: 12 },
+  pipelineCard: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16, fontSize: 15, lineHeight: 1.45, fontWeight: 800 },
+
+  page: { minHeight: "100vh", background: "#eef2f5", color: "#111827", padding: 24 },
+  wrap: { maxWidth: 1680, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 20 },
+  eyebrow: { color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "8px 0 0", fontSize: 56, lineHeight: 1, fontWeight: 950, letterSpacing: "-.06em" },
+  sub: { margin: "12px 0 0", color: "#64748b", fontWeight: 800, fontSize: 18 },
+  darkBtn: { background: "#111827", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950, height: "fit-content" },
+  kpiGrid: { display: "grid", gridTemplateColumns: "repeat(6,minmax(0,1fr))", gap: 12, marginBottom: 18 },
+  kpi: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 18, color: "#111827", textDecoration: "none" },
+  kpiTitle: { color: "#64748b", fontWeight: 900 },
+  kpiValue: { marginTop: 8, fontSize: 42, fontWeight: 950 },
+  kpiMove: { marginTop: 6, color: "#166534", fontWeight: 950, fontSize: 13 },
+  alert: { background: "#fff7ed", border: "3px solid #f97316", borderRadius: 24, padding: 22, marginBottom: 18 },
+  alertTag: { color: "#dc2626", fontWeight: 950 },
+  alertTitle: { margin: "8px 0 0", fontSize: 38, fontWeight: 950 },
+  alertText: { margin: "8px 0 0", fontSize: 18, fontWeight: 900 },
+  alertStats: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginTop: 16 },
+  alertBtns: { display: "flex", gap: 10, marginTop: 16 },
+  redBtn: { background: "#dc2626", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+  greenBtn: { background: "#166534", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+  grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 },
+  panel: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 22, overflow: "hidden", marginBottom: 18 },
+  panelHead: { background: "#111827", color: "#fff", padding: "14px 18px", fontSize: 20, fontWeight: 950 },
+  tableWrap: { overflowX: "auto" },
+  table: { width: "100%", borderCollapse: "collapse", minWidth: 860 },
+  th: { background: "#f3f4f6", color: "#111827", padding: "12px 14px", textAlign: "left", fontWeight: 950, borderBottom: "1px solid #e5e7eb", whiteSpace: "nowrap" },
+  td: { padding: "12px 14px", fontWeight: 800, borderBottom: "1px solid #e5e7eb", whiteSpace: "nowrap" },
+  openBtn: { background: "#166534", color: "#fff", padding: "7px 12px", borderRadius: 9, textDecoration: "none", fontWeight: 950 },
+  empty: { padding: 28, color: "#64748b", fontWeight: 900 },
+  mini: { background: "#fff", border: "1px solid #fed7aa", borderRadius: 16, padding: 14 },
+  miniTitle: { color: "#64748b", fontWeight: 900, fontSize: 13 },
+  miniValue: { marginTop: 6, fontSize: 22, fontWeight: 950 },
+  aiBox: { background: "#111827", color: "#fff", borderRadius: 24, padding: 22, marginBottom: 40 },
+  aiTitle: { fontSize: 24, fontWeight: 950 },
+  aiGrid: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginTop: 14 },
+};

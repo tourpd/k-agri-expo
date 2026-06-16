@@ -1,0 +1,288 @@
+import Link from "next/link";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function safeCount(table: string) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { count } = await supabase
+      .from(table)
+      .select("id", { count: "exact", head: true });
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const [expoOrders, photoOrders, vendorApps, agriAssets, knowledgeAssets, videoCalls] =
+    await Promise.all([
+      safeCount("expo_brand_orders"),
+      safeCount("photodoctor_orders"),
+      safeCount("vendor_applications"),
+      safeCount("agri_assets"),
+      safeCount("agri_knowledge_assets"),
+      safeCount("agri_video_calls"),
+    ]);
+
+  const totalOrders = expoOrders + photoOrders;
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <div style={S.eyebrow}>K-AGRI CEO DECISION CENTER</div>
+            <h1 style={S.title}>K-Agri 경영기획실</h1>
+            <p style={S.sub}>메뉴가 아니라 오늘 결정할 일을 보여줍니다.</p>
+          </div>
+          <div style={S.headerBtns}>
+            <Link href="/admin/approval-center" style={S.darkBtn}>작가실</Link>
+            <Link href="/expo" style={S.outlineBtn}>EXPO 보기</Link>
+          </div>
+        </header>
+
+        <section style={S.ceoAlert}>
+          <div style={S.alertLeft}>
+            <div style={S.redLabel}>오늘 가장 중요한 결정</div>
+            <h2 style={S.alertTitle}>홍산마늘 11톤, 2주 안에 팔아야 합니다</h2>
+            <p style={S.alertText}>
+              현재 조건은 5,500원/kg · 최소 100kg · 택배비 자부담 · 대량 구매처 우선 상담입니다.
+            </p>
+          </div>
+
+          <div style={S.lossBox}>
+            <div style={S.lossLabel}>걸려있는 금액</div>
+            <div style={S.lossValue}>6,050만원</div>
+            <div style={S.lossSub}>11톤 × 5,500원/kg</div>
+          </div>
+        </section>
+
+        <section style={S.decisionGrid}>
+          <Decision
+            rank="1"
+            title="김치공장·급식업체 B2B 영업"
+            problem="현재 일반 구매보다 대량 구매처 확보가 먼저입니다."
+            action="영업문자 작성 후 발송"
+            href="/admin/sms-generator"
+            tone="red"
+          />
+          <Decision
+            rank="2"
+            title="돈 되는 농사뉴스센터 개편"
+            problem="농민이 매일 들어올 이유가 아직 약합니다."
+            action="농사뉴스 TOP5 구조 완성"
+            href="/admin/kagri-writers-room/news"
+            tone="green"
+          />
+          <Decision
+            rank="3"
+            title="편성승인센터 만들기"
+            problem="작가실·뉴스·웹툰 결과물이 흩어져 있습니다."
+            action="모든 콘텐츠 승인 통로 구축"
+            href="/admin/approval-center"
+            tone="blue"
+          />
+        </section>
+
+        <section style={S.statusBoard}>
+          <Status title="주문센터 판단" value={`${totalOrders}건`} desc="원자료를 보지 말고 주문센터에서 입금·출고·송장을 처리합니다." href="/admin/product-orders" />
+          <Status title="농산물 자산 판단" value={`${agriAssets}건`} desc="저장농산물은 자산센터에서 거래·가공·판매 결정을 합니다." href="/admin/agri-assets" />
+          <Status title="입점 신청" value={`${vendorApps}건`} desc="신규 업체 신청·승인·브랜드관 생성 여부를 판단합니다." href="/admin/vendor-applications" />
+          <Status title="지식자료" value={`${knowledgeAssets}건`} desc="안이영 PPT·병해충 자료는 콘텐츠 자산으로 전환해야 합니다." href="/admin/agri-data-hub" />
+        </section>
+
+        <section style={S.aiBrief}>
+          <h2 style={S.sectionTitle}>🤖 AI 판단 요약</h2>
+          <div style={S.aiGrid}>
+            <AiCard title="오늘 돈 되는 일" body="홍산마늘 B2B 판매 전환. 일반 홍보보다 김치공장·급식업체 타깃이 우선입니다." />
+            <AiCard title="오늘 위험한 일" body="농사뉴스센터가 허접하면 메인 유입이 약합니다. 뉴스는 승인·근거·인포그래픽 구조가 필요합니다." />
+            <AiCard title="오늘 승인할 일" body="모든 작가실 결과물이 편성승인센터로 모이게 만드는 기준을 먼저 세웁니다." />
+          </div>
+        </section>
+
+        <Accordion title="오늘 실행 목록" open>
+          <Task rows={[
+            ["🔴", "홍산마늘 B2B 문자 작성", "김치공장·급식업체 대상", "/admin/sms-generator"],
+            ["🔴", "농사뉴스센터 첫 화면 재설계", "돈 되는 뉴스 TOP5", "/admin/kagri-writers-room/news"],
+            ["🟡", "편성승인센터 메뉴 추가", "작가실 결과물 최종 승인", "/admin/kagri-writers-room"],
+            ["🟡", "안이영 웹툰 프로젝트 상태표", "100부작 중 몇 편 완료인지 표시", "/admin/kagri-writers-room/knowledge"],
+          ]} />
+        </Accordion>
+
+        <Accordion title="K-Agri 방송국 공정률">
+          <Progress />
+        </Accordion>
+
+        <Accordion title="센터 이동">
+          <div style={S.centerGrid}>
+            <Center name="작가실" desc="대본·웹툰·쇼츠" href="/admin/kagri-writers-room" />
+            <Center name="농사뉴스센터" desc="돈 되는 농사정보" href="/admin/kagri-writers-room/news" />
+            <Center name="주문센터" desc="입금·출고·송장" href="/admin/product-orders" />
+            <Center name="농산물 자산센터" desc="저장농산물·거래" href="/admin/agri-assets" />
+            <Center name="거래제안" desc="바이어·판매제안" href="/admin/trade-offers" />
+            <Center name="입점승인센터" desc="업체 신청·브랜드관" href="/admin/vendor-applications" />
+          </div>
+        </Accordion>
+
+        <Accordion title="미래 프로젝트 메모">
+          <div style={S.future}>
+            CG실 · 오디오실 · 영상실 · AI앵커 · 립싱크 · 자동영상은 지금 구현하지 않습니다.
+            지금은 <b>경영기획실 → 편성승인센터 → 농사뉴스센터</b> 순서로 갑니다.
+          </div>
+        </Accordion>
+      </div>
+    </main>
+  );
+}
+
+function Decision({ rank, title, problem, action, href, tone }: any) {
+  const color = tone === "red" ? "#dc2626" : tone === "green" ? "#15803d" : "#2563eb";
+  return (
+    <Link href={href} style={{ ...S.decision, borderColor: color }}>
+      <div style={{ ...S.rank, background: color }}>{rank}</div>
+      <div>
+        <h3 style={S.decisionTitle}>{title}</h3>
+        <p style={S.problem}>문제: {problem}</p>
+        <p style={S.action}>오늘 액션: {action}</p>
+      </div>
+    </Link>
+  );
+}
+
+function Status({ title, value, desc, href }: any) {
+  return (
+    <Link href={href} style={S.status}>
+      <div style={S.statusTitle}>{title}</div>
+      <div style={S.statusValue}>{value}</div>
+      <p style={S.statusDesc}>{desc}</p>
+      <b style={S.linkText}>판단하러 가기 →</b>
+    </Link>
+  );
+}
+
+function AiCard({ title, body }: any) {
+  return (
+    <div style={S.aiCard}>
+      <h3>{title}</h3>
+      <p>{body}</p>
+    </div>
+  );
+}
+
+function Accordion({ title, children, open = false }: any) {
+  return (
+    <details open={open} style={S.details}>
+      <summary style={S.summary}>{title}</summary>
+      <div style={S.detailBody}>{children}</div>
+    </details>
+  );
+}
+
+function Task({ rows }: { rows: string[][] }) {
+  return (
+    <div style={S.taskList}>
+      {rows.map(([level, title, desc, href]) => (
+        <Link key={title} href={href} style={S.task}>
+          <span style={S.taskLevel}>{level}</span>
+          <div style={{ flex: 1 }}>
+            <b>{title}</b>
+            <p>{desc}</p>
+          </div>
+          <span style={S.move}>이동</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function Progress() {
+  const rows = [
+    ["경영기획실", 75],
+    ["작가실", 60],
+    ["농사뉴스센터", 30],
+    ["편성승인센터", 10],
+    ["CG실", 0],
+    ["오디오실", 0],
+    ["영상실", 0],
+  ];
+
+  return (
+    <div style={S.progressList}>
+      {rows.map(([name, pct]: any) => (
+        <div key={name} style={S.progressRow}>
+          <b>{name}</b>
+          <div style={S.bar}><div style={{ ...S.barIn, width: `${pct}%` }} /></div>
+          <span>{pct}%</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Center({ name, desc, href }: any) {
+  return (
+    <Link href={href} style={S.center}>
+      <b>{name}</b>
+      <p>{desc}</p>
+      <span>열기 →</span>
+    </Link>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#f2f6f4", color: "#111827", padding: 24 },
+  wrap: { maxWidth: 1360, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", marginBottom: 20 },
+  eyebrow: { color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "8px 0 0", fontSize: 54, fontWeight: 950, letterSpacing: "-.06em", lineHeight: 1 },
+  sub: { color: "#64748b", fontSize: 18, fontWeight: 850 },
+  headerBtns: { display: "flex", gap: 10 },
+  darkBtn: { background: "#111827", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950, height: "fit-content" },
+  outlineBtn: { background: "#fff", color: "#111827", border: "1px solid #cbd5e1", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950, height: "fit-content" },
+
+  ceoAlert: { display: "grid", gridTemplateColumns: "1fr 280px", gap: 18, background: "#fff", border: "3px solid #dc2626", borderRadius: 30, padding: 28, marginBottom: 18 },
+  redLabel: { color: "#dc2626", fontWeight: 950 },
+  alertTitle: { margin: "8px 0", fontSize: 44, fontWeight: 950, letterSpacing: "-.05em" },
+  alertText: { fontSize: 19, color: "#475569", fontWeight: 850 },
+  lossBox: { background: "#fff7ed", border: "1px solid #fdba74", borderRadius: 22, padding: 22, textAlign: "center" },
+  lossLabel: { color: "#9a3412", fontWeight: 950 },
+  lossValue: { fontSize: 42, fontWeight: 950, color: "#dc2626" },
+  lossSub: { color: "#64748b", fontWeight: 850 },
+
+  decisionGrid: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 18 },
+  decision: { background: "#fff", border: "2px solid #15803d", borderRadius: 24, padding: 20, display: "flex", gap: 16, textDecoration: "none", color: "#111827" },
+  rank: { width: 46, height: 46, borderRadius: 14, color: "#fff", display: "grid", placeItems: "center", fontWeight: 950, fontSize: 22 },
+  decisionTitle: { margin: 0, fontSize: 24, fontWeight: 950 },
+  problem: { margin: "8px 0 0", color: "#64748b", fontWeight: 850 },
+  action: { margin: "6px 0 0", color: "#15803d", fontWeight: 950 },
+
+  statusBoard: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 18 },
+  status: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 22, padding: 20, textDecoration: "none", color: "#111827" },
+  statusTitle: { color: "#64748b", fontWeight: 950 },
+  statusValue: { marginTop: 8, fontSize: 38, fontWeight: 950 },
+  statusDesc: { color: "#475569", fontWeight: 850, lineHeight: 1.45 },
+  linkText: { color: "#15803d" },
+
+  aiBrief: { background: "#0f172a", color: "#fff", borderRadius: 28, padding: 24, marginBottom: 18 },
+  sectionTitle: { margin: 0, fontSize: 30, fontWeight: 950 },
+  aiGrid: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginTop: 16 },
+  aiCard: { background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)", borderRadius: 18, padding: 18 },
+  details: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, marginBottom: 12, overflow: "hidden" },
+  summary: { cursor: "pointer", padding: "18px 20px", background: "#fff", fontSize: 22, fontWeight: 950 },
+  detailBody: { padding: 18 },
+
+  taskList: { display: "grid", gap: 10 },
+  task: { display: "flex", gap: 14, alignItems: "center", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, textDecoration: "none", color: "#111827" },
+  taskLevel: { fontSize: 22 },
+  move: { background: "#15803d", color: "#fff", padding: "9px 12px", borderRadius: 10, fontWeight: 950 },
+  progressList: { display: "grid", gap: 12 },
+  progressRow: { display: "grid", gridTemplateColumns: "160px 1fr 60px", gap: 12, alignItems: "center" },
+  bar: { height: 14, background: "#e5e7eb", borderRadius: 999, overflow: "hidden" },
+  barIn: { height: "100%", background: "#15803d" },
+  centerGrid: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 },
+  center: { border: "1px solid #e5e7eb", borderRadius: 18, padding: 18, textDecoration: "none", color: "#111827" },
+  future: { fontSize: 18, fontWeight: 850, color: "#475569", lineHeight: 1.7 },
+};
