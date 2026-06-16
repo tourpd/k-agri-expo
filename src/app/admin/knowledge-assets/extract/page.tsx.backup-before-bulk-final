@@ -1,0 +1,560 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
+type Rule = {
+  crop: string;
+  month: string;
+  growth_stage: string;
+  symptom: string;
+  cause: string;
+  countermeasure: string;
+  action_instruction: string;
+  confidence_score?: number;
+  source_reference?: string;
+};
+
+export default function KnowledgeExtractPage() {
+  const [title, setTitle] = useState("안이영 고추 생육관리와 병충해방제 PPT");
+  const [author, setAuthor] = useState("안이영");
+  const [crop, setCrop] = useState("고추");
+  const [month, setMonth] = useState("5~10월");
+  const [rawContent, setRawContent] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileQueue, setFileQueue] = useState<{ name: string; status: string; text: string; rules: Rule[] }[]>([]);
+  const [rules, setRules] = useState<Rule[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  async function uploadPpt(file: File) {
+    setLoading(true);
+    setMsg("파일에서 텍스트를 추출하고 있습니다...");
+    setFileName(file.name);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const res = await fetch("/api/admin/knowledge-assets/upload-ppt", {
+        method: "POST",
+        body: fd,
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) throw new Error(json.error || "파일 추출 실패");
+
+      setRawContent(json.text || "");
+      setMsg(`파일 텍스트 추출 완료: ${json.slideCount || 0}장`);
+    } catch (e: any) {
+      setMsg(e.message || "오류 발생");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function uploadMany(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    setLoading(true);
+    setMsg(`${files.length}개 파일 일괄 추출을 시작합니다...`);
+
+    const queue: { name: string; status: string; text: string; rules: Rule[] }[] = [];
+
+    for (const file of Array.from(files)) {
+      const item = { name: file.name, status: "추출 중", text: "", rules: [] as Rule[] };
+      queue.push(item);
+      setFileQueue([...queue]);
+
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+
+        const res = await fetch("/api/admin/knowledge-assets/upload-ppt", {
+          method: "POST",
+          body: fd,
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) throw new Error(json.error || "파일 추출 실패");
+
+        item.status = "텍스트 추출 완료";
+        item.text = json.text || "";
+      } catch (e: any) {
+        item.status = `실패: ${e.message || "오류"}`;
+      }
+
+      setFileQueue([...queue]);
+    }
+
+    const firstOk = queue.find((q) => q.text);
+    if (firstOk) {
+      setFileName(firstOk.name);
+      setRawContent(firstOk.text);
+    }
+
+    setMsg(`일괄 텍스트 추출 완료: ${queue.filter((q) => q.text).length}/${queue.length}개 성공`);
+    setLoading(false);
+  }
+
+  async function extractManyRules() {
+    const targets = fileQueue.filter((f) => f.text);
+
+    if (targets.length === 0) {
+      alert("AI 추출할 파일이 없습니다.");
+      return;
+    }
+
+    setLoading(true);
+    setMsg(`${targets.length}개 자료에서 AI 판단규칙을 추출합니다...`);
+
+    const next = [...fileQueue];
+
+    for (const item of next) {
+      if (!item.text) continue;
+
+      item.status = "AI 추출 중";
+      setFileQueue([...next]);
+
+      try {
+        const res = await fetch("/api/admin/knowledge-assets/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "extract",
+            title: item.name,
+            author,
+            crop,
+            month,
+            raw_content: item.text,
+          }),
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) throw new Error(json.error || "AI 추출 실패");
+
+        item.rules = json.rules || [];
+        item.status = `AI 추출 완료 ${item.rules.length}건`;
+      } catch (e: any) {
+        item.status = `AI 실패: ${e.message || "오류"}`;
+      }
+
+      setFileQueue([...next]);
+    }
+
+    const allRules = next.flatMap((f) => f.rules);
+    setRules(allRules);
+    setMsg(`일괄 AI 추출 완료: 판단규칙 ${allRules.length}건`);
+    setLoading(false);
+  }
+
+  async function saveManyRules() {
+    const targets = fileQueue.filter((f) => f.rules.length > 0);
+
+    if (targets.length === 0) {
+      alert("저장할 판단규칙이 없습니다.");
+      return;
+    }
+
+    setLoading(true);
+    setMsg(`${targets.length}개 자료를 DB에 일괄 저장합니다...`);
+
+    let savedAssets = 0;
+    let savedRules = 0;
+
+    for (const item of targets) {
+      item.status = "DB 저장 중";
+      setFileQueue([...fileQueue]);
+
+      try {
+        const res = await fetch("/api/admin/knowledge-assets/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "save",
+            title: item.name,
+            author,
+            crop,
+            month,
+            raw_content: item.text,
+            rules: item.rules,
+          }),
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) throw new Error(json.error || "저장 실패");
+
+        savedAssets += 1;
+        savedRules += Number(json.savedRules || 0);
+        item.status = `DB 저장 완료 ${json.savedRules || 0}건`;
+      } catch (e: any) {
+        item.status = `저장 실패: ${e.message || "오류"}`;
+      }
+
+      setFileQueue([...fileQueue]);
+    }
+
+    setMsg(`일괄 저장 완료: 자료 ${savedAssets}개, 판단규칙 ${savedRules}건`);
+    setLoading(false);
+  }
+
+  async function extractRules() {
+    if (!rawContent.trim()) {
+      alert("PPT를 업로드하거나 원문을 붙여넣어 주세요.");
+      return;
+    }
+
+    setLoading(true);
+    setMsg("AI가 판단규칙을 추출하고 있습니다...");
+
+    try {
+      const res = await fetch("/api/admin/knowledge-assets/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "extract",
+          title,
+          author,
+          crop,
+          month,
+          raw_content: rawContent,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) throw new Error(json.error || "AI 추출 실패");
+
+      setRules(json.rules || []);
+      setMsg(`추출 완료: ${json.rules?.length || 0}건`);
+    } catch (e: any) {
+      setMsg(e.message || "오류 발생");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveRules() {
+    if (rules.length === 0) {
+      alert("저장할 판단규칙이 없습니다.");
+      return;
+    }
+
+    setLoading(true);
+    setMsg("DB에 저장 중입니다...");
+
+    try {
+      const res = await fetch("/api/admin/knowledge-assets/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "save",
+          title,
+          author,
+          crop,
+          month,
+          raw_content: rawContent,
+          rules,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) throw new Error(json.error || "저장 실패");
+
+      setMsg(`저장 완료: 원천자료 1건, 판단규칙 ${json.savedRules}건`);
+    } catch (e: any) {
+      setMsg(e.message || "오류 발생");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <Link href="/admin/knowledge-assets" style={S.back}>← 농업 AI 두뇌센터</Link>
+            <div style={S.eyebrow}>K-AGRI AI EXTRACTOR</div>
+            <h1 style={S.title}>AI 판단규칙 추출기</h1>
+            <p style={S.sub}>
+              자료 원문을 넣고 AI가 뽑은 판단규칙을 엑셀형 표에서 검수한 뒤 DB에 저장합니다.
+            </p>
+          </div>
+          <div style={S.btns}>
+            <Link href="/admin/knowledge-assets" style={S.darkBtn}>운영표 보기</Link>
+            <Link href="/admin/knowledge-assets/rules" style={S.greenBtn}>판단규칙 DB</Link>
+          </div>
+        </header>
+
+        <section style={S.topPanel}>
+          <div style={S.field}>
+            <label style={S.label}>자료 제목</label>
+            <input style={S.input} value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+
+          <div style={S.fieldSmall}>
+            <label style={S.label}>저자 / 출처</label>
+            <input style={S.input} value={author} onChange={(e) => setAuthor(e.target.value)} />
+          </div>
+
+          <div style={S.fieldTiny}>
+            <label style={S.label}>작물</label>
+            <input style={S.input} value={crop} onChange={(e) => setCrop(e.target.value)} />
+          </div>
+
+          <div style={S.fieldTiny}>
+            <label style={S.label}>월 / 시기</label>
+            <input style={S.input} value={month} onChange={(e) => setMonth(e.target.value)} />
+          </div>
+
+          <div style={S.actionBox}>
+            <button style={S.greenButton} onClick={extractRules} disabled={loading}>
+              {loading ? "처리 중..." : "AI 추출"}
+            </button>
+            <button style={S.darkButton} onClick={saveRules} disabled={loading || rules.length === 0}>
+              DB 저장
+            </button>
+          </div>
+        </section>
+
+        {msg ? <section style={S.msg}>{msg}</section> : null}
+
+        <section style={S.editorGrid}>
+          <div style={S.rawBox}>
+            <div style={S.panelHead}>
+              <h2>PPT 업로드</h2>
+              <p>PPT, PPTX, PDF, Word, HWP, HWPX 파일을 올리면 텍스트를 자동 추출합니다.</p>
+
+              <label style={S.uploadBox}>
+                <input
+                  type="file"
+                  multiple
+                  accept=".ppt,.pptx,.pdf,.doc,.docx,.hwp,.hwpx"
+                  style={{ display: "none" }}
+                  onChange={(e) => uploadMany(e.target.files)}
+                />
+                자료 파일 일괄 선택
+              </label>
+
+              {fileName ? <p style={S.fileName}>현재 미리보기: {fileName}</p> : null}
+
+              {fileQueue.length > 0 ? (
+                <div style={S.queueBox}>
+                  <div style={S.queueHead}>
+                    <b>일괄 처리 목록 {fileQueue.length}개</b>
+                    <div style={S.btns}>
+                      <button style={S.greenButton} onClick={extractManyRules} disabled={loading}>
+                        일괄 AI 추출
+                      </button>
+                      <button style={S.darkButton} onClick={saveManyRules} disabled={loading}>
+                        일괄 DB 저장
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={S.queueTableWrap}>
+                    <table style={S.queueTable}>
+                      <thead>
+                        <tr>
+                          <th style={S.qth}>파일명</th>
+                          <th style={S.qth}>상태</th>
+                          <th style={S.qth}>텍스트</th>
+                          <th style={S.qth}>규칙</th>
+                          <th style={S.qth}>보기</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fileQueue.map((f, i) => (
+                          <tr key={`${f.name}-${i}`}>
+                            <td style={S.qtd}>{f.name}</td>
+                            <td style={S.qtdStrong}>{f.status}</td>
+                            <td style={S.qtd}>{f.text ? `${f.text.length.toLocaleString()}자` : "-"}</td>
+                            <td style={S.qtd}>{f.rules.length}건</td>
+                            <td style={S.qtd}>
+                              <button
+                                style={S.smallBtn}
+                                onClick={() => {
+                                  setFileName(f.name);
+                                  setRawContent(f.text);
+                                  setRules(f.rules);
+                                }}
+                              >
+                                열기
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
+
+              <p style={S.helpText}>※ 지원: ppt, pptx, pdf, doc, docx, hwp, hwpx. 단, 스캔 PDF는 OCR 단계가 별도로 필요합니다.</p>
+            </div>
+
+            <div style={S.panelHead}>
+              <h2>추출된 원문</h2>
+              <p>PPT에서 뽑힌 텍스트입니다. 필요하면 직접 수정할 수 있습니다.</p>
+            </div>
+            <textarea
+              style={S.textarea}
+              value={rawContent}
+              onChange={(e) => setRawContent(e.target.value)}
+              placeholder="예: 6월 고추는 개화기와 1차 비대기에 들어간다. 이 시기에는 총채벌레, 담배나방, 칼슘결핍, 탄저병 예방이 중요하다..."
+            />
+          </div>
+
+          <div style={S.resultBox}>
+            <div style={S.panelHeadRow}>
+              <div>
+                <h2>추출 결과 검수표</h2>
+                <p>AI가 뽑은 규칙을 한 줄 한 건으로 확인합니다.</p>
+              </div>
+              <b style={S.countBadge}>{rules.length}건</b>
+            </div>
+
+            <div style={S.tableWrap}>
+              <table style={S.table}>
+                <thead>
+                  <tr>
+                    <th style={S.thCheck}>선택</th>
+                    <th style={S.th}>작물</th>
+                    <th style={S.th}>월</th>
+                    <th style={S.th}>생육단계</th>
+                    <th style={S.th}>증상</th>
+                    <th style={S.th}>원인</th>
+                    <th style={S.th}>대책</th>
+                    <th style={S.thWide}>행동지시</th>
+                    <th style={S.th}>신뢰도</th>
+                    <th style={S.th}>출처</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rules.length === 0 ? (
+                    <tr>
+                      <td style={S.empty} colSpan={10}>
+                        아직 추출된 판단규칙이 없습니다. 원문을 붙여넣고 AI 추출을 누르세요.
+                      </td>
+                    </tr>
+                  ) : (
+                    rules.map((r, i) => (
+                      <tr key={i}>
+                        <td style={S.tdCheck}><input type="checkbox" defaultChecked /></td>
+                        <td style={S.tdStrong}>{r.crop}</td>
+                        <td style={S.td}>{r.month}</td>
+                        <td style={S.td}>{r.growth_stage}</td>
+                        <td style={S.td}>{r.symptom}</td>
+                        <td style={S.td}>{r.cause}</td>
+                        <td style={S.tdStrong}>{r.countermeasure}</td>
+                        <td style={S.tdAction}>{r.action_instruction}</td>
+                        <td style={S.td}>{r.confidence_score ?? "-"}</td>
+                        <td style={S.td}>{r.source_reference || "-"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section style={S.bottomBar}>
+          <div>
+            <b>운영 기준</b>
+            <p>이 화면은 자료 1개에서 규칙 10~100건을 뽑아 검수하는 작업대입니다.</p>
+          </div>
+          <div style={S.btns}>
+            <button style={S.greenButton} onClick={extractRules} disabled={loading}>현재 파일 AI 추출</button>
+            <button style={S.darkButton} onClick={saveRules} disabled={loading || rules.length === 0}>현재 파일 DB 저장</button>
+            <button style={S.greenButton} onClick={extractManyRules} disabled={loading || fileQueue.length === 0}>일괄 AI 추출</button>
+            <button style={S.darkButton} onClick={saveManyRules} disabled={loading || fileQueue.length === 0}>일괄 DB 저장</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#eef4f2", color: "#0f172a", padding: 22 },
+  wrap: { maxWidth: 1760, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 16, flexWrap: "wrap" },
+  back: { color: "#15803d", textDecoration: "none", fontWeight: 950 },
+  eyebrow: { marginTop: 12, color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "6px 0 0", fontSize: 44, lineHeight: 1, fontWeight: 950, letterSpacing: "-.06em" },
+  sub: { margin: "10px 0 0", color: "#475569", fontSize: 17, lineHeight: 1.5, fontWeight: 850 },
+
+  topPanel: {
+    background: "#fff",
+    border: "1px solid #dbe3ea",
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 12,
+    display: "grid",
+    gridTemplateColumns: "minmax(360px, 1fr) 220px 130px 150px 210px",
+    gap: 10,
+    alignItems: "end",
+  },
+  field: { minWidth: 0 },
+  fieldSmall: { minWidth: 0 },
+  fieldTiny: { minWidth: 0 },
+  label: { display: "block", marginBottom: 6, fontWeight: 950, color: "#334155", fontSize: 13 },
+  input: { width: "100%", border: "1px solid #cbd5e1", borderRadius: 10, padding: 12, fontSize: 15, fontWeight: 850 },
+  actionBox: { display: "flex", gap: 8, justifyContent: "flex-end" },
+
+  editorGrid: { display: "grid", gridTemplateColumns: "520px minmax(0,1fr)", gap: 12, alignItems: "start" },
+  rawBox: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, overflow: "hidden" },
+  resultBox: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, overflow: "hidden", minWidth: 0 },
+  panelHead: { padding: 14, borderBottom: "1px solid #e5e7eb" },
+  panelHeadRow: { padding: 14, borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" },
+  textarea: {
+    width: "100%",
+    minHeight: "50vh",
+    border: 0,
+    padding: 14,
+    fontSize: 15,
+    fontWeight: 800,
+    lineHeight: 1.65,
+    outline: "none",
+    resize: "vertical",
+  },
+
+  tableWrap: { overflowX: "auto", maxHeight: "64vh" },
+  table: { width: "max-content", minWidth: 1500, borderCollapse: "separate", borderSpacing: 0 },
+  th: { position: "sticky", top: 0, zIndex: 2, background: "#f1f5f9", padding: 11, textAlign: "left", fontWeight: 950, whiteSpace: "nowrap", borderBottom: "1px solid #dbe3ea", minWidth: 130 },
+  thWide: { position: "sticky", top: 0, zIndex: 2, background: "#f1f5f9", padding: 11, textAlign: "left", fontWeight: 950, whiteSpace: "nowrap", borderBottom: "1px solid #dbe3ea", minWidth: 420 },
+  thCheck: { position: "sticky", top: 0, left: 0, zIndex: 4, background: "#f1f5f9", padding: 11, borderBottom: "1px solid #dbe3ea", fontWeight: 950, whiteSpace: "nowrap" },
+  td: { padding: 11, borderBottom: "1px solid #edf2f7", fontWeight: 800, verticalAlign: "top", lineHeight: 1.45, minWidth: 130, maxWidth: 240 },
+  tdCheck: { position: "sticky", left: 0, zIndex: 1, background: "#fff", padding: 11, borderBottom: "1px solid #edf2f7" },
+  tdStrong: { padding: 11, borderBottom: "1px solid #edf2f7", fontWeight: 950, color: "#15803d", verticalAlign: "top", lineHeight: 1.45, minWidth: 140, maxWidth: 260 },
+  tdAction: { padding: 11, borderBottom: "1px solid #edf2f7", fontWeight: 950, color: "#dc2626", verticalAlign: "top", lineHeight: 1.45, minWidth: 420, maxWidth: 540 },
+  empty: { padding: 40, textAlign: "center", color: "#64748b", fontWeight: 950 },
+
+  btns: { display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" },
+  greenBtn: { background: "#15803d", color: "#fff", padding: "12px 16px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+  darkBtn: { background: "#0f172a", color: "#fff", padding: "12px 16px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+  greenButton: { background: "#15803d", color: "#fff", border: 0, padding: "12px 16px", borderRadius: 12, fontWeight: 950, cursor: "pointer", whiteSpace: "nowrap" },
+  darkButton: { background: "#0f172a", color: "#fff", border: 0, padding: "12px 16px", borderRadius: 12, fontWeight: 950, cursor: "pointer", whiteSpace: "nowrap" },
+  msg: { background: "#ecfdf5", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: 14, padding: 12, marginBottom: 12, fontWeight: 950 },
+  countBadge: { background: "#ecfdf5", color: "#15803d", borderRadius: 999, padding: "8px 12px", whiteSpace: "nowrap" },
+  uploadBox: { display: "inline-flex", background: "#15803d", color: "#fff", borderRadius: 12, padding: "12px 16px", fontWeight: 950, cursor: "pointer", marginTop: 10 },
+  fileName: { marginTop: 10, color: "#15803d", fontWeight: 950 },
+  helpText: { marginTop: 8, color: "#64748b", fontWeight: 850, lineHeight: 1.5 },
+  queueBox: { marginTop: 12, border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden" },
+  queueHead: { padding: 10, background: "#f8fafc", display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" },
+  queueTableWrap: { overflowX: "auto", maxHeight: 260 },
+  queueTable: { width: "100%", minWidth: 680, borderCollapse: "collapse" },
+  qth: { background: "#f1f5f9", padding: 9, textAlign: "left", fontWeight: 950, borderBottom: "1px solid #e5e7eb", whiteSpace: "nowrap" },
+  qtd: { padding: 9, borderBottom: "1px solid #edf2f7", fontWeight: 800, verticalAlign: "top" },
+  qtdStrong: { padding: 9, borderBottom: "1px solid #edf2f7", fontWeight: 950, color: "#15803d", verticalAlign: "top" },
+  smallBtn: { background: "#0f172a", color: "#fff", border: 0, borderRadius: 9, padding: "7px 9px", fontWeight: 950, cursor: "pointer" },
+  bottomBar: { marginTop: 12, display: "flex", justifyContent: "space-between", gap: 16, background: "#0f172a", color: "#fff", borderRadius: 18, padding: 18, flexWrap: "wrap" },
+};

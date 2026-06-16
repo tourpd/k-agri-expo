@@ -1,0 +1,179 @@
+import Link from "next/link";
+
+export const dynamic = "force-dynamic";
+
+const assets = [
+  {
+    name: "안이영 농민교육 자료",
+    count: 324,
+    type: "교육자료",
+    possibleNews: 648,
+    possibleShorts: 1620,
+    possibleWebtoons: 324,
+  },
+  {
+    name: "홍산마늘 프로젝트",
+    count: 87,
+    type: "작물자산",
+    possibleNews: 174,
+    possibleShorts: 435,
+    possibleWebtoons: 87,
+  },
+  {
+    name: "병해충 데이터",
+    count: 1211,
+    type: "농업DB",
+    possibleNews: 2422,
+    possibleShorts: 6055,
+    possibleWebtoons: 1211,
+  },
+  {
+    name: "한국농수산TV 영상",
+    count: 894,
+    type: "영상자산",
+    possibleNews: 1788,
+    possibleShorts: 4470,
+    possibleWebtoons: 894,
+  },
+];
+
+export default function Page() {
+  const totalAssets = assets.reduce((a, b) => a + b.count, 0);
+  const totalNews = assets.reduce((a, b) => a + b.possibleNews, 0);
+  const totalShorts = assets.reduce((a, b) => a + b.possibleShorts, 0);
+
+  return (
+    <main className="min-h-screen bg-slate-50 p-6">
+      <div className="mx-auto max-w-7xl">
+
+        <div className="mb-6">
+          <div className="text-green-700 font-black">
+            KNOWLEDGE ASSET CENTER
+          </div>
+
+          <h1 className="text-5xl font-black mt-2">
+            농업 지식 자산센터
+          </h1>
+
+          <p className="text-xl text-slate-600 mt-3">
+            자료창고가 아니라 콘텐츠 공장입니다.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+
+          <div className="bg-white rounded-3xl p-6 shadow">
+            <div className="text-slate-500 font-bold">
+              원천자산
+            </div>
+            <div className="text-5xl font-black mt-2">
+              {totalAssets.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow">
+            <div className="text-slate-500 font-bold">
+              생성 가능 뉴스
+            </div>
+            <div className="text-5xl font-black mt-2 text-blue-600">
+              {totalNews.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow">
+            <div className="text-slate-500 font-bold">
+              생성 가능 쇼츠
+            </div>
+            <div className="text-5xl font-black mt-2 text-red-600">
+              {totalShorts.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow">
+            <div className="text-slate-500 font-bold">
+              AI 가치
+            </div>
+            <div className="text-5xl font-black mt-2 text-green-700">
+              무한
+            </div>
+          </div>
+
+        </div>
+
+        <div className="bg-white rounded-3xl shadow overflow-hidden">
+
+          <div className="p-5 border-b text-2xl font-black">
+            콘텐츠 원천 자산
+          </div>
+
+          <table className="w-full">
+            <thead className="bg-slate-100">
+              <tr>
+                <th className="p-4 text-left">자산명</th>
+                <th className="p-4 text-left">자료수</th>
+                <th className="p-4 text-left">뉴스</th>
+                <th className="p-4 text-left">쇼츠</th>
+                <th className="p-4 text-left">웹툰</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {assets.map((a) => (
+                <tr key={a.name} className="border-t">
+                  <td className="p-4 font-bold">{a.name}</td>
+                  <td className="p-4">{a.count}</td>
+                  <td className="p-4 text-blue-600 font-black">
+                    {a.possibleNews}
+                  </td>
+                  <td className="p-4 text-red-600 font-black">
+                    {a.possibleShorts}
+                  </td>
+                  <td className="p-4 text-green-700 font-black">
+                    {a.possibleWebtoons}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+        </div>
+
+        <div className="mt-8 bg-yellow-50 border-2 border-yellow-300 rounded-3xl p-6">
+          <div className="text-3xl font-black">
+            핵심 질문
+          </div>
+
+          <div className="mt-4 text-xl">
+            뉴스를 만들 것인가?
+          </div>
+
+          <div className="text-xl">
+            쇼츠를 만들 것인가?
+          </div>
+
+          <div className="text-xl">
+            웹툰을 만들 것인가?
+          </div>
+
+          <div className="mt-6 text-3xl font-black text-red-600">
+            아니다.
+          </div>
+
+          <div className="text-2xl font-black mt-2">
+            원천자산을 늘릴 것인가?
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <Link
+            href="/admin/dashboard"
+            className="inline-flex bg-black text-white px-6 py-4 rounded-2xl font-black"
+          >
+            경영기획실로 돌아가기
+          </Link>
+        </div>
+
+      </div>
+    </main>
+  );
+}

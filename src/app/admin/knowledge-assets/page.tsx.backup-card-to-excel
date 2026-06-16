@@ -1,0 +1,382 @@
+import Link from "next/link";
+import type { CSSProperties } from "react";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+type RuleRow = {
+  id: string;
+  crop: string | null;
+  month: string | null;
+  growth_stage: string | null;
+  symptom: string | null;
+  cause: string | null;
+  countermeasure: string | null;
+  action_instruction: string | null;
+  status: string | null;
+};
+
+const brainAssets = [
+  {
+    rank: "1",
+    asset: "안이영 농민교육 자료",
+    crop: "고추",
+    source: "고추 생육관리와 병충해방제 PPT",
+    extracted: "작물 · 월 · 생육단계 · 증상 · 원인 · 대책 · 작업지시",
+    rules: "5~10월 작업지시서",
+    use: "농사119 / 작가실 / 뉴스 / 쇼츠 / 공동편집",
+    next: "5월~10월 작업지시 DB화",
+    status: "오늘 시작",
+  },
+  {
+    rank: "2",
+    asset: "병해충 판단 데이터",
+    crop: "고추",
+    source: "탄저병 · 역병 · 반점세균병 · 청고병 · 바이러스",
+    extracted: "증상 · 발생조건 · 구분법 · 방제시기 · 처방",
+    rules: "증상 → 원인 → 대책",
+    use: "농사119 진단 / 긴급경보 / 카드뉴스",
+    next: "탄저병 판단규칙 추출",
+    status: "준비",
+  },
+  {
+    rank: "3",
+    asset: "해충 방제 데이터",
+    crop: "고추",
+    source: "총채벌레 · 진딧물 · 응애 · 담배나방",
+    extracted: "발생시기 · 피해증상 · 약제교대 · 예방작업",
+    rules: "월별 해충 예찰 규칙",
+    use: "농민 알림 / 방제 캘린더 / 쇼츠",
+    next: "총채벌레 방제규칙 추출",
+    status: "준비",
+  },
+  {
+    rank: "4",
+    asset: "월별 고추 작업지시서",
+    crop: "고추",
+    source: "5월 · 6월 · 7월 · 8월 · 9월 · 10월",
+    extracted: "생육관리 · 포장관리 · 장해대책 · 병해대책 · 충해대책",
+    rules: "오늘 해야 할 일 TOP5",
+    use: "농민 행동엔진 / 앱 푸시 / 문자 / 뉴스",
+    next: "월별 작업카드 생성",
+    status: "핵심",
+  },
+];
+
+const fallbackRules: RuleRow[] = [
+  {
+    id: "may",
+    crop: "고추",
+    month: "5월",
+    growth_stage: "활착기 · 줄기신장기 · 가지분얼기",
+    symptom: "냉해 · 활착부진 · 총채벌레 · 진딧물",
+    cause: "정식 후 저온, 뿌리활착 부족, 초기 해충 밀도 증가",
+    countermeasure: "활착관리, 발근제, 초기 해충 방제",
+    action_instruction: "정식 후 활착을 확인하고 발근제 처리와 초기 해충 예찰을 진행합니다.",
+    status: "seed",
+  },
+  {
+    id: "jun",
+    crop: "고추",
+    month: "6월",
+    growth_stage: "개화기 · 1차 비대기 · 2차 비대기",
+    symptom: "담배나방 · 총채벌레 · 칼슘결핍 · 탄저병 예방",
+    cause: "고온 시작, 착과 증가, 장마 전 병원균 밀도 증가",
+    countermeasure: "2차 추비, 칼슘 공급, 탄저병 예방약제",
+    action_instruction: "2차 추비와 칼슘 공급을 진행하고 탄저병 예방 방제를 시작합니다.",
+    status: "seed",
+  },
+  {
+    id: "jul",
+    crop: "고추",
+    month: "7월",
+    growth_stage: "착색기 · 1차 수확기 · 2차 개화기",
+    symptom: "탄저병 · 시듦 · 장마 · 담배나방",
+    cause: "장마, 배수불량, 고온다습, 병해충 확산",
+    countermeasure: "배수정비, 이병과 제거, 치료제 교대살포",
+    action_instruction: "배수로를 정비하고 이병과를 제거한 뒤 치료제를 교대 살포합니다.",
+    status: "seed",
+  },
+  {
+    id: "aug",
+    crop: "고추",
+    month: "8월",
+    growth_stage: "2차 착과기 · 비대기 · 수확기",
+    symptom: "청고병 · 탄저병 · 총채벌레 · 잔류농약",
+    cause: "고온기 병 확산, 연속수확, 약제 안전사용기간 문제",
+    countermeasure: "치료제 확보, 안전사용기간 준수, 피해과 제거",
+    action_instruction: "수확 전 안전사용기간을 확인하고 피해과를 즉시 제거합니다.",
+    status: "seed",
+  },
+  {
+    id: "sep",
+    crop: "고추",
+    month: "9월",
+    growth_stage: "연속수확기",
+    symptom: "탄저병 · 담배나방 · 곡과 · 황화",
+    cause: "초세 저하, 양분 부족, 후기 병해충 누적",
+    countermeasure: "가리추비, 붕산혼용, 수확관리",
+    action_instruction: "가리 추비와 붕산 혼용을 검토하고 후기 수확 품질을 관리합니다.",
+    status: "seed",
+  },
+  {
+    id: "oct",
+    crop: "고추",
+    month: "10월",
+    growth_stage: "후기수확기 · 수확연장",
+    symptom: "서리 · 착색지연 · 잔류농약",
+    cause: "기온 저하, 일조 부족, 마지막 방제 시기 문제",
+    countermeasure: "착색관리, 최종수확, 건조관리",
+    action_instruction: "서리 전 최종 수확 계획을 세우고 건조 품질을 관리합니다.",
+    status: "seed",
+  },
+];
+
+async function getBrainData() {
+  const supabase = createSupabaseAdminClient();
+
+  const [
+    assetCountResult,
+    ruleCountResult,
+    actionCountResult,
+    rulesResult,
+  ] = await Promise.all([
+    supabase.from("knowledge_assets").select("id", { count: "exact", head: true }),
+    supabase.from("knowledge_rules").select("id", { count: "exact", head: true }),
+    supabase
+      .from("knowledge_rules")
+      .select("id", { count: "exact", head: true })
+      .not("action_instruction", "is", null),
+    supabase
+      .from("knowledge_rules")
+      .select("id,crop,month,growth_stage,symptom,cause,countermeasure,action_instruction,status")
+      .eq("crop", "고추")
+      .order("month", { ascending: true })
+      .limit(30),
+  ]);
+
+  const rules = rulesResult.data && rulesResult.data.length > 0
+    ? rulesResult.data
+    : fallbackRules;
+
+  return {
+    assetCount: assetCountResult.count ?? 0,
+    ruleCount: ruleCountResult.count ?? 0,
+    actionCount: actionCountResult.count ?? 0,
+    rules,
+    usingFallback: !rulesResult.data || rulesResult.data.length === 0,
+  };
+}
+
+export default async function KnowledgeAssetsPage() {
+  const data = await getBrainData();
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <Link href="/admin/dashboard" style={S.back}>← 경영기획실</Link>
+            <div style={S.eyebrow}>K-AGRI BRAIN CENTER</div>
+            <h1 style={S.title}>농업 AI 두뇌센터</h1>
+            <p style={S.sub}>
+              뉴스 몇 개를 만들지가 아닙니다. 자료에서 판단규칙과 농민 행동지시를 뽑아내는 곳입니다.
+            </p>
+          </div>
+          <div style={S.headerBtns}>
+            <Link href="/admin/kagri-writers-room/knowledge" style={S.darkBtn}>자료 업로드</Link>
+            <Link href="/admin/knowledge-assets/rules" style={S.greenBtn}>판단규칙 보기</Link>
+            <Link href="/admin/approval-center" style={S.darkBtn}>승인센터</Link>
+          </div>
+        </header>
+
+        <section style={S.hero}>
+          <div>
+            <div style={S.redLabel}>1호 두뇌 자산</div>
+            <h2 style={S.heroTitle}>안이영 고추 PPT를 “농민 행동엔진”으로 해체합니다.</h2>
+            <p style={S.heroText}>
+              이 자료의 핵심은 콘텐츠 생산량이 아니라 5월부터 10월까지 농민이 실제로 해야 할 작업지시,
+              병해충 판단규칙, 증상별 대책입니다. 이제 PPT를 슬라이드가 아니라 데이터로 봅니다.
+            </p>
+          </div>
+          <div style={S.heroBox}>
+            <span>오늘의 결론</span>
+            <b>자료 → 판단규칙 → 행동지시</b>
+            <small>그 다음에 뉴스·쇼츠·웹툰·문자가 따라옵니다.</small>
+          </div>
+        </section>
+
+        <section style={S.kpiGrid}>
+          <Kpi title="원천자료" value={`${data.assetCount} / 300`} desc="안이영 자료 300개 자산화 목표" />
+          <Kpi title="판단규칙" value={`${data.ruleCount}건`} desc="증상 → 원인 → 대책 규칙" />
+          <Kpi title="행동지시" value={`${data.actionCount}건`} desc="농민이 오늘 해야 할 일" />
+          <Kpi title="현재 기준" value="데이터 우선" desc="자료 → 규칙 → 지시 → 콘텐츠" />
+        </section>
+
+        <section style={S.panel}>
+          <div style={S.panelHead}>
+            <h2>안이영 자료 해체 기준</h2>
+            <p>앞으로 모든 농업자료는 콘텐츠 수가 아니라 판단규칙 수로 평가합니다.</p>
+          </div>
+
+          <div style={S.tableWrap}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>우선</th>
+                  <th style={S.th}>두뇌 자산</th>
+                  <th style={S.th}>작물</th>
+                  <th style={S.th}>원천자료</th>
+                  <th style={S.th}>추출할 데이터</th>
+                  <th style={S.th}>판단규칙</th>
+                  <th style={S.th}>활용처</th>
+                  <th style={S.th}>다음 행동</th>
+                  <th style={S.th}>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                {brainAssets.map((a) => (
+                  <tr key={a.asset}>
+                    <td style={S.rank}>{a.rank}</td>
+                    <td style={S.tdTitle}>{a.asset}</td>
+                    <td style={S.td}>{a.crop}</td>
+                    <td style={S.td}>{a.source}</td>
+                    <td style={S.td}>{a.extracted}</td>
+                    <td style={S.tdStrong}>{a.rules}</td>
+                    <td style={S.td}>{a.use}</td>
+                    <td style={S.tdStrong}>{a.next}</td>
+                    <td style={S.td}><span style={S.badge}>{a.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section style={S.panel}>
+          <div style={S.panelHead}>
+            <h2>고추 월별 행동엔진 1차 추출</h2>
+            <p>
+              농민이 원하는 것은 설명이 아니라 “이번 달 무엇을 해야 하는가”입니다.
+              {data.usingFallback ? " 현재는 초기 기준 데이터이며, DB에 판단규칙이 들어오면 자동으로 대체됩니다." : ""}
+            </p>
+          </div>
+
+          <div style={S.monthGrid}>
+            {data.rules.map((r) => (
+              <article key={r.id} style={S.monthCard}>
+                <div style={S.month}>{r.month || "월 미지정"}</div>
+                <h3>{r.growth_stage || "생육단계 미지정"}</h3>
+
+                <div style={S.label}>주의할 문제</div>
+                <p>{r.symptom || "증상 미입력"}</p>
+
+                <div style={S.label}>원인</div>
+                <p>{r.cause || "원인 미입력"}</p>
+
+                <div style={S.label}>대책</div>
+                <p>{r.countermeasure || "대책 미입력"}</p>
+
+                <div style={S.label}>농민 행동지시</div>
+                <b>{r.action_instruction || "행동지시 미입력"}</b>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section style={S.flowBox}>
+          <h2>두뇌 활용 경로</h2>
+          <div style={S.flow}>
+            <Step title="농업지식 자산센터" desc="안이영 자료 원본 보관" />
+            <Step title="AI 해체" desc="작물·월·증상·대책 추출" />
+            <Step title="판단규칙 DB" desc="증상→원인→대책 저장" />
+            <Step title="농사119·작가실" desc="질문답변·뉴스·쇼츠 생성" />
+            <Step title="편성승인센터" desc="최종 승인 후 발행" />
+          </div>
+        </section>
+
+        <section style={S.today}>
+          <div>
+            <h2>지금 할 일</h2>
+            <p>
+              안이영 고추 PPT에서 <b>5월~10월 작업지시서</b>를 먼저 데이터로 바꿉니다.
+              이것이 K-AGRI 농민 행동엔진의 첫 성공사례입니다.
+            </p>
+          </div>
+          <div style={S.btns}>
+            <Link href="/admin/kagri-writers-room/knowledge" style={S.greenBtn}>자료 업로드</Link>
+            <Link href="/admin/knowledge-assets/rules" style={S.greenBtn}>판단규칙 보기</Link>
+            <Link href="/admin/approval-center" style={S.darkBtn}>승인센터</Link>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function Kpi({ title, value, desc }: { title: string; value: string; desc: string }) {
+  return (
+    <div style={S.kpi}>
+      <div style={S.kpiTitle}>{title}</div>
+      <div style={S.kpiValue}>{value}</div>
+      <div style={S.kpiDesc}>{desc}</div>
+    </div>
+  );
+}
+
+function Step({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div style={S.step}>
+      <b>{title}</b>
+      <p>{desc}</p>
+    </div>
+  );
+}
+
+const S: Record<string, CSSProperties> = {
+  page: { minHeight: "100vh", background: "#eef4f2", color: "#0f172a", padding: 28 },
+  wrap: { maxWidth: 1500, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 24, flexWrap: "wrap" },
+  back: { color: "#15803d", textDecoration: "none", fontWeight: 950 },
+  eyebrow: { marginTop: 16, color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "8px 0 0", fontSize: 58, lineHeight: 1, fontWeight: 950, letterSpacing: "-.06em" },
+  sub: { margin: "14px 0 0", color: "#475569", fontSize: 21, lineHeight: 1.55, fontWeight: 850 },
+  headerBtns: { display: "flex", gap: 10, alignItems: "flex-start", flexWrap: "wrap" },
+  darkBtn: { background: "#0f172a", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950, height: "fit-content" },
+  greenBtn: { background: "#15803d", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950, height: "fit-content" },
+
+  hero: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 22, background: "#fff", border: "3px solid #15803d", borderRadius: 30, padding: 30, marginBottom: 18 },
+  redLabel: { color: "#dc2626", fontWeight: 950 },
+  heroTitle: { margin: "10px 0", fontSize: 42, lineHeight: 1.15, fontWeight: 950, letterSpacing: "-.05em" },
+  heroText: { color: "#334155", fontSize: 19, lineHeight: 1.65, fontWeight: 850 },
+  heroBox: { background: "#fff7ed", border: "1px solid #fdba74", borderRadius: 24, padding: 24, display: "grid", alignContent: "center", gap: 10 },
+
+  kpiGrid: { display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: 14, marginBottom: 18 },
+  kpi: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 22, padding: 22 },
+  kpiTitle: { color: "#64748b", fontWeight: 950 },
+  kpiValue: { marginTop: 8, fontSize: 32, fontWeight: 950 },
+  kpiDesc: { marginTop: 6, color: "#475569", fontWeight: 850 },
+
+  panel: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 26, overflow: "hidden", marginBottom: 18 },
+  panelHead: { padding: 24, borderBottom: "1px solid #e5e7eb" },
+  tableWrap: { overflowX: "auto" },
+  table: { width: "100%", borderCollapse: "collapse", minWidth: 1300 },
+  th: { background: "#f1f5f9", color: "#0f172a", padding: 15, textAlign: "left", borderBottom: "1px solid #e5e7eb", fontWeight: 950 },
+  td: { padding: 15, borderBottom: "1px solid #e5e7eb", color: "#0f172a", fontWeight: 800, verticalAlign: "top", lineHeight: 1.5 },
+  rank: { padding: 15, borderBottom: "1px solid #e5e7eb", color: "#dc2626", fontWeight: 950, fontSize: 26 },
+  tdTitle: { padding: 15, borderBottom: "1px solid #e5e7eb", color: "#0f172a", fontWeight: 950, verticalAlign: "top" },
+  tdStrong: { padding: 15, borderBottom: "1px solid #e5e7eb", color: "#15803d", fontWeight: 950, verticalAlign: "top" },
+  badge: { background: "#ecfdf5", color: "#15803d", borderRadius: 999, padding: "7px 11px", fontWeight: 950 },
+
+  monthGrid: { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 14, padding: 18 },
+  monthCard: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 20, padding: 18 },
+  month: { display: "inline-flex", background: "#0f172a", color: "#fff", borderRadius: 12, padding: "8px 12px", fontWeight: 950, marginBottom: 12 },
+  label: { marginTop: 12, color: "#64748b", fontWeight: 950, fontSize: 13 },
+
+  flowBox: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 26, padding: 24, marginBottom: 18 },
+  flow: { display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 12, marginTop: 16 },
+  step: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 18, padding: 16 },
+  today: { display: "flex", justifyContent: "space-between", gap: 20, background: "#0f172a", color: "#fff", borderRadius: 28, padding: 26, flexWrap: "wrap" },
+  btns: { display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" },
+};
