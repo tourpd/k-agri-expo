@@ -6,7 +6,6 @@ import { getAutoHeroData } from "@/lib/expo/hero-auto";
 import { getMonthlyConsultQuestions } from "@/lib/expo/consult-queries";
 import { getExpoHotIssues } from "@/lib/expo/hot-issues";
 import { getMonthlyProblemCards } from "@/lib/expo/problem-cards";
-import { getExpoProblemSectionData } from "@/lib/expo/problem-queries";
 import { getHomeDeals } from "@/lib/expo/home-deals";
 import ExpoPromotionHero from "@/components/expo/ExpoPromotionHero";
 
@@ -17,8 +16,6 @@ import ExpoHotIssuesSection from "@/components/expo/ExpoHotIssuesSection";
 import ExpoLiveSection from "@/components/expo/ExpoLiveSection";
 import ExpoDealsSection from "@/components/expo/ExpoDealsSection";
 import ExpoFarmerConsultSection from "@/components/expo/ExpoFarmerConsultSection";
-import ExpoProblemSection from "@/components/expo/ExpoProblemSection";
-import ExpoNewProductsSection from "@/components/expo/ExpoNewProductsSection";
 import ExpoFooter from "@/components/expo/ExpoFooter";
 
 import type { CmsSettings, HomeSlot } from "@/types/expo-home";
@@ -337,6 +334,85 @@ type HomeSlotWithLink = HomeSlot & {
   meta_1?: string | null;
   meta_2?: string | null;
 };
+
+
+
+function FarmerDirectMarketEntry() {
+  return (
+    <section className="expo-section" style={{ padding: "18px 20px 0" }}>
+      <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+        <Link href="/expo/farmer-direct-market">
+          <img
+            src="/images/farmer-direct-market.png"
+            alt="K-AGRI 산지직송 농산물 직판장"
+            style={{
+              width: "100%",
+              display: "block",
+              borderRadius: 24,
+              boxShadow: "0 12px 30px rgba(0,0,0,.15)",
+            }}
+          />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+
+function FarmerMoneyBriefingEntry() {
+  return (
+    <section className="expo-section" style={{ padding: "24px 20px 0" }}>
+      <div
+        style={{
+          maxWidth: 1160,
+          margin: "0 auto",
+          background: "#ffffff",
+          borderRadius: 30,
+          padding: "54px 56px",
+          boxShadow: "0 18px 45px rgba(15,23,42,0.10)",
+        }}
+      >
+        <h2
+          style={{
+            margin: 0,
+            fontSize: "clamp(44px, 6vw, 82px)",
+            lineHeight: 1.08,
+            fontWeight: 950,
+            letterSpacing: "-0.07em",
+            color: "#000",
+          }}
+        >
+          돈이 되는 <span style={{ color: "#047857" }}>농사정보</span><br />
+          혼자만 보세요!
+        </h2>
+
+        <p style={{ marginTop: 24, fontSize: 24, fontWeight: 800, color: "#333" }}>
+          매일 오후 6시, 엄선한 정보로 더 많은 수익을 만드세요.
+        </p>
+
+        <Link
+          href="/expo/farmer-briefing"
+          style={{
+            marginTop: 34,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: 70,
+            padding: "0 52px",
+            borderRadius: 18,
+            background: "#047857",
+            color: "#ffffff",
+            fontSize: 26,
+            fontWeight: 950,
+            textDecoration: "none",
+          }}
+        >
+          오늘의 농사뉴스 보러가기 →
+        </Link>
+      </div>
+    </section>
+  );
+}
 
 
 function AgriTradeCenterEntry() {
@@ -1016,7 +1092,6 @@ export default async function ExpoIndexPage() {
     getMonthlyConsultQuestions(),
     getExpoHotIssues(),
     getMonthlyProblemCards(4),
-    getExpoProblemSectionData(),
     getHomeDeals(),
     getManagedLiveShowContent(supabase),
   ]);
@@ -1136,16 +1211,6 @@ export default async function ExpoIndexPage() {
     ? autoHeroData.description
     : "지금 필요한 농자재 · 농사 상담 · 경품 · 특가를 한 번에";
 
-  const problemContents =
-    monthlyProblemCards.length > 0
-      ? monthlyProblemCards.map((item) => ({
-          id: item.id,
-          title: item.title,
-          link_url: item.link_url,
-          summary: item.summary ?? "",
-        }))
-      : problemSectionData.contents;
-
   const monthlyQuestionItems = (monthlyQuestions ?? []).map((item: any) => ({
     title: item.title ?? item.question ?? item.label ?? "",
     description: item.description ?? item.summary ?? "",
@@ -1170,33 +1235,13 @@ export default async function ExpoIndexPage() {
         <ExpoCategoryEntrySection />
       </section>
 
+      <FarmerMoneyBriefingEntry />
+
       <AgriTradeCenterEntry />
 
+      <FarmerDirectMarketEntry />
 
       <ExpoHotIssuesSection items={hotIssues} />
-
-      <section className="expo-section" style={{ padding: "18px 20px 0" }}>
-        <div
-          style={{
-            maxWidth: 1160,
-            margin: "0 auto",
-          }}
-        >
-          <Link href="/expo/hongsan-garlic">
-            <img
-              src="/images/hongsan-garlic-main.png"
-              alt="홍산마늘 긴급판매"
-              style={{
-                width: "100%",
-                display: "block",
-                borderRadius: 24,
-                boxShadow: "0 12px 30px rgba(0,0,0,.15)",
-              }}
-            />
-          </Link>
-        </div>
-      </section>
-
 
       {promotions.length > 0 ? (
   <ExpoPromotionHero
@@ -1207,13 +1252,7 @@ export default async function ExpoIndexPage() {
   <ExpoLiveSection item={liveShow as any} />
 ) : null}
 
-      <ExpoDealsSection items={homeDeals} />
-
-      <ExpoFarmerConsultSection questions={monthlyQuestionItems as any} />
-
-      <ExpoProblemSection contents={problemContents as any} />
-
-      <ExpoNewProductsSection items={autoNewProducts} />
+      <ExpoDealsSection items={Array.isArray(homeDeals) ? homeDeals : []} />
 
       <JointGroupBuyBanner />
 
