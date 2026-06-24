@@ -50,3 +50,6 @@ temp/
 .next
 backup-videos
 data
+
+# Supabase local temp
+supabase/.temp/
