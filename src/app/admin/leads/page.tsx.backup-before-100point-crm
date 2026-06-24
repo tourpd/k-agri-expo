@@ -1,0 +1,290 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+type LeadItem = {
+  id: string;
+  created_at?: string | null;
+  booth_name?: string | null;
+  vendor_name?: string | null;
+  contact_name?: string | null;
+  farmer_name?: string | null;
+  company_name?: string | null;
+  phone?: string | null;
+  farmer_phone?: string | null;
+  region?: string | null;
+  crop_name?: string | null;
+  product_name?: string | null;
+  issue_type?: string | null;
+  message?: string | null;
+  source_type?: string | null;
+  lead_stage?: string | null;
+  status?: string | null;
+  priority_rank?: number | null;
+  lead_score?: number | null;
+  hot_lead?: boolean | null;
+  negotiation_status?: string | null;
+  contract_status?: string | null;
+};
+
+function fmt(v?: string | null) {
+  if (!v) return "-";
+  return v;
+}
+
+function fmtDate(v?: string | null) {
+  if (!v) return "-";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString("ko-KR");
+}
+
+function nameOf(x: LeadItem) {
+  return x.contact_name || x.farmer_name || x.company_name || "-";
+}
+
+function phoneOf(x: LeadItem) {
+  return x.phone || x.farmer_phone || "-";
+}
+
+export default function AdminLeadsPage() {
+  const [items, setItems] = useState<LeadItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    const res = await fetch(`/api/admin/leads?q=${encodeURIComponent(q)}`, {
+      cache: "no-store",
+    });
+    const json = await res.json();
+    setItems(json.items || []);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const rows = useMemo(() => items, [items]);
+  const selected = useMemo(
+    () => rows.find((x) => x.id === selectedId) || rows[0] || null,
+    [rows, selectedId]
+  );
+
+  return (
+    <main className="min-h-screen bg-slate-100 p-4 text-slate-900">
+      <div className="mx-auto max-w-[1800px]">
+        <div className="mb-4 rounded-xl bg-white p-4 shadow-sm">
+          <div className="text-xs font-black text-green-700">K-AGRI CRM</div>
+          <h1 className="mt-1 text-2xl font-black">리드 · 상담 · 주문 전환 관리</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            카드형 폐기. 한 줄에 한 건씩 보는 엑셀형 운영 화면.
+          </p>
+
+          <div className="mt-4 flex gap-2">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="이름, 전화, 작물, 업체, 문의내용 검색"
+              className="h-11 w-full rounded-lg border px-3 text-sm"
+            />
+            <button
+              onClick={load}
+              className="h-11 rounded-lg bg-black px-5 text-sm font-bold text-white"
+            >
+              검색
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-6">
+          <Box label="전체" value={rows.length} />
+          <Box label="HOT" value={rows.filter((x) => x.hot_lead).length} />
+          <Box label="신규" value={rows.filter((x) => x.status === "new").length} />
+          <Box label="상담중" value={rows.filter((x) => x.lead_stage === "negotiating").length} />
+          <Box label="성사" value={rows.filter((x) => x.contract_status === "paid" || x.lead_stage === "won").length} />
+          <Box label="로딩" value={loading ? "중" : "완료"} />
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr]">
+          <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
+            <table className="w-full min-w-[1400px] border-collapse text-sm">
+            <thead className="sticky top-0 z-10 bg-slate-900 text-white">
+              <tr>
+                <Th>선택</Th>
+                <Th>접수일</Th>
+                <Th>상태</Th>
+                <Th>우선</Th>
+                <Th>고객명</Th>
+                <Th>전화</Th>
+                <Th>지역</Th>
+                <Th>작물</Th>
+                <Th>업체/부스</Th>
+                <Th>제품</Th>
+                <Th>문의유형</Th>
+                <Th>문의내용</Th>
+                <Th>출처</Th>
+                <Th>상담단계</Th>
+                <Th>계약상태</Th>
+                <Th>액션</Th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={16} className="p-8 text-center text-slate-500">
+                    불러오는 중...
+                  </td>
+                </tr>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={16} className="p-8 text-center text-slate-500">
+                    리드가 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                rows.map((item) => (
+                  <tr
+                    key={item.id}
+                    onClick={() => setSelectedId(item.id)}
+                    className={`cursor-pointer border-b hover:bg-green-50 ${
+                      selected?.id === item.id ? "bg-green-50" : ""
+                    }`}
+                  >
+                    <Td><input type="checkbox" /></Td>
+                    <Td>{fmtDate(item.created_at)}</Td>
+                    <Td><Badge>{fmt(item.status)}</Badge></Td>
+                    <Td>{item.hot_lead ? "🔥 HOT" : item.priority_rank ?? "-"}</Td>
+                    <Td className="font-bold">{nameOf(item)}</Td>
+                    <Td>
+                      {phoneOf(item) !== "-" ? (
+                        <a className="font-bold text-blue-700" href={`tel:${phoneOf(item)}`}>
+                          {phoneOf(item)}
+                        </a>
+                      ) : "-"}
+                    </Td>
+                    <Td>{fmt(item.region)}</Td>
+                    <Td>{fmt(item.crop_name)}</Td>
+                    <Td>{fmt(item.booth_name || item.vendor_name)}</Td>
+                    <Td>{fmt(item.product_name)}</Td>
+                    <Td>{fmt(item.issue_type)}</Td>
+                    <Td className="max-w-[320px] truncate">{fmt(item.message)}</Td>
+                    <Td>{fmt(item.source_type)}</Td>
+                    <Td>{fmt(item.lead_stage)}</Td>
+                    <Td>{fmt(item.contract_status)}</Td>
+                    <Td>
+                      <div className="flex gap-1">
+                        <button className="rounded bg-black px-2 py-1 text-xs font-bold text-white">
+                          전화
+                        </button>
+                        <button className="rounded bg-green-700 px-2 py-1 text-xs font-bold text-white">
+                          상담
+                        </button>
+                        <button className="rounded bg-blue-700 px-2 py-1 text-xs font-bold text-white">
+                          주문
+                        </button>
+                      </div>
+                    </Td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            </table>
+          </div>
+
+          <aside className="rounded-xl border bg-white p-4 shadow-sm">
+            <div className="text-xs font-black text-green-700">LEAD DETAIL</div>
+            <h2 className="mt-1 text-xl font-black">상담 상세</h2>
+
+            {!selected ? (
+              <div className="mt-6 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+                선택된 리드가 없습니다.
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <Detail label="고객명" value={nameOf(selected)} />
+                <Detail label="전화번호" value={phoneOf(selected)} />
+                <Detail label="지역" value={selected.region || "-"} />
+                <Detail label="작물" value={selected.crop_name || "-"} />
+                <Detail label="제품" value={selected.product_name || "-"} />
+                <Detail label="문의유형" value={selected.issue_type || "-"} />
+                <Detail label="부스/업체" value={selected.booth_name || selected.vendor_name || "-"} />
+                <Detail label="접수일" value={fmtDate(selected.created_at)} />
+
+                <div>
+                  <div className="mb-1 text-xs font-bold text-slate-500">문의내용</div>
+                  <div className="min-h-28 rounded-lg border bg-slate-50 p-3 text-sm leading-6">
+                    {selected.message || "-"}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href={phoneOf(selected) !== "-" ? `tel:${phoneOf(selected)}` : "#"}
+                    className="rounded-lg bg-black px-4 py-3 text-center text-sm font-black text-white"
+                  >
+                    전화걸기
+                  </a>
+                  <button className="rounded-lg bg-green-700 px-4 py-3 text-sm font-black text-white">
+                    상담완료
+                  </button>
+                  <button className="rounded-lg bg-blue-700 px-4 py-3 text-sm font-black text-white">
+                    주문생성
+                  </button>
+                  <button className="rounded-lg bg-red-600 px-4 py-3 text-sm font-black text-white">
+                    종결
+                  </button>
+                </div>
+
+                <div>
+                  <div className="mb-1 text-xs font-bold text-slate-500">상담 메모</div>
+                  <textarea
+                    className="h-32 w-full rounded-lg border p-3 text-sm"
+                    placeholder="통화 내용, 추천 제품, 다음 연락일을 기록합니다."
+                  />
+                  <button className="mt-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white">
+                    메모 저장
+                  </button>
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function Box({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl bg-white p-4 shadow-sm">
+      <div className="text-xs font-bold text-slate-500">{label}</div>
+      <div className="mt-1 text-2xl font-black">{value}</div>
+    </div>
+  );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return <th className="whitespace-nowrap border-r border-slate-700 px-3 py-3 text-left text-xs font-black">{children}</th>;
+}
+
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={`whitespace-nowrap border-r px-3 py-3 align-top ${className}`}>{children}</td>;
+}
+
+function Badge({ children }: { children: React.ReactNode }) {
+  return <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-800">{children}</span>;
+}
+
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[90px_1fr] gap-2 border-b pb-2 text-sm">
+      <div className="font-bold text-slate-500">{label}</div>
+      <div className="font-semibold text-slate-900">{value}</div>
+    </div>
+  );
+}

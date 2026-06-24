@@ -1,0 +1,288 @@
+import Link from "next/link";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function safeCount(table: string) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { count } = await supabase
+      .from(table)
+      .select("id", { count: "exact", head: true });
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const [expoOrders, photoOrders, vendorApps, agriAssets, knowledgeAssets, videoCalls] =
+    await Promise.all([
+      safeCount("expo_brand_orders"),
+      safeCount("photodoctor_orders"),
+      safeCount("vendor_applications"),
+      safeCount("agri_assets"),
+      safeCount("agri_knowledge_assets"),
+      safeCount("agri_video_calls"),
+    ]);
+
+  const totalOrders = expoOrders + photoOrders;
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <div style={S.eyebrow}>K-AGRI CEO WAR ROOM</div>
+            <h1 style={S.title}>오늘 1시간 안에 결정할 일</h1>
+            <p style={S.sub}>센터가 아니라 결정만 보여줍니다. 돈 · 위험 · 승인 · 실행 순서입니다.</p>
+          </div>
+          <div style={S.headerBtns}>
+            <Link href="/admin/approval-center" style={S.darkBtn}>승인센터</Link>
+            <Link href="/admin/ai-production-line" style={S.outlineBtn}>AI 제작라인</Link>
+            <Link href="/admin/ai-content-dna" style={S.outlineBtn}>AI 콘텐츠 DNA</Link>
+            <Link href="/expo" style={S.outlineBtn}>EXPO</Link>
+          </div>
+        </header>
+
+        <section style={S.truth}>
+          <div>
+            <div style={S.red}>오늘 결론</div>
+            <h2 style={S.truthTitle}>홍산마늘은 홍보가 아니라 B2B 계약부터 잡아야 합니다.</h2>
+            <p style={S.truthText}>
+              11톤 긴급판매가 먼저입니다. 오늘 해야 할 일은 김치공장·급식업체에 연락하고,
+              판매페이지와 문자를 바로 실행하는 것입니다.
+            </p>
+          </div>
+          <div style={S.money}>
+            <span>오늘 걸린 돈</span>
+            <b>6,050만원</b>
+            <small>11톤 × 5,500원/kg</small>
+          </div>
+        </section>
+
+        <section style={S.onlyFour}>
+          <MainDecision
+            no="1"
+            label="돈"
+            title="홍산마늘 B2B 계약"
+            line1="오늘 목표: 2톤 상담 확보"
+            line2="지금 할 일: 김치공장·급식업체 문자"
+            href="/admin/sms-generator"
+            color="#dc2626"
+            cta="문자 만들기"
+          />
+          <MainDecision
+            no="2"
+            label="승인"
+            title="농사뉴스 TOP5"
+            line1="오늘 발행 전 검증 필요"
+            line2="출처·근거·인포그래픽 확인"
+            href="/admin/approval-center"
+            color="#2563eb"
+            cta="승인하기"
+          />
+          <MainDecision
+            no="3"
+            label="유입"
+            title="돈 되는 농사정보"
+            line1="고객이 매일 들어올 이유"
+            line2="뉴스센터 첫 화면 재설계"
+            href="/admin/kagri-writers-room/news"
+            color="#15803d"
+            cta="뉴스센터"
+          />
+          <MainDecision
+            no="4"
+            label="자산"
+            title="홍산마늘 170톤"
+            line1="예상가치 9.3억"
+            line2="거래·가공·수매 전략 필요"
+            href="/admin/agri-assets"
+            color="#f97316"
+            cta="자산 판단"
+          />
+        </section>
+
+        <section style={S.row}>
+          <Card title="오늘 돈 되는 일" value="홍산마늘 B2B" desc="일반 홍보보다 대량 구매처 확보가 먼저입니다." href="/admin/sms-generator" />
+          <Card title="오늘 위험한 일" value="판매속도 부족" desc="오늘 상담이 없으면 2주 판매 목표가 흔들립니다." href="/expo/hongsan-garlic" />
+          <Card title="오늘 승인할 일" value="콘텐츠 5건" desc="뉴스·웹툰·판매문구는 승인 후 발행합니다." href="/admin/approval-center" />
+          <Card title="오늘 보류할 일" value="CG·영상 자동화" desc="지금은 구현하지 말고 설계만 보관합니다." href="/admin/dashboard" />
+        </section>
+
+        <section style={S.pipeline}>
+          <div style={S.pipelineHead}>
+            <div>
+              <div style={S.green}>방송국 심장</div>
+              <h2>공동편집 · 편성승인 대기열</h2>
+              <p>여기서 승인 안 된 콘텐츠는 밖으로 나가지 않습니다.</p>
+            </div>
+            <Link href="/admin/approval-center" style={S.redBtn}>승인센터 열기</Link>
+          </div>
+
+          <div style={S.approvalSummary}>
+            <Mini title="오늘 승인대기" value="5건" />
+            <Mini title="오늘 발행예정" value="2건" />
+            <Mini title="수정필요" value="3건" />
+            <Mini title="발행금지" value="0건" />
+          </div>
+
+          <table style={S.table}>
+            <thead>
+              <tr>
+                <th style={S.th}>우선</th>
+                <th style={S.th}>결정할 콘텐츠</th>
+                <th style={S.th}>왜 중요한가</th>
+                <th style={S.th}>오늘 결정</th>
+                <th style={S.th}>이동</th>
+              </tr>
+            </thead>
+            <tbody>
+              <DecisionRow flag="🔴" title="홍산마늘 긴급판매 문자" why="오늘 바로 돈으로 연결됨" decision="발송 승인" href="/admin/sms-generator" />
+              <DecisionRow flag="🔴" title="오늘 농사뉴스 TOP5" why="고객 유입의 시작" decision="출처 검증 후 발행" href="/admin/approval-center" />
+              <DecisionRow flag="🟡" title="돈 되는 농사정보 메인" why="메인 체류시간과 재방문 유도" decision="디자인 확정" href="/admin/kagri-writers-room/news" />
+              <DecisionRow flag="🟡" title="안이영 고추웹툰 1화" why="장기 콘텐츠 자산" decision="시리즈 기준 확정" href="/admin/kagri-writers-room/knowledge" />
+            </tbody>
+          </table>
+        </section>
+
+        <section style={S.row2}>
+          <Panel title="주문센터는 숫자가 아니라 문제만 본다">
+            <Judge title="처리할 주문" value={`${totalOrders}건`} desc="입금·출고·송장·클레임만 처리" href="/admin/product-orders" />
+            <Judge title="입점 승인" value={`${vendorApps}건`} desc="승인·반려·브랜드관 생성 판단" href="/admin/vendor-applications" />
+            <Judge title="상담 예약" value={`${videoCalls}건`} desc="화상상담·바이어 연결 확인" href="/admin/video-call-control" />
+          </Panel>
+
+          <Panel title="자산센터는 거래 가능성만 본다">
+            <Judge title="홍산마늘 170톤" value="9.3억" desc="거래처·가공센터·수매전략 결정" href="/admin/agri-assets" />
+            <Judge title="등록 자산" value={`${agriAssets}건`} desc="판매·가공·거래제안 판단" href="/admin/agri-assets" />
+            <Judge title="지식자료" value={`${knowledgeAssets}건`} desc="안이영·병해충 자료 콘텐츠화" href="/admin/agri-data-hub" />
+          </Panel>
+        </section>
+
+        <details style={S.details}>
+          <summary style={S.summary}>미래 프로젝트는 접어둔다</summary>
+          <div style={S.future}>
+            CG실 · 오디오실 · 영상실 · AI앵커 · 립싱크 · 자동영상은 오늘 구현하지 않습니다.
+            오늘은 돈, 승인, 뉴스, 자산 판단만 처리합니다.
+          </div>
+        </details>
+      </div>
+    </main>
+  );
+}
+
+function MainDecision({ no, label, title, line1, line2, href, color, cta }: any) {
+  return (
+    <Link href={href} style={{ ...S.mainDecision, borderColor: color }}>
+      <div style={{ ...S.no, background: color }}>{no}</div>
+      <div style={S.mainBody}>
+        <span style={{ ...S.label, color }}>{label}</span>
+        <b>{title}</b>
+        <p>{line1}</p>
+        <p>{line2}</p>
+      </div>
+      <div style={{ ...S.cta, background: color }}>{cta}</div>
+    </Link>
+  );
+}
+
+function Card({ title, value, desc, href }: any) {
+  return (
+    <Link href={href} style={S.card}>
+      <span>{title}</span>
+      <b>{value}</b>
+      <p>{desc}</p>
+    </Link>
+  );
+}
+
+function Mini({ title, value }: any) {
+  return (
+    <div style={S.mini}>
+      <span>{title}</span>
+      <b>{value}</b>
+    </div>
+  );
+}
+
+function DecisionRow({ flag, title, why, decision, href }: any) {
+  return (
+    <tr>
+      <td style={S.td}>{flag}</td>
+      <td style={S.tdStrong}>{title}</td>
+      <td style={S.td}>{why}</td>
+      <td style={S.tdStrong}>{decision}</td>
+      <td style={S.td}><Link href={href} style={S.smallBtn}>열기</Link></td>
+    </tr>
+  );
+}
+
+function Panel({ title, children }: any) {
+  return (
+    <section style={S.panel}>
+      <h2>{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Judge({ title, value, desc, href }: any) {
+  return (
+    <Link href={href} style={S.judge}>
+      <div>
+        <b>{title}</b>
+        <p>{desc}</p>
+      </div>
+      <strong>{value}</strong>
+      <span>판단</span>
+    </Link>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#eef4f2", color: "#111827", padding: 24 },
+  wrap: { maxWidth: 1420, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 20 },
+  eyebrow: { color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "8px 0 0", fontSize: 56, fontWeight: 950, letterSpacing: "-.06em", lineHeight: 1 },
+  sub: { margin: "10px 0 0", color: "#64748b", fontSize: 18, fontWeight: 850 },
+  headerBtns: { display: "flex", gap: 10, alignItems: "flex-start" },
+  darkBtn: { background: "#111827", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950 },
+  outlineBtn: { background: "#fff", color: "#111827", border: "1px solid #cbd5e1", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950 },
+
+  truth: { display: "grid", gridTemplateColumns: "1fr 280px", gap: 20, background: "#fff", border: "4px solid #dc2626", borderRadius: 30, padding: 28, marginBottom: 18 },
+  red: { color: "#dc2626", fontWeight: 950 },
+  green: { color: "#15803d", fontWeight: 950 },
+  truthTitle: { margin: "8px 0", fontSize: 46, lineHeight: 1.08, fontWeight: 950, letterSpacing: "-.06em" },
+  truthText: { color: "#475569", fontSize: 20, lineHeight: 1.55, fontWeight: 850 },
+  money: { background: "#fff7ed", border: "1px solid #fdba74", borderRadius: 24, display: "grid", placeItems: "center", textAlign: "center", padding: 20 },
+  onlyFour: { display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 18 },
+  mainDecision: { display: "grid", gridTemplateColumns: "54px 1fr 130px", gap: 16, alignItems: "center", background: "#fff", border: "3px solid #15803d", borderRadius: 24, padding: 18, textDecoration: "none", color: "#111827" },
+  no: { width: 54, height: 54, borderRadius: 16, color: "#fff", display: "grid", placeItems: "center", fontSize: 26, fontWeight: 950 },
+  mainBody: { display: "grid", gap: 4 },
+  label: { fontWeight: 950 },
+  cta: { color: "#fff", borderRadius: 14, padding: "12px 14px", textAlign: "center", fontWeight: 950 },
+
+  row: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 18 },
+  card: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 20, padding: 18, color: "#111827", textDecoration: "none" },
+  pipeline: { background: "#fff", border: "2px solid #bbf7d0", borderRadius: 26, padding: 24, marginBottom: 18 },
+  pipelineHead: { display: "flex", justifyContent: "space-between", gap: 18 },
+  redBtn: { background: "#dc2626", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950, height: "fit-content" },
+  approvalSummary: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, margin: "18px 0" },
+  mini: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14 },
+  table: { width: "100%", borderCollapse: "collapse" },
+  th: { background: "#f3f4f6", padding: 14, textAlign: "left", borderBottom: "1px solid #e5e7eb" },
+  td: { padding: 14, borderBottom: "1px solid #e5e7eb", fontWeight: 850 },
+  tdStrong: { padding: 14, borderBottom: "1px solid #e5e7eb", fontWeight: 950 },
+  smallBtn: { background: "#15803d", color: "#fff", borderRadius: 10, padding: "8px 12px", textDecoration: "none", fontWeight: 950 },
+
+  row2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 },
+  panel: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 24, padding: 20 },
+  judge: { display: "grid", gridTemplateColumns: "1fr 90px 70px", gap: 12, alignItems: "center", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, color: "#111827", textDecoration: "none", marginBottom: 10 },
+  details: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, marginBottom: 12, overflow: "hidden" },
+  summary: { cursor: "pointer", padding: "18px 20px", fontSize: 22, fontWeight: 950 },
+  future: { padding: 20, color: "#475569", fontWeight: 850, lineHeight: 1.7 },
+};

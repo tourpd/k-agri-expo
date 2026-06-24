@@ -1,0 +1,26 @@
+
+create table if not exists public.agri_calendar_actions (
+  id uuid primary key default gen_random_uuid(),
+  source_page_id uuid,
+  job_id uuid,
+  source_title text,
+  source_type text default 'ppt',
+  crop text not null,
+  month int,
+  growth_stage text,
+  issue text,
+  action_instruction text not null,
+  reason text,
+  alert_timing text default '작업 2주 전',
+  recommended_materials text[] default '{}',
+  content_angle text,
+  shorts_title text,
+  broadcast_title text,
+  sms_message text,
+  quality_score int default 0,
+  source_page_number int,
+  thumbnail_url text,
+  status text default 'draft',
+  created_at timestamptz default now(),
+  unique(source_page_id, crop, month, issue)
+);

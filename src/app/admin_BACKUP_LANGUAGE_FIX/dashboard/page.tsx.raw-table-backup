@@ -1,0 +1,299 @@
+import Link from "next/link";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function safeCount(table: string) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { count } = await supabase.from(table).select("id", { count: "exact", head: true });
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function safeRows(table: string, limit = 8) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data } = await supabase.from(table).select("*").order("created_at", { ascending: false }).limit(limit);
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const [expoOrders, photoOrders, vendorApps, agriAssets, knowledgeAssets, videoCalls] =
+    await Promise.all([
+      safeCount("expo_brand_orders"),
+      safeCount("photodoctor_orders"),
+      safeCount("vendor_applications"),
+      safeCount("agri_assets"),
+      safeCount("agri_knowledge_assets"),
+      safeCount("agri_video_calls"),
+    ]);
+
+  const recentOrders = await safeRows("expo_brand_orders", 8);
+  const recentAssets = await safeRows("agri_assets", 6);
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <div style={S.eyebrow}>K-AGRI COMMAND CENTER</div>
+            <h1 style={S.title}>K-Agri 경영기획실</h1>
+            <p style={S.sub}>오늘 할 일만 먼저 보고, 필요한 센터만 열어봅니다.</p>
+          </div>
+          <Link href="/expo" style={S.darkBtn}>EXPO 보기</Link>
+        </header>
+
+        <section style={S.hero}>
+          <div>
+            <div style={S.redTag}>오늘 최우선 업무</div>
+            <h2 style={S.heroTitle}>홍산마늘 깐마늘 11톤 긴급판매</h2>
+            <p style={S.heroText}>5,500원/kg · 최소 100kg · 택배비 자부담 · 대량 구매처 우선 상담</p>
+          </div>
+          <div style={S.heroGrid}>
+            <Mini title="재고" value="11톤" />
+            <Mini title="목표기간" value="2주" />
+            <Mini title="최소물량" value="100kg" />
+            <Mini title="상담전화" value="010-8556-1010" />
+          </div>
+          <div style={S.btnRow}>
+            <Link href="/expo/hongsan-garlic" style={S.redBtn}>판매페이지</Link>
+            <Link href="/admin/kagri-writers-room" style={S.greenBtn}>작가실</Link>
+            <Link href="/admin/sms-generator" style={S.greenBtn}>영업문자</Link>
+          </div>
+        </section>
+
+        <section style={S.kpiGrid}>
+          <Kpi title="전체 주문" value={expoOrders + photoOrders} href="/admin/product-orders" />
+          <Kpi title="입점 신청" value={vendorApps} href="/admin/vendor-applications" />
+          <Kpi title="농산물 자산" value={agriAssets} href="/admin/agri-assets" />
+          <Kpi title="상담 예약" value={videoCalls} href="/admin/video-call-control" />
+          <Kpi title="지식 자료" value={knowledgeAssets} href="/admin/agri-data-hub" />
+        </section>
+
+        <Accordion title="1. 오늘 해야 할 일" open>
+          <Table
+            headers={["우선", "업무", "목표", "상태", "이동"]}
+            rows={[
+              ["🔴 1", "편성승인센터 만들기", "모든 콘텐츠 최종 승인 통로", "최우선", "/admin/kagri-writers-room"],
+              ["🔴 2", "농사뉴스센터 개편", "돈 되는 농사정보 TOP5", "진행", "/admin/kagri-writers-room/news"],
+              ["🟡 3", "홍산마늘 상세페이지 보강", "최소물량·화물·B2B 명확화", "진행", "/expo/hongsan-garlic"],
+              ["🟡 4", "안이영 웹툰 프로젝트 뼈대", "100부작 진행현황 관리", "대기", "/admin/kagri-writers-room/knowledge"],
+            ]}
+          />
+        </Accordion>
+
+        <Accordion title="2. 공동편집 · 편성승인 대기열">
+          <Table
+            headers={["구분", "콘텐츠", "현재상태", "다음단계", "이동"]}
+            rows={[
+              ["뉴스", "오늘 농사뉴스 TOP5", "구조개편중", "편성승인센터 연결", "/admin/kagri-writers-room/news"],
+              ["웹툰", "안이영 고추웹툰", "기획중", "회차관리 생성", "/admin/kagri-writers-room/knowledge"],
+              ["판매", "홍산마늘 긴급판매", "페이지 완료", "B2B 상담 강화", "/expo/hongsan-garlic"],
+              ["쇼츠", "농촌쇼츠", "대기", "작가실 연결", "/admin/shorts-generator"],
+            ]}
+          />
+        </Accordion>
+
+        <Accordion title="3. K-Agri 방송국 구축 현황">
+          <Table
+            headers={["부서", "역할", "상태", "오늘 작업 여부", "이동"]}
+            rows={[
+              ["경영기획실", "전체 우선순위 관리", "작업중", "예", "/admin/dashboard"],
+              ["작가실", "대본·뉴스·아이디어", "운영", "예", "/admin/kagri-writers-room"],
+              ["편성승인센터", "최종 컨펌 통로", "미구축", "예", "/admin/kagri-writers-room"],
+              ["CG실", "인포그래픽·지도·삽화", "뼈대만", "아니오", "/admin/banner-generator"],
+              ["오디오실", "성우·나레이션", "보류", "아니오", "/admin/video-factory"],
+              ["영상실", "영상 조립·자막", "보류", "아니오", "/admin/video-generator"],
+            ]}
+          />
+        </Accordion>
+
+
+        <Accordion title="4. 주문센터 판단하기">
+          <ActionBox
+            title="주문은 여기서 원자료를 보지 말고 주문센터에서 처리합니다."
+            desc="입금확인, 출고대기, 송장등록, 배송완료, 문제주문 처리는 주문센터에서 합니다."
+            actions={[
+              ["주문센터 열기", "/admin/product-orders"],
+              ["송장 업로드", "/admin/tracking-upload"],
+              ["주문 로그", "/admin/order-logs"],
+            ]}
+          />
+        </Accordion>
+
+        <Accordion title="5. 농산물 자산센터 판단하기">
+          <ActionBox
+            title="자산은 여기서 보는 게 아니라 자산센터에서 거래·가공·판매 결정을 합니다."
+            desc="저장농산물 등록, 가공센터 연결, 거래제안, 판매전략은 농산물 자산센터에서 처리합니다."
+            actions={[
+              ["농산물 자산센터", "/admin/agri-assets"],
+              ["가공센터", "/admin/processors"],
+              ["거래제안", "/admin/trade-offers"],
+            ]}
+          />
+        </Accordion>
+
+        <Accordion title="6. 오늘 보류할 일">
+          <ActionBox
+            title="지금은 확장보다 연결이 우선입니다."
+            desc="CG실·오디오실·영상실은 메뉴 뼈대만 두고, 오늘은 편성승인센터와 농사뉴스센터부터 정리합니다."
+            actions={[
+              ["작가실", "/admin/kagri-writers-room"],
+              ["뉴스센터", "/admin/kagri-writers-room/news"],
+            ]}
+          />
+        </Accordion>
+
+
+      </div>
+    </main>
+  );
+}
+
+function Kpi({ title, value, href }: { title: string; value: number; href: string }) {
+  return (
+    <Link href={href} style={S.kpi}>
+      <div style={S.kpiTitle}>{title}</div>
+      <div style={S.kpiValue}>{value.toLocaleString("ko-KR")}</div>
+      <div style={S.kpiMove}>관리하기 →</div>
+    </Link>
+  );
+}
+
+function Accordion({ title, children, open = false }: { title: string; children: React.ReactNode; open?: boolean }) {
+  return (
+    <details open={open} style={S.details}>
+      <summary style={S.summary}>{title}</summary>
+      <div style={S.detailBody}>{children}</div>
+    </details>
+  );
+}
+
+function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div style={S.tableWrap}>
+      <table style={S.table}>
+        <thead>
+          <tr>{headers.map((h) => <th key={h} style={S.th}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              {r.map((c, j) => (
+                <td key={j} style={S.td}>
+                  {c.startsWith("/") ? <Link href={c} style={S.openBtn}>이동</Link> : c}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+function ActionBox({
+  title,
+  desc,
+  actions,
+}: {
+  title: string;
+  desc: string;
+  actions: string[][];
+}) {
+  return (
+    <div style={S.actionBox}>
+      <h3 style={S.actionTitle}>{title}</h3>
+      <p style={S.actionDesc}>{desc}</p>
+      <div style={S.actionBtns}>
+        {actions.map(([label, href]) => (
+          <Link key={href} href={href} style={S.actionBtn}>
+            {label} →
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Data({ rows, empty }: { rows: any[]; empty: string }) {
+  if (!rows.length) return <div style={S.empty}>{empty}</div>;
+  const keys = Object.keys(rows[0]).slice(0, 6);
+  return (
+    <div style={S.tableWrap}>
+      <table style={S.table}>
+        <thead>
+          <tr>{keys.map((k) => <th key={k} style={S.th}>{k}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={r.id ?? i}>
+              {keys.map((k) => <td key={k} style={S.td}>{String(r[k] ?? "-").slice(0, 70)}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Mini({ title, value }: { title: string; value: string }) {
+  return (
+    <div style={S.mini}>
+      <div style={S.miniTitle}>{title}</div>
+      <div style={S.miniValue}>{value}</div>
+    </div>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#eef2f5", color: "#111827", padding: 24 },
+  wrap: { maxWidth: 1440, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 18 },
+  eyebrow: { color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "8px 0 0", fontSize: 52, lineHeight: 1, fontWeight: 950, letterSpacing: "-.06em" },
+  sub: { margin: "12px 0 0", color: "#64748b", fontWeight: 800, fontSize: 18 },
+  darkBtn: { background: "#111827", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950, height: "fit-content" },
+
+  hero: { background: "#fff7ed", border: "3px solid #f97316", borderRadius: 24, padding: 22, marginBottom: 16 },
+  redTag: { color: "#dc2626", fontWeight: 950 },
+  heroTitle: { margin: "8px 0 0", fontSize: 36, fontWeight: 950 },
+  heroText: { margin: "8px 0 0", fontSize: 18, fontWeight: 900 },
+  heroGrid: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginTop: 16 },
+  btnRow: { display: "flex", gap: 10, marginTop: 16 },
+  redBtn: { background: "#dc2626", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+  greenBtn: { background: "#166534", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+
+  kpiGrid: { display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: 12, marginBottom: 16 },
+  kpi: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 18, color: "#111827", textDecoration: "none" },
+  kpiTitle: { color: "#64748b", fontWeight: 900 },
+  kpiValue: { marginTop: 8, fontSize: 38, fontWeight: 950 },
+  kpiMove: { marginTop: 6, color: "#166534", fontWeight: 950, fontSize: 13 },
+
+  details: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, marginBottom: 12, overflow: "hidden", boxShadow: "0 8px 20px rgba(15,23,42,.04)" },
+  summary: { cursor: "pointer", padding: "18px 20px", background: "#111827", color: "#fff", fontSize: 22, fontWeight: 950 },
+  detailBody: { padding: 0 },
+  tableWrap: { overflowX: "auto" },
+  table: { width: "100%", borderCollapse: "collapse", minWidth: 860 },
+  th: { background: "#f3f4f6", padding: "13px 14px", textAlign: "left", fontSize: 14, borderBottom: "1px solid #e5e7eb" },
+  td: { padding: "13px 14px", borderBottom: "1px solid #e5e7eb", fontSize: 15, fontWeight: 800 },
+  openBtn: { background: "#15803d", color: "#fff", padding: "8px 12px", borderRadius: 9, textDecoration: "none", fontWeight: 950 },
+  empty: { padding: 22, color: "#64748b", fontWeight: 800 },
+  mini: { background: "#fff", border: "1px solid #fdba74", borderRadius: 14, padding: 14 },
+  miniTitle: { color: "#64748b", fontSize: 13, fontWeight: 900 },
+  miniValue: { marginTop: 6, fontSize: 22, fontWeight: 950 },
+  stopBox: { padding: 22, fontSize: 18, fontWeight: 850, lineHeight: 1.7, color: "#334155" },
+  actionBox: { padding: 24, background: "#ffffff" },
+  actionTitle: { margin: 0, fontSize: 26, fontWeight: 950, letterSpacing: "-.04em" },
+  actionDesc: { margin: "10px 0 0", color: "#475569", fontSize: 17, fontWeight: 850, lineHeight: 1.6 },
+  actionBtns: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 },
+  actionBtn: { background: "#166534", color: "#fff", padding: "12px 16px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+};

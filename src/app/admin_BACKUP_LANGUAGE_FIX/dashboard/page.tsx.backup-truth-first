@@ -1,0 +1,299 @@
+import Link from "next/link";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+async function safeCount(table: string) {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { count } = await supabase
+      .from(table)
+      .select("id", { count: "exact", head: true });
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default async function AdminDashboardPage() {
+  const [expoOrders, photoOrders, vendorApps, agriAssets, knowledgeAssets, videoCalls] =
+    await Promise.all([
+      safeCount("expo_brand_orders"),
+      safeCount("photodoctor_orders"),
+      safeCount("vendor_applications"),
+      safeCount("agri_assets"),
+      safeCount("agri_knowledge_assets"),
+      safeCount("agri_video_calls"),
+    ]);
+
+  const totalOrders = expoOrders + photoOrders;
+
+  return (
+    <main style={S.page}>
+      <div style={S.wrap}>
+        <header style={S.header}>
+          <div>
+            <div style={S.eyebrow}>K-AGRI CEO COCKPIT</div>
+            <h1 style={S.title}>K-Agri 경영기획실</h1>
+            <p style={S.sub}>오늘 돈 · 오늘 방송 · 오늘 위험 · 오늘 승인을 먼저 봅니다.</p>
+          </div>
+          <div style={S.headerBtns}>
+            <Link href="/admin/approval-center" style={S.darkBtn}>편성승인센터</Link>
+            <Link href="/expo" style={S.outlineBtn}>EXPO 보기</Link>
+          </div>
+        </header>
+
+        <section style={S.topDecision}>
+          <div>
+            <div style={S.redLabel}>🚨 오늘 가장 중요한 결정</div>
+            <h2 style={S.topTitle}>홍산마늘 170톤 판매 전략을 오늘 결정해야 합니다</h2>
+            <p style={S.topText}>
+              현재 11톤 긴급판매가 먼저입니다. 이후 170톤 수매·판매·가공전환까지 연결해야 합니다.
+            </p>
+            <div style={S.btnRow}>
+              <Link href="/expo/hongsan-garlic" style={S.redBtn}>판매페이지</Link>
+              <Link href="/admin/sms-generator" style={S.greenBtn}>B2B 문자</Link>
+              <Link href="/admin/agri-assets" style={S.greenBtn}>자산센터</Link>
+              <Link href="/admin/trade-offers" style={S.greenBtn}>거래제안</Link>
+            </div>
+          </div>
+
+          <div style={S.moneyBlock}>
+            <div style={S.moneyLabel}>걸려있는 예상가치</div>
+            <div style={S.moneyBig}>9.3억</div>
+            <div style={S.moneySmall}>홍산마늘 170톤 기준 추정</div>
+          </div>
+        </section>
+
+        <section style={S.coreGrid}>
+          <Core title="오늘 돈" main="6,050만원" sub="11톤 × 5,500원/kg" tone="green" />
+          <Core title="오늘 방송" main="17건" sub="공동편집 승인대기 예상" tone="blue" />
+          <Core title="오늘 위험" main="판매속도 부족" sub="B2B 영업 즉시 필요" tone="red" />
+          <Core title="오늘 승인" main="5건" sub="뉴스·웹툰·쇼츠 확인" tone="orange" />
+        </section>
+
+        <section style={S.editorialBox}>
+          <div style={S.boxHead}>
+            <div>
+              <div style={S.redLabel}>방송국 심장</div>
+              <h2 style={S.boxTitle}>공동편집 · 편성승인센터</h2>
+              <p style={S.boxText}>작가실·뉴스실·CG실·쇼츠실·영상실 결과물은 여기서 승인 후 발행합니다.</p>
+            </div>
+            <Link href="/admin/approval-center" style={S.redBtn}>승인센터 열기</Link>
+          </div>
+
+          <div style={S.approvalGrid}>
+            <Approval title="작가실" value="5건" />
+            <Approval title="뉴스실" value="4건" />
+            <Approval title="CG실" value="3건" />
+            <Approval title="쇼츠실" value="2건" />
+            <Approval title="영상실" value="3건" />
+          </div>
+
+          <div style={S.tableWrap}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>상태</th>
+                  <th style={S.th}>콘텐츠</th>
+                  <th style={S.th}>부서</th>
+                  <th style={S.th}>다음 결정</th>
+                  <th style={S.th}>이동</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["🔴 긴급", "홍산마늘 긴급판매 콘텐츠", "작가실", "B2B 영업문자 승인", "/admin/approval-center"],
+                  ["🔴 긴급", "오늘 농사뉴스 TOP5", "뉴스실", "출처 검증 후 발행", "/admin/approval-center"],
+                  ["🟡 중요", "안이영 고추웹툰 1화", "작가실", "시리즈 구조 검토", "/admin/kagri-writers-room/knowledge"],
+                  ["🟡 중요", "홍산마늘 인포그래픽", "CG실", "미래 프로젝트 보류", "/admin/banner-generator"],
+                ].map((r) => (
+                  <tr key={r[1]}>
+                    {r.map((c, i) => (
+                      <td key={i} style={S.td}>
+                        {String(c).startsWith("/") ? <Link href={c} style={S.smallBtn}>열기</Link> : c}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section style={S.twoGrid}>
+          <Panel title="농산물 자산센터 판단">
+            <DecisionRow title="홍산마늘 170톤" value="9.3억" desc="거래처 연결 · 가공전환 · 수매전략 결정 필요" href="/admin/agri-assets" />
+            <DecisionRow title="영천 마늘 30톤" value="1.6억" desc="깐마늘 공장 연결 가능성 검토" href="/admin/agri-assets" />
+            <DecisionRow title="저장농산물 전체" value={`${agriAssets}건`} desc="자산센터에서 판매·가공·거래제안 판단" href="/admin/agri-assets" />
+          </Panel>
+
+          <Panel title="주문센터 판단">
+            <DecisionRow title="전체 주문" value={`${totalOrders}건`} desc="입금확인·출고대기·송장등록만 주문센터에서 처리" href="/admin/product-orders" />
+            <DecisionRow title="입점 신청" value={`${vendorApps}건`} desc="승인·반려·브랜드관 생성 여부 판단" href="/admin/vendor-applications" />
+            <DecisionRow title="상담 예약" value={`${videoCalls}건`} desc="화상상담·바이어 연결 확인" href="/admin/video-call-control" />
+          </Panel>
+        </section>
+
+        <section style={S.newsBox}>
+          <div style={S.boxHead}>
+            <div>
+              <h2 style={S.boxTitle}>오늘 농사뉴스 TOP5</h2>
+              <p style={S.boxText}>고객이 돈 벌거나 손해를 피하는 뉴스만 골라 승인 후 발행합니다.</p>
+            </div>
+            <Link href="/admin/kagri-writers-room/news" style={S.greenBtn}>뉴스센터 열기</Link>
+          </div>
+
+          <div style={S.newsGrid}>
+            {[
+              ["마늘 가격 상승", "출하 전략", "시세"],
+              ["비·태풍 예보", "작업 일정 조정", "날씨"],
+              ["고추 탄저병 위험", "예찰·방제", "병해충"],
+              ["지원사업 마감", "신청 필요", "정책"],
+              ["양파 가격 하락", "저장·가공 검토", "시세"],
+            ].map(([title, action, tag]) => (
+              <div key={title} style={S.newsCard}>
+                <span style={S.newsTag}>{tag}</span>
+                <b>{title}</b>
+                <p>{action}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <Accordion title="방송국 생산 현황">
+          <div style={S.productionGrid}>
+            {[
+              ["작가실", "12건"],
+              ["CG실", "9건"],
+              ["뉴스실", "5건"],
+              ["쇼츠실", "18건"],
+              ["영상실", "4건"],
+            ].map(([name, count]) => (
+              <div key={name} style={S.productionCard}>
+                <b>{name}</b>
+                <strong>{count}</strong>
+              </div>
+            ))}
+          </div>
+        </Accordion>
+
+        <Accordion title="미래 프로젝트">
+          <div style={S.future}>
+            CG실 · 오디오실 · 영상실 · AI앵커 · 립싱크 · 자동영상은 설계만 보관합니다.
+            오늘은 공동편집센터와 농사뉴스센터를 먼저 연결합니다.
+          </div>
+        </Accordion>
+      </div>
+    </main>
+  );
+}
+
+function Core({ title, main, sub, tone }: { title: string; main: string; sub: string; tone: "green" | "blue" | "red" | "orange" }) {
+  const color = tone === "green" ? "#15803d" : tone === "blue" ? "#2563eb" : tone === "orange" ? "#f97316" : "#dc2626";
+  return (
+    <div style={{ ...S.core, borderColor: color }}>
+      <div style={{ ...S.coreTitle, color }}>{title}</div>
+      <div style={S.coreMain}>{main}</div>
+      <div style={S.coreSub}>{sub}</div>
+    </div>
+  );
+}
+
+function Approval({ title, value }: { title: string; value: string }) {
+  return (
+    <div style={S.approval}>
+      <div>{title}</div>
+      <b>{value}</b>
+    </div>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section style={S.panel}>
+      <h2 style={S.panelTitle}>{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function DecisionRow({ title, value, desc, href }: { title: string; value: string; desc: string; href: string }) {
+  return (
+    <Link href={href} style={S.decisionRow}>
+      <div>
+        <b>{title}</b>
+        <p>{desc}</p>
+      </div>
+      <strong>{value}</strong>
+      <span style={S.smallBtn}>판단</span>
+    </Link>
+  );
+}
+
+function Accordion({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <details style={S.details}>
+      <summary style={S.summary}>{title}</summary>
+      <div style={S.detailBody}>{children}</div>
+    </details>
+  );
+}
+
+const S: Record<string, React.CSSProperties> = {
+  page: { minHeight: "100vh", background: "#eef4f2", color: "#111827", padding: 24 },
+  wrap: { maxWidth: 1440, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", gap: 20, marginBottom: 20 },
+  eyebrow: { color: "#15803d", fontWeight: 950, letterSpacing: ".08em" },
+  title: { margin: "8px 0 0", fontSize: 56, fontWeight: 950, letterSpacing: "-.06em", lineHeight: 1 },
+  sub: { margin: "12px 0 0", color: "#64748b", fontSize: 18, fontWeight: 850 },
+  headerBtns: { display: "flex", gap: 10, alignItems: "flex-start" },
+  darkBtn: { background: "#111827", color: "#fff", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950 },
+  outlineBtn: { background: "#fff", color: "#111827", border: "1px solid #cbd5e1", padding: "14px 18px", borderRadius: 14, textDecoration: "none", fontWeight: 950 },
+
+  topDecision: { display: "grid", gridTemplateColumns: "1fr 300px", gap: 20, background: "#fff", border: "3px solid #dc2626", borderRadius: 30, padding: 28, marginBottom: 18 },
+  redLabel: { color: "#dc2626", fontWeight: 950 },
+  topTitle: { margin: "8px 0", fontSize: 44, lineHeight: 1.1, fontWeight: 950, letterSpacing: "-.06em" },
+  topText: { color: "#475569", fontSize: 19, fontWeight: 850, lineHeight: 1.6 },
+  moneyBlock: { background: "#fff7ed", border: "1px solid #fdba74", borderRadius: 22, padding: 22, textAlign: "center" },
+  moneyLabel: { color: "#9a3412", fontWeight: 950 },
+  moneyBig: { fontSize: 50, fontWeight: 950, color: "#dc2626" },
+  moneySmall: { color: "#64748b", fontWeight: 850 },
+  btnRow: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 },
+  redBtn: { background: "#dc2626", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+  greenBtn: { background: "#15803d", color: "#fff", padding: "12px 18px", borderRadius: 12, textDecoration: "none", fontWeight: 950 },
+
+  coreGrid: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 18 },
+  core: { background: "#fff", border: "2px solid #15803d", borderRadius: 22, padding: 20 },
+  coreTitle: { fontWeight: 950 },
+  coreMain: { marginTop: 8, fontSize: 34, fontWeight: 950 },
+  coreSub: { marginTop: 8, color: "#64748b", fontWeight: 850 },
+
+  editorialBox: { background: "#fff", border: "2px solid #bbf7d0", borderRadius: 26, padding: 24, marginBottom: 18 },
+  boxHead: { display: "flex", justifyContent: "space-between", gap: 18, alignItems: "flex-start" },
+  boxTitle: { margin: "6px 0", fontSize: 34, fontWeight: 950, letterSpacing: "-.04em" },
+  boxText: { margin: 0, color: "#475569", fontWeight: 850, fontSize: 17 },
+  approvalGrid: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, marginTop: 18 },
+  approval: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14 },
+  tableWrap: { overflowX: "auto", marginTop: 18 },
+  table: { width: "100%", borderCollapse: "collapse", minWidth: 900 },
+  th: { background: "#f3f4f6", padding: "13px 14px", textAlign: "left", borderBottom: "1px solid #e5e7eb", fontWeight: 950 },
+  td: { padding: "13px 14px", borderBottom: "1px solid #e5e7eb", fontWeight: 850 },
+  smallBtn: { background: "#15803d", color: "#fff", borderRadius: 10, padding: "8px 12px", textDecoration: "none", fontWeight: 950, whiteSpace: "nowrap" },
+
+  twoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 },
+  panel: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 24, padding: 20 },
+  panelTitle: { margin: "0 0 14px", fontSize: 28, fontWeight: 950 },
+  decisionRow: { display: "grid", gridTemplateColumns: "1fr 100px 70px", gap: 12, alignItems: "center", border: "1px solid #e5e7eb", borderRadius: 16, padding: 14, color: "#111827", textDecoration: "none", marginBottom: 10 },
+  newsBox: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 24, padding: 22, marginBottom: 18 },
+  newsGrid: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginTop: 18 },
+  newsCard: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16 },
+  newsTag: { display: "inline-block", background: "#ecfdf5", color: "#15803d", borderRadius: 999, padding: "6px 10px", fontWeight: 950, marginBottom: 10 },
+  details: { background: "#fff", border: "1px solid #dbe3ea", borderRadius: 18, marginBottom: 12, overflow: "hidden" },
+  summary: { cursor: "pointer", padding: "18px 20px", fontSize: 22, fontWeight: 950 },
+  detailBody: { padding: 18 },
+  productionGrid: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12 },
+  productionCard: { background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16 },
+  future: { fontSize: 18, color: "#475569", fontWeight: 850, lineHeight: 1.7 },
+};

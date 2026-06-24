@@ -175,20 +175,10 @@ export async function POST(req: NextRequest) {
         const pdfPath = await convertWithSoffice(inputPath, tempDir, "pdf");
         imageUrls = await renderPdfToImages(pdfPath, assetDir);
       } catch {
-        imageUrls = await createTextPageImages({
-          fileName: originalName,
-          fileType: "docx",
-          text: extracted.text,
-          publicDirName: assetDir,
-        });
+        imageUrls = await [];
       }
 
-      const visual = await saveImagesToVisualPages({
-        fileName: originalName,
-        fileType: "docx",
-        imageUrls,
-        text: extracted.text,
-      });
+      
 
       return NextResponse.json({
         ok: true,
@@ -197,7 +187,7 @@ export async function POST(req: NextRequest) {
         slideCount: imageUrls.length || extracted.pageCount,
         text: extracted.text,
         imageUrls,
-        visual_inserted: visual.inserted,
+        
       });
     }
 
@@ -209,20 +199,10 @@ export async function POST(req: NextRequest) {
         const pdfPath = await convertWithSoffice(inputPath, tempDir, "pdf");
         imageUrls = await renderPdfToImages(pdfPath, assetDir);
       } catch {
-        imageUrls = await createTextPageImages({
-          fileName: originalName,
-          fileType: "hwpx",
-          text: extracted.text,
-          publicDirName: assetDir,
-        });
+        imageUrls = await [];
       }
 
-      const visual = await saveImagesToVisualPages({
-        fileName: originalName,
-        fileType: "hwpx",
-        imageUrls,
-        text: extracted.text,
-      });
+      
 
       return NextResponse.json({
         ok: true,
@@ -231,7 +211,7 @@ export async function POST(req: NextRequest) {
         slideCount: imageUrls.length || extracted.pageCount,
         text: extracted.text,
         imageUrls,
-        visual_inserted: visual.inserted,
+        
       });
     }
 
@@ -251,20 +231,10 @@ export async function POST(req: NextRequest) {
         const pdfPath = await convertWithSoffice(inputPath, tempDir, "pdf");
         imageUrls = await renderPdfToImages(pdfPath, assetDir);
       } catch {
-        imageUrls = await createTextPageImages({
-          fileName: originalName,
-          fileType,
-          text: text || "문서 변환은 되었지만 추출 텍스트가 부족합니다.",
-          publicDirName: assetDir,
-        });
+        imageUrls = await [];
       }
 
-      const visual = await saveImagesToVisualPages({
-        fileName: originalName,
-        fileType,
-        imageUrls,
-        text,
-      });
+      
 
       return NextResponse.json({
         ok: true,
@@ -273,7 +243,7 @@ export async function POST(req: NextRequest) {
         slideCount: imageUrls.length,
         text,
         imageUrls,
-        visual_inserted: visual.inserted,
+        
       });
     }
 

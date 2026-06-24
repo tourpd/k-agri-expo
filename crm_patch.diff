@@ -1,0 +1,28 @@
+diff --git a/src/app/api/admin/crm/route.ts b/src/app/api/admin/crm/route.ts
+index xxxx..xxxx 100644
+--- a/src/app/api/admin/crm/route.ts
++++ b/src/app/api/admin/crm/route.ts
+@@
+ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
++import { createVendorLeadFromCustomer } from "@/lib/crm/vendorLead";
+
+ export async function GET() {
+   const supabase = createSupabaseAdminClient();
+
+   const { data: customers, error } = await supabase
+     .from("customers")
+     .select("*")
+     .order("repurchase_score", { ascending: false })
+     .order("updated_at", { ascending: false });
+
++  // 🔥 CRM 자동 vendor 연결 엔진
++  for (const c of customers || []) {
++    await createVendorLeadFromCustomer(c);
++  }
+
+   return Response.json({
+     ok: true,
+     customers: customers || [],
+     logs: [],
+   });
+ }

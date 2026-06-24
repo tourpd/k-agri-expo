@@ -1,0 +1,296 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+type LeadItem = {
+  id: string;
+  created_at?: string | null;
+  booth_name?: string | null;
+  vendor_name?: string | null;
+  contact_name?: string | null;
+  farmer_name?: string | null;
+  company_name?: string | null;
+  phone?: string | null;
+  farmer_phone?: string | null;
+  region?: string | null;
+  crop_name?: string | null;
+  product_name?: string | null;
+  issue_type?: string | null;
+  message?: string | null;
+  source_type?: string | null;
+  lead_stage?: string | null;
+  status?: string | null;
+  priority_rank?: number | null;
+  lead_score?: number | null;
+  hot_lead?: boolean | null;
+  negotiation_status?: string | null;
+  contract_status?: string | null;
+  deal_amount_krw?: number | null;
+  commission_rate?: number | null;
+  commission_amount_krw?: number | null;
+  detection_summary?: string | null;
+};
+
+const STAGES = ["신규", "상담중", "업체매칭", "견적중", "주문완료", "정산대기", "종결"];
+
+function text(v?: string | null) {
+  return v && v.trim() ? v.trim() : "-";
+}
+
+function date(v?: string | null) {
+  if (!v) return "-";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleString("ko-KR");
+}
+
+function money(v?: number | null) {
+  if (!v) return "-";
+  return `${Number(v).toLocaleString("ko-KR")}원`;
+}
+
+function nameOf(x?: LeadItem | null) {
+  if (!x) return "-";
+  return x.contact_name || x.farmer_name || x.company_name || "-";
+}
+
+function phoneOf(x?: LeadItem | null) {
+  if (!x) return "-";
+  return x.phone || x.farmer_phone || "-";
+}
+
+function summaryOf(x: LeadItem) {
+  const s = x.message || x.detection_summary || x.issue_type || "";
+  return s.length > 36 ? `${s.slice(0, 36)}…` : s || "-";
+}
+
+function stageOf(x: LeadItem) {
+  if (x.contract_status === "paid") return "정산대기";
+  if (x.lead_stage === "won") return "주문완료";
+  if (x.lead_stage === "negotiating") return "견적중";
+  if (x.status === "closed") return "종결";
+  return x.status === "new" || x.lead_stage === "new" ? "신규" : text(x.lead_stage || x.status);
+}
+
+export default function AdminLeadsPage() {
+  const [items, setItems] = useState<LeadItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [amount, setAmount] = useState("1500000");
+  const [rate, setRate] = useState("15");
+
+  async function load() {
+    setLoading(true);
+    const res = await fetch(`/api/admin/leads?q=${encodeURIComponent(q)}`, { cache: "no-store" });
+    const json = await res.json();
+    setItems(json.items || []);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const rows = useMemo(() => items, [items]);
+  const selected = useMemo(() => rows.find((x) => x.id === selectedId) || rows[0] || null, [rows, selectedId]);
+  const expectedFee = Math.round((Number(amount || 0) * Number(rate || 0)) / 100);
+
+  return (
+    <main className="min-h-screen bg-slate-100 p-4 text-slate-900">
+      <div className="mx-auto max-w-[1900px]">
+        <section className="mb-3 rounded-xl bg-white p-4 shadow-sm">
+          <div className="text-xs font-black text-green-700">K-AGRI FARMER SALES CONTROL CENTER</div>
+          <h1 className="text-2xl font-black">고객 상담 · 업체매칭 · 견적 · 주문 · 정산 관제센터</h1>
+          <div className="mt-3 flex gap-2">
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름, 전화, 작물, 업체, 문의내용 검색" className="h-11 flex-1 rounded-lg border px-3 text-sm" />
+            <button onClick={load} className="h-11 rounded-lg bg-black px-6 text-sm font-black text-white">검색</button>
+          </div>
+        </section>
+
+        <section className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-7">
+          <Kpi label="전체" value={rows.length} />
+          <Kpi label="신규" value={rows.filter((x) => stageOf(x) === "신규").length} />
+          <Kpi label="상담중" value={rows.filter((x) => stageOf(x) === "상담중").length} />
+          <Kpi label="견적중" value={rows.filter((x) => stageOf(x) === "견적중").length} />
+          <Kpi label="주문완료" value={rows.filter((x) => stageOf(x) === "주문완료").length} />
+          <Kpi label="정산대기" value={rows.filter((x) => stageOf(x) === "정산대기").length} />
+          <Kpi label="HOT" value={rows.filter((x) => x.hot_lead).length} />
+        </section>
+
+        <div className="grid gap-3 xl:grid-cols-[1.55fr_0.95fr]">
+          <section className="overflow-x-auto rounded-xl border border-slate-900 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b bg-slate-50 px-3 py-2">
+              <div className="text-sm font-black">리드 목록</div>
+              <div className="flex gap-2">
+                <button className="rounded bg-slate-900 px-3 py-2 text-xs font-black text-white">선택 상담완료</button>
+                <button className="rounded bg-green-700 px-3 py-2 text-xs font-black text-white">업체전달</button>
+                <button className="rounded bg-red-600 px-3 py-2 text-xs font-black text-white">선택 종결</button>
+              </div>
+            </div>
+
+            <table className="w-full min-w-[1600px] border-collapse text-xs">
+              <thead className="sticky top-0 z-10 bg-slate-950 text-white">
+                <tr>
+                  <Th>선택</Th><Th>접수일</Th><Th>상태</Th><Th>고객명</Th><Th>전화</Th><Th>작물</Th><Th>지역</Th><Th>제품</Th><Th>문의유형</Th><Th>문의요약</Th><Th>업체</Th><Th>예상매출</Th><Th>수수료</Th><Th>최종상태</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={14} className="p-8 text-center">불러오는 중...</td></tr>
+                ) : rows.map((item) => (
+                  <tr key={item.id} onClick={() => setSelectedId(item.id)} className={`cursor-pointer border-b hover:bg-green-50 ${selected?.id === item.id ? "bg-green-50" : ""}`}>
+                    <Td><input type="checkbox" onClick={(e) => e.stopPropagation()} /></Td>
+                    <Td>{date(item.created_at)}</Td>
+                    <Td><Stage value={stageOf(item)} hot={!!item.hot_lead} /></Td>
+                    <Td className="font-black">{nameOf(item)}</Td>
+                    <Td><a className="font-black text-blue-700" href={`tel:${phoneOf(item)}`}>{phoneOf(item)}</a></Td>
+                    <Td>{text(item.crop_name)}</Td>
+                    <Td>{text(item.region)}</Td>
+                    <Td>{text(item.product_name)}</Td>
+                    <Td>{text(item.issue_type)}</Td>
+                    <Td className="max-w-[300px] truncate">{summaryOf(item)}</Td>
+                    <Td>{text(item.booth_name || item.vendor_name)}</Td>
+                    <Td>{money(item.deal_amount_krw)}</Td>
+                    <Td>{money(item.commission_amount_krw)}</Td>
+                    <Td>{text(item.contract_status || item.negotiation_status)}</Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <aside className="rounded-xl border border-slate-900 bg-white p-3 shadow-sm">
+            {!selected ? (
+              <div className="p-8 text-center text-slate-500">선택된 리드가 없습니다.</div>
+            ) : (
+              <div className="space-y-3">
+                <div className="rounded-xl border bg-slate-50 p-3">
+                  <div className="text-xs font-black text-green-700">CUSTOMER</div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-2xl font-black">{nameOf(selected)}</div>
+                      <div className="mt-1 text-sm font-bold text-slate-600">
+                        {text(selected.crop_name)} / {text(selected.region)}
+                      </div>
+                      <div className="text-sm font-bold text-slate-600">
+                        제품: {text(selected.product_name)}
+                      </div>
+                    </div>
+                    <a
+                      href={`tel:${phoneOf(selected)}`}
+                      className="rounded-xl bg-green-700 px-5 py-4 text-center text-2xl font-black text-white"
+                    >
+                      {phoneOf(selected)}
+                    </a>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-[0.9fr_1.1fr] gap-3">
+                  <div className="rounded-xl border bg-slate-50 p-3">
+                    <div className="mb-2 text-xs font-black">작물사진</div>
+                    <PhotoBox large />
+                  </div>
+
+                  <div className="rounded-xl border border-green-300 bg-green-50 p-3">
+                    <div className="text-xs font-black text-green-700">AI 진단</div>
+                    <div className="mt-1 text-xl font-black">{text(selected.issue_type)}</div>
+                    <div className="mt-1 text-sm font-black text-red-600">의심도 91%</div>
+                    <div className="mt-2 text-sm leading-6">
+                      추천제품: <b>{text(selected.product_name)}</b><br />
+                      추천조치: 환기 · 습도관리 · 병반 확산 확인
+                    </div>
+                  </div>
+                </div>
+
+                <a
+                  href={`tel:${phoneOf(selected)}`}
+                  className="block rounded-xl bg-green-700 py-4 text-center text-2xl font-black text-white"
+                >
+                  전화걸기
+                </a>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <Action green label="문자" />
+                  <Action green label="카카오" />
+                  <Action black label="영상통화" />
+                </div>
+
+                <div className="rounded-xl border p-3">
+                  <div className="mb-2 text-xs font-black">상담 파이프라인</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {STAGES.map((s) => <button key={s} className="rounded-lg border px-2 py-2 text-xs font-black hover:bg-green-50">{s}</button>)}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border p-3">
+                  <div className="mb-2 text-xs font-black">업체 매칭</div>
+                  {["펀토리", "한국농자재", "SP AGRI"].map((v) => (
+                    <label key={v} className="mb-1 flex items-center gap-2 text-sm font-bold">
+                      <input type="checkbox" /> {v}
+                    </label>
+                  ))}
+                  <button className="mt-2 w-full rounded-lg bg-green-700 py-2 text-sm font-black text-white">업체전달</button>
+                </div>
+
+                <div className="rounded-xl border p-3">
+                  <div className="mb-2 text-xs font-black">견적 · 주문 · 정산</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <input value={amount} onChange={(e) => setAmount(e.target.value)} className="rounded border px-2 py-2 text-sm" placeholder="예상금액" />
+                    <input value={rate} onChange={(e) => setRate(e.target.value)} className="rounded border px-2 py-2 text-sm" placeholder="수수료%" />
+                    <div className="rounded bg-amber-50 p-2 text-sm font-black">{expectedFee.toLocaleString("ko-KR")}원</div>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    <button className="rounded bg-blue-700 py-2 text-sm font-black text-white">견적작성</button>
+                    <button className="rounded bg-black py-2 text-sm font-black text-white">주문생성</button>
+                    <button className="rounded bg-red-600 py-2 text-sm font-black text-white">정산등록</button>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-1 text-xs font-black">상담 메모</div>
+                  <textarea className="h-24 w-full rounded-lg border p-3 text-sm" placeholder="통화내용, 추천제품, 다음 연락일" />
+                  <button className="mt-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-black text-white">메모 저장</button>
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function Kpi({ label, value }: { label: string; value: string | number }) {
+  return <div className="rounded-xl bg-white p-3 shadow-sm"><div className="text-xs font-black text-slate-500">{label}</div><div className="text-2xl font-black">{value}</div></div>;
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return <th className="whitespace-nowrap border-r border-slate-700 px-2 py-2 text-left font-black">{children}</th>;
+}
+
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={`whitespace-nowrap border-r px-2 py-2 align-top ${className}`}>{children}</td>;
+}
+
+function Stage({ value, hot }: { value: string; hot: boolean }) {
+  return <span className={`rounded-full px-2 py-1 text-xs font-black ${hot ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{hot ? "🔥 HOT" : value}</span>;
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-lg bg-slate-50 p-2"><div className="text-xs font-bold text-slate-500">{label}</div><div className="font-black">{value}</div></div>;
+}
+
+function PhotoBox({ large = false }: { large?: boolean }) {
+  return (
+    <div
+      className={`flex ${large ? "h-44" : "h-24"} items-center justify-center rounded-lg border border-dashed bg-white text-xs font-bold text-slate-400`}
+    >
+      작물사진
+    </div>
+  );
+}
+
+function Action({ label, black, green }: { label: string; black?: boolean; green?: boolean }) {
+  return <button className={`rounded-lg px-2 py-3 text-sm font-black text-white ${black ? "bg-black" : green ? "bg-green-700" : "bg-blue-700"}`}>{label}</button>;
+}
