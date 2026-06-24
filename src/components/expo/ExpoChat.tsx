@@ -47,7 +47,7 @@ export default function ExpoChat({ roomId }: { roomId: string }) {
           table: "expo_chat_messages",
           filter: `room_id=eq.${roomId}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newMessage = payload.new as ChatMessage;
           setMessages((prev) => [...prev, newMessage]);
         }

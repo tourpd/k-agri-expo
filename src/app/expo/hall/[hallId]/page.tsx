@@ -432,8 +432,8 @@ export default async function ExpoHallPage({
     if (boothId) boothMap.set(boothId, booth);
   }
 
-  const booths: MergedBoothRow[] = slots
-    .map((slot) => {
+  const booths = slots
+    .map((slot): MergedBoothRow | null => {
       const slotBoothId = safe(slot.booth_id, "");
       if (!slotBoothId) return null;
 
@@ -448,9 +448,9 @@ export default async function ExpoHallPage({
         booth_id: resolvedBoothId,
         slot_code: slot.slot_id ?? null,
         source_hall_id: slot.hall_id ?? null,
-      };
+      } as MergedBoothRow;
     })
-    .filter((booth): booth is MergedBoothRow => !!booth)
+    .filter((booth): booth is MergedBoothRow => booth !== null)
     .filter((booth) => isVisibleBooth(booth));
 
   const featuredPremium = sortBooths(

@@ -402,8 +402,8 @@ async function createOcrWorker(): Promise<Worker> {
 
   try {
     await worker.setParameters({
-      tessedit_pageseg_mode: "6",
-      preserve_interword_spaces: "1",
+      tessedit_pageseg_mode: "6" as any,
+      preserve_interword_spaces: "1" as any,
     });
   } catch {}
 

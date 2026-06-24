@@ -120,7 +120,7 @@ export async function GET() {
     const resolved = await resolveCurrentVendor();
 
     if ("error" in resolved) {
-      return jsonError(resolved.error, resolved.status);
+      return jsonError(resolved.error || "vendor resolve error", resolved.status);
     }
 
     const { vendor, booth } = resolved;
@@ -171,7 +171,7 @@ export async function POST(req: Request) {
     const resolved = await resolveCurrentVendor();
 
     if ("error" in resolved) {
-      return jsonError(resolved.error, resolved.status);
+      return jsonError(resolved.error || "vendor resolve error", resolved.status);
     }
 
     const { vendor, booth } = resolved;
@@ -260,7 +260,7 @@ export async function PATCH(req: Request) {
     const resolved = await resolveCurrentVendor();
 
     if ("error" in resolved) {
-      return jsonError(resolved.error, resolved.status);
+      return jsonError(resolved.error || "vendor resolve error", resolved.status);
     }
 
     const { vendor } = resolved;
@@ -363,7 +363,7 @@ export async function DELETE(req: Request) {
     const resolved = await resolveCurrentVendor();
 
     if ("error" in resolved) {
-      return jsonError(resolved.error, resolved.status);
+      return jsonError(resolved.error || "vendor resolve error", resolved.status);
     }
 
     const { vendor } = resolved;

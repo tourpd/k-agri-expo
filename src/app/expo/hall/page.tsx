@@ -266,9 +266,10 @@ export default async function Page({
       (
         v
       ): v is BoothRow & {
-        slot_code?: string | null;
-        source_hall_id?: string | null;
-      } => !!v
+        booth_id: string;
+        slot_code: string | null;
+        source_hall_id: string;
+      } => !!v && typeof v.booth_id === "string" && v.booth_id.length > 0
     );
 
   // 5) sponsor strip도 실제 노출 가능한 부스 기준

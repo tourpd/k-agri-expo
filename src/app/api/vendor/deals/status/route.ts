@@ -75,7 +75,7 @@ export async function PATCH(req: Request) {
     const resolved = await resolveCurrentVendorId();
 
     if ("error" in resolved) {
-      return jsonError(resolved.error, resolved.status);
+      return jsonError(resolved.error || "vendor resolve error", resolved.status);
     }
 
     const { vendorId } = resolved;

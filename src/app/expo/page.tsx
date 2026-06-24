@@ -228,7 +228,7 @@ function mapExpoSlotToHomeSlot(
       : "#");
 
   return {
-    ...(slot as unknown as HomeSlot),
+    ...(slot as unknown as any),
     section_key: normalizeSlotSection(slot),
     title: slot.title || boothName,
     subtitle: slot.subtitle || boothIntro,
@@ -238,7 +238,7 @@ function mapExpoSlotToHomeSlot(
     badge: slot.badge || "NEW",
     meta_1: slot.meta_1 || booth?.category_primary || null,
     meta_2: slot.meta_2 || booth?.hall_code || null,
-  };
+  } as any;
 }
 
 export default async function ExpoIndexPage() {
