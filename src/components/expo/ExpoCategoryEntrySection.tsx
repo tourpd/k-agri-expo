@@ -1,65 +1,92 @@
+import React from "react";
 import Link from "next/link";
 
-const CATEGORIES = [
+const HALLS = [
   {
-    hallId: "fertilizer",
+    hallId: "crop-nutrition",
     icon: "🌱",
-    title: "비료관",
-    desc: "기비·추비·비대·활력 관련 제품",
+    title: "작물영양관",
+    desc: "비대 · 활력 · 뿌리 · 회복 · 칼슘 솔루션",
+    href: "/expo/halls/crop-nutrition",
+    cta: "작물영양관 입장",
   },
   {
-    hallId: "eco-inputs",
-    icon: "🍀",
-    title: "친환경자재관",
-    desc: "친환경 병해충·영양 관리 자재",
+    hallId: "pest-solution",
+    icon: "🐛",
+    title: "병해충솔루션관",
+    desc: "살충 · 살균 · 친환경 병해충 관리",
+    href: "/expo/halls/pest-solution",
+    cta: "병해충관 입장",
   },
   {
-    hallId: "machinery",
+    hallId: "agri-machinery",
     icon: "🚜",
-    title: "농기계관",
-    desc: "작업 효율을 높이는 농기계",
+    title: "농기계·장비관",
+    desc: "농기계 · 드론 · 자동화 장비",
+    href: "/expo/halls/agri-machinery",
+    cta: "농기계관 입장",
   },
   {
-    hallId: "seed",
+    hallId: "seed-nursery",
     icon: "🌾",
-    title: "종자관",
-    desc: "작물별 우수 종자·육묘 관련",
+    title: "종자·육묘관",
+    desc: "종자 · 모종 · 육묘기술",
+    href: "/expo/halls/seed-nursery",
+    cta: "종자육묘관 입장",
   },
   {
-    hallId: "smart-farm",
+    hallId: "smart-ai",
     icon: "📱",
-    title: "스마트농업관",
-    desc: "센서·제어·자동화 장비",
+    title: "스마트농업·AI관",
+    desc: "AI · 센서 · 스마트팜",
+    href: "/expo/halls/smart-ai",
+    cta: "스마트농업관 입장",
   },
   {
-    hallId: "future-insect",
+    hallId: "future-food",
     icon: "🦗",
-    title: "미래곤충관",
-    desc: "곤충 산업의 생산·가공·장비·교육",
+    title: "미래식량·곤충관",
+    desc: "곤충 · 기능성식품 · 대체단백",
+    href: "/expo/future-food",
+    cta: "미래식량관 입장",
   },
 ];
 
 export default function ExpoCategoryEntrySection() {
   return (
     <section style={wrap}>
-      <div style={eyebrow}>CATEGORY ENTRY</div>
-      <h2 style={title}>원하는 분야부터 들어가세요</h2>
-      <p style={desc}>
-        농민이 찾는 방식대로 카테고리를 먼저 고르고, 그 안에서 프리미엄 부스와 제품을
-        우선 확인하게 구성합니다.
+      <div style={eyebrow}>HALL ENTRY</div>
+
+      <h2 style={title} className="expo-section-title">
+        필요한 농사 문제부터 들어가세요
+      </h2>
+
+      <p style={desc} className="expo-section-desc">
+        K-Agri Expo는 단순 상품 나열이 아니라, 농민이 겪는 문제와 시기별
+        필요에 맞춰 전문 전시관으로 들어가는 구조입니다.
       </p>
 
-      <div style={grid}>
-        {CATEGORIES.map((item) => (
+      <div style={grid} className="expo-category-grid expo-entry-grid">
+        {HALLS.map((item) => (
           <Link
             key={item.hallId}
-            href={`/expo/hall/${item.hallId}`}
+            href={item.href}
             style={card}
+            className="expo-category-card expo-entry-card"
           >
-            <div style={icon}>{item.icon}</div>
-            <div style={cardTitle}>{item.title}</div>
-            <div style={cardDesc}>{item.desc}</div>
-            <div style={cta}>카테고리 보기 →</div>
+            <div style={cardTop}>
+              <div style={iconWrap}>
+                <span style={icon}>{item.icon}</span>
+              </div>
+
+              <div style={cardTitle}>{item.title}</div>
+              <div style={cardDesc}>{item.desc}</div>
+            </div>
+
+            <div style={ctaRow}>
+              <span style={cta}>{item.cta}</span>
+              <span style={arrow}>→</span>
+            </div>
           </Link>
         ))}
       </div>
@@ -68,77 +95,111 @@ export default function ExpoCategoryEntrySection() {
 }
 
 const wrap: React.CSSProperties = {
-  marginTop: 10,
+  marginTop: 8,
 };
 
 const eyebrow: React.CSSProperties = {
-  fontSize: 14,
+  fontSize: 12,
   fontWeight: 950,
   color: "#16a34a",
-  letterSpacing: 0.4,
+  letterSpacing: 0.6,
 };
 
 const title: React.CSSProperties = {
-  marginTop: 14,
-  fontSize: 58,
-  lineHeight: 1.08,
+  marginTop: 10,
+  fontSize: 40,
+  lineHeight: 1.12,
   fontWeight: 950,
   color: "#0f172a",
+  letterSpacing: -1,
+  wordBreak: "keep-all",
 };
 
 const desc: React.CSSProperties = {
-  marginTop: 24,
-  fontSize: 22,
-  lineHeight: 1.8,
+  marginTop: 12,
+  fontSize: 15,
+  lineHeight: 1.75,
   color: "#64748b",
-  maxWidth: 1080,
+  maxWidth: 820,
+  wordBreak: "keep-all",
 };
 
 const grid: React.CSSProperties = {
-  marginTop: 30,
+  marginTop: 20,
   display: "grid",
   gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-  gap: 18,
+  gap: 12,
 };
 
 const card: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  minHeight: 300,
-  padding: "28px 26px",
-  borderRadius: 28,
+  minHeight: 210,
+  padding: "16px 14px",
+  borderRadius: 20,
   border: "1px solid #e5e7eb",
-  background: "#fff",
+  background: "#ffffff",
   textDecoration: "none",
   color: "#0f172a",
-  boxShadow: "0 12px 28px rgba(15,23,42,0.04)",
+  boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+};
+
+const cardTop: React.CSSProperties = {
+  display: "block",
+};
+
+const iconWrap: React.CSSProperties = {
+  width: 44,
+  height: 44,
+  borderRadius: 14,
+  background: "#f8fafc",
+  border: "1px solid #e2e8f0",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 const icon: React.CSSProperties = {
-  fontSize: 38,
+  fontSize: 24,
   lineHeight: 1,
 };
 
 const cardTitle: React.CSSProperties = {
-  marginTop: 26,
-  fontSize: 28,
-  lineHeight: 1.25,
+  marginTop: 14,
+  fontSize: 18,
+  lineHeight: 1.3,
   fontWeight: 950,
   color: "#0f172a",
+  wordBreak: "keep-all",
 };
 
 const cardDesc: React.CSSProperties = {
-  marginTop: 18,
-  fontSize: 16,
-  lineHeight: 1.8,
+  marginTop: 8,
+  fontSize: 13,
+  lineHeight: 1.6,
   color: "#64748b",
-  minHeight: 58,
+  wordBreak: "keep-all",
+};
+
+const ctaRow: React.CSSProperties = {
+  marginTop: 16,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 8,
 };
 
 const cta: React.CSSProperties = {
-  marginTop: 28,
-  fontSize: 16,
+  fontSize: 13,
   fontWeight: 950,
   color: "#0f172a",
+  lineHeight: 1.2,
+};
+
+const arrow: React.CSSProperties = {
+  fontSize: 14,
+  fontWeight: 950,
+  color: "#0f172a",
+  lineHeight: 1,
 };

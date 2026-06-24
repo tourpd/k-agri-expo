@@ -1,4 +1,7 @@
 import React from "react";
+import FarmerDirectMarketEntry from "@/components/expo/FarmerDirectMarketEntry";
+import AgriTradeCenterEntry from "@/components/expo/AgriTradeCenterEntry";
+import FarmerDecisionMainBanner from "@/components/expo/FarmerDecisionMainBanner";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAutoHeroData } from "@/lib/expo/hero-auto";
 import { getMonthlyConsultQuestions } from "@/lib/expo/consult-queries";
@@ -376,7 +379,10 @@ export default async function ExpoIndexPage() {
       />
 
       <section className="expo-section" style={{ padding: "18px 20px 0" }}>
-        <ExpoCategoryEntrySection />
+        <FarmerDecisionMainBanner />
+      <AgriTradeCenterEntry />
+      <FarmerDirectMarketEntry />
+      <ExpoCategoryEntrySection />
       </section>
 
       <ExpoHotIssuesSection items={hotIssues} />
