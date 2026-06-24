@@ -66,9 +66,7 @@ export default function ExpoLiveSection({ item }: Props) {
   );
 
   const imageUrl = safe(item?.image_url || item?.prize_image_url);
-  const youtubeUrl = safe(
-    item?.video_url || item?.featured_video_url || item?.youtube_url
-  );
+  const youtubeUrl = "https://youtu.be/K_88O0nVws4";
   const embedUrl = toYoutubeEmbed(youtubeUrl);
 
   const dateLabel = safe(

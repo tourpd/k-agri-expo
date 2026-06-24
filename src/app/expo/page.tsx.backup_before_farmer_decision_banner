@@ -9,9 +9,6 @@ import { getHomeDeals } from "@/lib/expo/home-deals";
 
 import ExpoTopBar from "@/components/expo/ExpoTopBar";
 import ExpoHeroSection from "@/components/expo/ExpoHeroSection";
-import FarmerDecisionMainBanner from "@/components/expo/FarmerDecisionMainBanner";
-import AgriTradeCenterEntry from "@/components/expo/AgriTradeCenterEntry";
-import FarmerDirectMarketEntry from "@/components/expo/FarmerDirectMarketEntry";
 import ExpoCategoryEntrySection from "@/components/expo/ExpoCategoryEntrySection";
 import ExpoHotIssuesSection from "@/components/expo/ExpoHotIssuesSection";
 import ExpoLiveSection from "@/components/expo/ExpoLiveSection";
@@ -656,12 +653,6 @@ export default async function ExpoIndexPage() {
         heroSubtitle={heroSubtitle}
         heroDescription={heroDescription}
       />
-
-      <FarmerDecisionMainBanner />
-
-      <AgriTradeCenterEntry />
-
-      <FarmerDirectMarketEntry />
 
       <section className="expo-section" style={{ padding: "16px 20px 0" }}>
         <ExpoCategoryEntrySection />
