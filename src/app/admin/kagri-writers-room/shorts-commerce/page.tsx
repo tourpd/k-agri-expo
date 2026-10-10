@@ -52,6 +52,21 @@ export default function ShortsCommercePage() {
     return { id: String(i+1), crop: c?.trim() || "", topic: parts.join("|").trim() };
   }), products, expoProducts), [dailyInput, products, expoProducts]);
 
+  function exportBatch() {
+    const payload = {
+      schema: "kagri.shorts-commerce.v1",
+      exportedAt: new Date().toISOString(),
+      status: "review_required",
+      items: dailyResults,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "kagri-shorts-commerce-batch.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
   function addProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!name.trim() || !isAllowedAffiliateLink(link)) {
@@ -112,6 +127,7 @@ export default function ShortsCommercePage() {
         <h2 className="text-2xl font-black">하루 쇼츠 5편 일괄 상품 추천</h2>
         <p className="text-sm text-stone-600">작물 | 쇼츠 제목 형식으로 한 줄씩 입력하세요. 최대 5편을 준비하며 상품 적합성 검수가 필요합니다.</p>
         <textarea className="w-full rounded-lg border p-3" rows={6} value={dailyInput} onChange={e=>setDailyInput(e.target.value)} placeholder={"마늘 | 토양 산도 측정과 검사\n딸기 | 하우스 온습도 관리\n고추 | 관수 타이머 사용법"} />
+        <button type="button" disabled={!dailyResults.length} onClick={exportBatch} className="rounded-xl bg-green-800 px-5 py-3 font-bold text-white disabled:opacity-50">5편 상품연결 JSON 내보내기</button>
         {dailyResults.map(item=><div className="rounded-xl border p-3" key={item.id}>
           <p className="font-black">{item.id}편 · {item.crop} · {item.topic}</p>
           <p className="text-sm">쿠팡 승인상품 {item.affiliateProducts.length}개 / EXPO 후보 {item.expoProducts.length}개</p>
