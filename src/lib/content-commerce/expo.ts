@@ -39,19 +39,19 @@ export function normalizeExpoProducts(raw: unknown): ExpoProduct[] {
 }
 
 export function matchExpoProducts(topic: string, crop: string, products: ExpoProduct[]): (ExpoProduct & {score: number})[] {
-  const text = (topic + " " + crop).toLowerCase();
   const cropText = crop.trim().toLowerCase();
   return products.map(p => {
     let score = 0;
+    let topicScore = 0;
     if (p.crops.some(c => c.toLowerCase() === cropText)) score += 5;
     if (cropText && p.category.toLowerCase().includes(cropText)) score += 2;
     for (const token of p.name.toLowerCase().split(/\s+/).filter(t => t.length >= 2)) {
-      if (text.includes(token)) score += 2;
+      if (topic.toLowerCase().includes(token)) { score += 2; topicScore += 2; }
     }
     for (const token of p.description.toLowerCase().split(/\s+/).filter(t => t.length >= 3).slice(0, 12)) {
-      if (text.includes(token)) score++;
+      if (topic.toLowerCase().includes(token)) { score++; topicScore++; }
     }
-    return { ...p, score };
+    return { ...p, score: topicScore >= 2 ? score : 0 };
   }).filter(p => p.score >= 3).sort((a,b) => b.score-a.score).slice(0,3);
 }
 // Partner links require explicit publisher verification. EXPO buy_url is never
