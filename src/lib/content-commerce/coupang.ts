@@ -25,16 +25,17 @@ export function rankProducts(topic: string, crop: string, products: Product[]): 
   return products.filter(p => p.approved && isAllowedAffiliateLink(p.link))
     .map(p => {
       let score = 0;
+      let topicRelevance = 0;
       const reasons: string[] = [];
       if (p.crops.some(c => normalize(c) === cropText && cropText)) { score += 5; reasons.push("작물 일치"); }
       for (const kw of p.keywords) {
         const n = normalize(kw);
         if (n.length >= 2 && (topicText.includes(n) || [...topicWords].some(w => w.includes(n) || n.includes(w)))) {
-          score += 3; reasons.push("주제 관련: " + kw);
+          score += 3; topicRelevance += 3; reasons.push("주제 관련: " + kw);
         }
       }
-      if (words(p.name).some(w => topicWords.has(w))) { score += 2; reasons.push("상품명 관련"); }
-      return { ...p, score, reasons };
+      if (words(p.name).some(w => topicWords.has(w))) { score += 2; topicRelevance += 2; reasons.push("상품명 관련"); }
+      return { ...p, score: topicRelevance >= 2 ? score : 0, reasons };
     }).filter(p => p.score >= 3)
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "ko"))
     .slice(0, 3);
