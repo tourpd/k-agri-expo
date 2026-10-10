@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+// @ts-ignore Node test runner uses TypeScript source files.
 import { normalizeExpoProducts, matchExpoProducts, toApprovedAffiliateProduct } from "../src/lib/content-commerce/expo.ts";
 
 test("EXPO 상품 API 응답을 안전하게 정규화", () => {
