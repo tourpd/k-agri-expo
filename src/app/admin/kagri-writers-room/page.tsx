@@ -29,6 +29,11 @@ const menus = [
     href: "/admin/kagri-writers-room/knowledge",
   },
   {
+    title: "🛒 쇼츠 상품연결 센터",
+    desc: "쿠팡파트너스 상품 등록·검수, 작물과 쇼츠 주제별 자동 추천, 유튜브 설명문 생성",
+    href: "/admin/kagri-writers-room/shorts-commerce",
+  },
+  {
     title: "📖 콘텐츠 DNA",
     desc: "한국농수산TV 콘텐츠 제작 원칙, 관점, 역발상 규칙 저장",
     href: "/admin/kagri-writers-room/dna",
