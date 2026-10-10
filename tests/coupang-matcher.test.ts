@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+// @ts-ignore Node 22 strip-types test runner loads TypeScript source directly.
 import { isAllowedAffiliateLink, rankProducts, youtubeDescription, type Product } from "../src/lib/content-commerce/coupang.ts";
 
 const products: Product[] = [
