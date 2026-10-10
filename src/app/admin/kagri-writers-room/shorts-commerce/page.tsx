@@ -5,6 +5,8 @@ import { AFFILIATE_NOTICE, isAllowedAffiliateLink, rankProducts, youtubeDescript
 
 import { normalizeExpoProducts, matchExpoProducts, type ExpoProduct } from "@/lib/content-commerce/expo";
 
+import { buildDailyShortsCommerce } from "@/lib/content-commerce/batch";
+
 const STORE = "kagri-coupang-products-v1";
 const clean = (value: string) => value.split(",").map(x => x.trim()).filter(Boolean);
 
@@ -18,6 +20,7 @@ export default function ShortsCommercePage() {
   const [keywords, setKeywords] = useState("");
   const [link, setLink] = useState("");
   const [topic, setTopic] = useState("");
+  const [dailyInput, setDailyInput] = useState("");
   const [crop, setCrop] = useState("마늘");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -44,6 +47,10 @@ export default function ShortsCommercePage() {
     } catch { setExpoStatus("조회 실패 — 기존 상품·권한 확인 필요"); }
   }
   const description = useMemo(() => youtubeDescription(topic, matches), [topic, matches]);
+  const dailyResults = useMemo(() => buildDailyShortsCommerce(dailyInput.split("\\n").filter(Boolean).map((line, i) => {
+    const [c, ...parts] = line.split("|");
+    return { id: String(i+1), crop: c?.trim() || "", topic: parts.join("|").trim() };
+  }), products, expoProducts), [dailyInput, products, expoProducts]);
 
   function addProduct(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -100,6 +107,18 @@ export default function ShortsCommercePage() {
           {p.buyUrl ? <a className="text-green-800 underline" target="_blank" rel="noopener noreferrer" href={p.buyUrl}>기존 판매 페이지 확인</a> : <p className="text-sm text-stone-500">판매 링크 미등록</p>}
         </div>)}</div>
         {expoProducts.length>0 && expoMatches.length===0 && <p className="text-sm text-stone-600">해당 작물·주제에 맞는 상품이 없습니다.</p>}
+      </section>
+      <section className="space-y-3 rounded-3xl bg-white p-6 shadow">
+        <h2 className="text-2xl font-black">하루 쇼츠 5편 일괄 상품 추천</h2>
+        <p className="text-sm text-stone-600">작물 | 쇼츠 제목 형식으로 한 줄씩 입력하세요. 최대 5편을 준비하며 상품 적합성 검수가 필요합니다.</p>
+        <textarea className="w-full rounded-lg border p-3" rows={6} value={dailyInput} onChange={e=>setDailyInput(e.target.value)} placeholder={"마늘 | 토양 산도 측정과 검사\n딸기 | 하우스 온습도 관리\n고추 | 관수 타이머 사용법"} />
+        {dailyResults.map(item=><div className="rounded-xl border p-3" key={item.id}>
+          <p className="font-black">{item.id}편 · {item.crop} · {item.topic}</p>
+          <p className="text-sm">쿠팡 승인상품 {item.affiliateProducts.length}개 / EXPO 후보 {item.expoProducts.length}개</p>
+          <p className="text-xs text-stone-600">{item.affiliateProducts.map(p=>p.name).join(", ") || "쿠팡 추천 없음"} · {item.expoProducts.map(p=>p.name).join(", ") || "EXPO 추천 없음"}</p>
+          <button type="button" className="mt-2 rounded-lg border px-3 py-2 text-sm" onClick={()=>navigator.clipboard.writeText(item.youtubeDescription)}>이 편 설명문 복사</button>
+          <p className="mt-1 text-xs text-amber-800">게시 전 상품 적합성·광고 고지 검수 필요</p>
+        </div>)}
       </section>
       <section className="rounded-3xl bg-white p-6 shadow">
         <h2 className="mb-3 text-2xl font-black">3. 상품 검수 및 승인 ({products.length}개 등록)</h2>
