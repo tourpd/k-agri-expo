@@ -1,0 +1,29 @@
+name: Shorts Commerce Verification
+
+on:
+  push:
+    branches: [feature/coupang-shorts-matcher-v1]
+  pull_request:
+    paths:
+      - "src/lib/content-commerce/**"
+      - "src/app/admin/kagri-writers-room/**"
+      - "tests/*commerce*"
+      - "tests/coupang-matcher.test.ts"
+      - ".github/workflows/shorts-commerce.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: TypeScript
+        run: npx tsc --noEmit --pretty false
+      - name: Matching regression tests
+        run: npx tsx --test tests/coupang-matcher.test.ts tests/expo-commerce.test.ts tests/shorts-commerce-batch.test.ts
