@@ -47,7 +47,7 @@ export default function ShortsCommercePage() {
     } catch { setExpoStatus("조회 실패 — 기존 상품·권한 확인 필요"); }
   }
   const description = useMemo(() => youtubeDescription(topic, matches), [topic, matches]);
-  const dailyResults = useMemo(() => buildDailyShortsCommerce(dailyInput.split("\\n").filter(Boolean).map((line, i) => {
+  const dailyResults = useMemo(() => buildDailyShortsCommerce(dailyInput.split("\n").filter(Boolean).map((line, i) => {
     const [c, ...parts] = line.split("|");
     return { id: String(i+1), crop: c?.trim() || "", topic: parts.join("|").trim() };
   }), products, expoProducts), [dailyInput, products, expoProducts]);
