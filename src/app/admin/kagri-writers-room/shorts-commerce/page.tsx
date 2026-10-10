@@ -3,12 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { AFFILIATE_NOTICE, isAllowedAffiliateLink, rankProducts, youtubeDescription, type Product } from "@/lib/content-commerce/coupang";
 
+import { normalizeExpoProducts, matchExpoProducts, type ExpoProduct } from "@/lib/content-commerce/expo";
+
 const STORE = "kagri-coupang-products-v1";
 const clean = (value: string) => value.split(",").map(x => x.trim()).filter(Boolean);
 
 export default function ShortsCommercePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [expoProducts, setExpoProducts] = useState<ExpoProduct[]>([]);
+  const [expoStatus, setExpoStatus] = useState("미조회");
   const [name, setName] = useState("");
   const [cropTags, setCropTags] = useState("");
   const [keywords, setKeywords] = useState("");
@@ -26,6 +30,19 @@ export default function ShortsCommercePage() {
   }, []);
   useEffect(() => { if (loaded) localStorage.setItem(STORE, JSON.stringify(products)); }, [products, loaded]);
   const matches = useMemo(() => rankProducts(topic, crop, products), [topic, crop, products]);
+  const expoMatches = useMemo(() => matchExpoProducts(topic, crop, expoProducts), [topic,crop,expoProducts]);
+  async function loadExpo() {
+    setExpoStatus("조회 중");
+    try {
+      const response = await fetch("/api/products", { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      if (!result.success) throw new Error("상품 조회 실패");
+      const items = normalizeExpoProducts(result.products);
+      setExpoProducts(items);
+      setExpoStatus(`${items.length}개 조회 완료`);
+    } catch { setExpoStatus("조회 실패 — 기존 상품·권한 확인 필요"); }
+  }
   const description = useMemo(() => youtubeDescription(topic, matches), [topic, matches]);
 
   function addProduct(event: React.FormEvent<HTMLFormElement>) {
@@ -71,6 +88,18 @@ export default function ShortsCommercePage() {
           {!matches.length && <p className="rounded-lg bg-stone-100 p-4 text-stone-600">관련성이 확인된 승인 상품이 없습니다. 상품을 억지로 붙이지 않습니다.</p>}
           {matches.map(p=><div className="rounded-xl border p-3" key={p.id}><p className="font-bold">{p.name} · {p.score}점</p><p className="text-sm text-stone-600">{p.reasons.join(" / ")}</p></div>)}
         </section>
+      </section>
+      <section className="space-y-3 rounded-3xl bg-white p-6 shadow">
+        <h2 className="text-2xl font-black">K-AGRI EXPO 상품 추천 (읽기 전용)</h2>
+        <p className="text-sm text-stone-700">기존 EXPO 판매 상품을 조회해 쇼츠 주제에 맞춰 추천합니다. 쿠팡 제휴 수익과 별도입니다. 결과가 있더라도 적합성과 현재 판매 가능 여부는 검수하세요.</p>
+        <button type="button" onClick={loadExpo} className="rounded-xl border-2 border-green-800 px-5 py-3 font-bold">EXPO 상품 불러오기</button>
+        <span className="ml-3 text-sm text-stone-600" role="status">{expoStatus}</span>
+        <div className="space-y-2">{expoMatches.map(p=><div key={p.id} className="rounded-xl border p-3">
+          <p className="font-black">{p.name} · 관련성 {p.score}점</p>
+          <p className="text-sm text-stone-600">{p.category} / {p.description.slice(0,130)}</p>
+          {p.buyUrl ? <a className="text-green-800 underline" target="_blank" rel="noopener noreferrer" href={p.buyUrl}>기존 판매 페이지 확인</a> : <p className="text-sm text-stone-500">판매 링크 미등록</p>}
+        </div>)}</div>
+        {expoProducts.length>0 && expoMatches.length===0 && <p className="text-sm text-stone-600">해당 작물·주제에 맞는 상품이 없습니다.</p>}
       </section>
       <section className="rounded-3xl bg-white p-6 shadow">
         <h2 className="mb-3 text-2xl font-black">3. 상품 검수 및 승인 ({products.length}개 등록)</h2>
