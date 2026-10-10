@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+// @ts-ignore Node test runner uses TypeScript source files.
 import { buildDailyShortsCommerce } from "../src/lib/content-commerce/batch.ts";
+// @ts-ignore Node test runner uses TypeScript source files.
 import type { Product } from "../src/lib/content-commerce/coupang.ts";
 
 const products: Product[] = [
