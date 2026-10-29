@@ -31,6 +31,8 @@ const ADMIN_PAGES = [
   "/expo/admin",
   "/expo/crop-nutrition", // 관리자 편집 화면이 공개 주소에 놓여 있었음
   "/photodoctor-recommend-rules", // 추천 규칙 관리 화면
+  "/studio", // 영상 편집 도구
+  "/pv5-life", // PV5 분석 도구
 ];
 const ADMIN_PAGE_EXCEPTIONS = ["/admin/login"];
 
@@ -235,6 +237,10 @@ export const config = {
     "/expo/admin/:path*",
     "/expo/crop-nutrition",
     "/photodoctor-recommend-rules",
+    "/studio",
+    "/studio/:path*",
+    "/pv5-life",
+    "/pv5-life/:path*",
     "/api/:path*",
   ],
 };
