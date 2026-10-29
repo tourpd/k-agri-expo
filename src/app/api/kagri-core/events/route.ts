@@ -346,7 +346,7 @@ export async function GET(request: Request) {
       return tb - ta;
     });
 
-    const journeys = summarizeJourneys(events);
+    const journeys = summarizeJourneys(events as any);
 
     const crossTableJourneys = journeys.filter(
       (journey) => journey.crossesTables,

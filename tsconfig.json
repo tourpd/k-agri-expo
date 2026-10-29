@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "src/app/admin/layout.tsx.off"  ],
-  "exclude": ["node_modules"]
+  ],
+  "exclude": ["node_modules", "scripts", "backup", "_route_backup", "K-HOS", "jopd-studio", "KOREAN_MODERN_DANGUN_UNIVERSE"]
 }

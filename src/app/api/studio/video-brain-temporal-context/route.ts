@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
             : [],
         }))
         .sort(
-          (a, b) =>
+          (a: any, b: any) =>
             a.start - b.start ||
             a.end - b.end
         );

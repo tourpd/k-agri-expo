@@ -336,6 +336,8 @@ async function transcribeMedia(
     start: number;
     end: number;
     text: string;
+    // 음성 인식 신뢰도 정보 (선택)
+    audioTruth?: any;
   }> = [];
 
   let fullText = "";
