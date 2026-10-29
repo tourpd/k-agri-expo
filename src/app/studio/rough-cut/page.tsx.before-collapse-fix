@@ -1,0 +1,1430 @@
+"use client";
+
+import {
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
+
+type TranscriptSegment = {
+  start: number;
+  end: number;
+  text: string;
+};
+
+type Analysis = {
+  status:
+    | "waiting"
+    | "uploading"
+    | "transcribing"
+    | "done"
+    | "error";
+  progress: number;
+  uploadId?: string;
+  text?: string;
+  segments?: TranscriptSegment[];
+  topic?: string;
+  summary?: string;
+  error?: string;
+};
+
+type SourceItem = {
+  id: string;
+  file: File;
+  name: string;
+  size: number;
+  duration: number;
+  objectUrl: string;
+  analysis: Analysis;
+};
+
+type StoryItem = {
+  role: string;
+  reason: string;
+  sourceId: string;
+  sourceName: string;
+  sourceStart: number;
+  sourceEnd: number;
+  transcript: string;
+  holdAfter?: number;
+};
+
+type StoryResult = {
+  title?: string;
+  coreStory?: string;
+  dramaticReason?: string;
+  storyArc?: StoryItem[];
+  missingShots?: Array<{
+    reason: string;
+    suggestion: string;
+  }>;
+};
+
+function uid() {
+  return (
+    Date.now().toString(36) +
+    Math.random().toString(36).slice(2)
+  );
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024 ** 2)
+    return `${(bytes / 1024).toFixed(1)} KB`;
+
+  if (bytes < 1024 ** 3)
+    return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+
+  return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+}
+
+function formatTime(sec: number) {
+  if (!Number.isFinite(sec)) return "--:--";
+
+  const s = Math.max(0, sec);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = Math.floor(s % 60);
+
+  if (h > 0) {
+    return `${String(h).padStart(2, "0")}:${String(
+      m
+    ).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  }
+
+  return `${String(m).padStart(2, "0")}:${String(ss).padStart(
+    2,
+    "0"
+  )}`;
+}
+
+function getDuration(file: File, url: string): Promise<number> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+
+    video.onloadedmetadata = () => {
+      resolve(Number.isFinite(video.duration) ? video.duration : 0);
+    };
+
+    video.onerror = () => resolve(0);
+    video.src = url;
+  });
+}
+
+function deriveTopic(text: string) {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+
+  if (!cleaned) return "음성 내용 없음";
+
+  const first = cleaned
+    .split(/[.!?。]/)
+    .map((x) => x.trim())
+    .find(Boolean);
+
+  if (!first) return cleaned.slice(0, 70);
+
+  return first.length > 70
+    ? first.slice(0, 70) + "…"
+    : first;
+}
+
+function deriveSummary(text: string) {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+
+  if (!cleaned) return "전사된 음성이 없습니다.";
+
+  return cleaned.length > 220
+    ? cleaned.slice(0, 220) + "…"
+    : cleaned;
+}
+
+export default function RoughCutPage() {
+  const [sources, setSources] = useState<SourceItem[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const [story, setStory] = useState<StoryResult | null>(null);
+
+  const [storyStatus, setStoryStatus] = useState<
+    "idle" | "waiting" | "running" | "done" | "error"
+  >("idle");
+
+  const [storyError, setStoryError] = useState("");
+
+  const runningRef = useRef<Set<string>>(new Set());
+
+  const selected = useMemo(
+    () => sources.find((s) => s.id === selectedId) || null,
+    [sources, selectedId]
+  );
+
+  const doneCount = sources.filter(
+    (s) => s.analysis.status === "done"
+  ).length;
+
+  const processingCount = sources.filter((s) =>
+    ["uploading", "transcribing"].includes(s.analysis.status)
+  ).length;
+
+  const totalDuration = sources.reduce(
+    (sum, s) => sum + (s.duration || 0),
+    0
+  );
+
+  function patchSource(
+    id: string,
+    patch: Partial<SourceItem> | {
+      analysis: Partial<Analysis>;
+    }
+  ) {
+    setSources((current) =>
+      current.map((item) => {
+        if (item.id !== id) return item;
+
+        if ("analysis" in patch) {
+          return {
+            ...item,
+            analysis: {
+              ...item.analysis,
+              ...patch.analysis,
+            },
+          };
+        }
+
+        return {
+          ...item,
+          ...patch,
+        };
+      })
+    );
+  }
+
+  async function uploadAndTranscribe(source: SourceItem) {
+    if (runningRef.current.has(source.id)) return;
+
+    runningRef.current.add(source.id);
+
+    try {
+      const uploadId = `${Date.now()}_${source.id}`.replace(
+        /[^a-zA-Z0-9_-]/g,
+        ""
+      );
+
+      const CHUNK_SIZE = 8 * 1024 * 1024;
+
+      const totalChunks = Math.ceil(
+        source.file.size / CHUNK_SIZE
+      );
+
+      patchSource(source.id, {
+        analysis: {
+          status: "uploading",
+          progress: 0,
+          uploadId,
+        },
+      });
+
+      for (let i = 0; i < totalChunks; i++) {
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(
+          source.file.size,
+          start + CHUNK_SIZE
+        );
+
+        const blob = source.file.slice(start, end);
+
+        const response = await fetch(
+          "/api/studio/media?action=chunk",
+          {
+            method: "POST",
+            headers: {
+              "x-upload-id": uploadId,
+              "x-file-name": source.name,
+              "x-chunk-index": String(i),
+              "x-total-chunks": String(totalChunks),
+            },
+            body: blob,
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+          throw new Error(
+            result.error || `업로드 실패 ${i + 1}/${totalChunks}`
+          );
+        }
+
+        patchSource(source.id, {
+          analysis: {
+            status: "uploading",
+            progress: Math.round(
+              ((i + 1) / totalChunks) * 70
+            ),
+            uploadId,
+          },
+        });
+      }
+
+      const completeResponse = await fetch(
+        "/api/studio/media?action=complete",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ uploadId }),
+        }
+      );
+
+      const complete = await completeResponse.json();
+
+      if (!completeResponse.ok || !complete.ok) {
+        throw new Error(
+          complete.error || "원본 결합 실패"
+        );
+      }
+
+      patchSource(source.id, {
+        analysis: {
+          status: "transcribing",
+          progress: 78,
+          uploadId,
+        },
+      });
+
+      const transcribeResponse = await fetch(
+        "/api/studio/media?action=transcribe",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ uploadId }),
+        }
+      );
+
+      const transcript = await transcribeResponse.json();
+
+      if (!transcribeResponse.ok || !transcript.ok) {
+        throw new Error(
+          transcript.error || "음성 전사 실패"
+        );
+      }
+
+      const text = String(transcript.text || "");
+
+      patchSource(source.id, {
+        analysis: {
+          status: "done",
+          progress: 100,
+          uploadId,
+          text,
+          segments: Array.isArray(transcript.segments)
+            ? transcript.segments
+            : [],
+          topic: deriveTopic(text),
+          summary: deriveSummary(text),
+        },
+      });
+    } catch (error) {
+      patchSource(source.id, {
+        analysis: {
+          status: "error",
+          progress: 0,
+          error:
+            error instanceof Error
+              ? error.message
+              : String(error),
+        },
+      });
+    } finally {
+      runningRef.current.delete(source.id);
+    }
+  }
+
+  async function handleFiles(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const files = Array.from(event.target.files || []);
+
+    if (!files.length) return;
+
+    const created: SourceItem[] = [];
+
+    for (const file of files) {
+      const objectUrl = URL.createObjectURL(file);
+      const duration = await getDuration(file, objectUrl);
+
+      created.push({
+        id: uid(),
+        file,
+        name: file.name,
+        size: file.size,
+        duration,
+        objectUrl,
+        analysis: {
+          status: "waiting",
+          progress: 0,
+        },
+      });
+    }
+
+    setSources((current) => [...current, ...created]);
+
+    if (!selectedId && created[0]) {
+      setSelectedId(created[0].id);
+    }
+
+    setStory(null);
+    setStoryStatus("waiting");
+
+    event.target.value = "";
+
+    /*
+     * 파일을 넣는 순간 자동 분석.
+     * 별도의 '분석 시작' 버튼은 없다.
+     */
+    for (const source of created) {
+      uploadAndTranscribe(source);
+    }
+  }
+
+  function removeSource(id: string) {
+    setSources((current) => {
+      const target = current.find((x) => x.id === id);
+
+      if (target) {
+        URL.revokeObjectURL(target.objectUrl);
+      }
+
+      return current.filter((x) => x.id !== id);
+    });
+
+    if (selectedId === id) {
+      setSelectedId(null);
+    }
+
+    setStory(null);
+    setStoryStatus("waiting");
+  }
+
+  async function buildStory() {
+    const completed = sources.filter(
+      (s) => s.analysis.status === "done"
+    );
+
+    if (!completed.length) return;
+
+    if (completed.length !== sources.length) {
+      setStoryError(
+        "모든 원본의 오디오 분석이 끝난 뒤 전체 구성안을 만듭니다."
+      );
+      return;
+    }
+
+    setStoryStatus("running");
+    setStoryError("");
+
+    try {
+      const response = await fetch("/api/studio/story", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sources: completed.map((s) => ({
+            sourceId: s.id,
+            sourceName: s.name,
+            duration: s.duration,
+            text: s.analysis.text || "",
+            segments: s.analysis.segments || [],
+          })),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(
+          result.error || "전체 방송 구성안 생성 실패"
+        );
+      }
+
+      setStory(result.story);
+      setStoryStatus("done");
+    } catch (error) {
+      setStoryStatus("error");
+      setStoryError(
+        error instanceof Error
+          ? error.message
+          : String(error)
+      );
+    }
+  }
+
+  /*
+   * 모든 파일의 전사가 끝나면 사용자가
+   * 별도 버튼을 찾지 않아도 자동으로
+   * 전체 STORY 분석을 시작한다.
+   */
+  const allDone =
+    sources.length > 0 &&
+    doneCount === sources.length;
+
+  const autoStoryStartedRef = useRef(false);
+
+  if (
+    allDone &&
+    storyStatus === "waiting" &&
+    !autoStoryStartedRef.current
+  ) {
+    autoStoryStartedRef.current = true;
+
+    setTimeout(() => {
+      buildStory();
+    }, 0);
+  }
+
+  if (
+    !allDone &&
+    autoStoryStartedRef.current
+  ) {
+    autoStoryStartedRef.current = false;
+  }
+
+  return (
+    <main className="page">
+      <header className="topbar">
+        <div>
+          <div className="eyebrow">JOPD AI · 1차 가편실</div>
+          <h1>원본 분석 · 방송 구성</h1>
+        </div>
+
+        <div className="topActions">
+          <a href="/studio">← 기획실</a>
+          <span>
+            {doneCount}/{sources.length} 분석
+          </span>
+        </div>
+      </header>
+
+      <div className="truth">
+        <strong>SOURCE TRUTH MODE</strong>
+        <span>
+          원본의 실제 오디오와 실제 타임코드만
+          분석합니다. 1차 가편실에서는 영상을
+          자르지 않습니다.
+        </span>
+      </div>
+
+      <section className="workspace">
+        <aside className="library">
+          <div className="libraryHead">
+            <div>
+              <strong>원본 영상</strong>
+              <div className="muted">
+                {sources.length}개 · {formatTime(totalDuration)}
+              </div>
+            </div>
+
+            <label className="uploadButton">
+              + 영상 추가
+              <input
+                type="file"
+                multiple
+                accept="video/*,audio/*"
+                onChange={handleFiles}
+                hidden
+              />
+            </label>
+          </div>
+
+          <div className="mediaList">
+            {sources.length === 0 && (
+              <div className="empty">
+                원본 영상을 넣으면 각 영상의 오디오
+                분석이 자동으로 시작됩니다.
+              </div>
+            )}
+
+            {sources.map((source) => (
+              <button
+                key={source.id}
+                type="button"
+                className={
+                  "mediaRow " +
+                  (selectedId === source.id
+                    ? "selected"
+                    : "")
+                }
+                onClick={() => setSelectedId(source.id)}
+              >
+                <div className="thumb">
+                  <video
+                    src={source.objectUrl}
+                    preload="metadata"
+                    muted
+                  />
+                  <span>{formatTime(source.duration)}</span>
+                </div>
+
+                <div className="mediaInfo">
+                  <div className="fileName">{source.name}</div>
+
+                  <div className="fileMeta">
+                    {formatBytes(source.size)}
+                  </div>
+
+                  {source.analysis.status === "waiting" && (
+                    <div className="status waiting">
+                      분석 대기
+                    </div>
+                  )}
+
+                  {source.analysis.status === "uploading" && (
+                    <>
+                      <div className="status working">
+                        원본 준비중 {source.analysis.progress}%
+                      </div>
+                      <div className="progress">
+                        <i
+                          style={{
+                            width: `${source.analysis.progress}%`,
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {source.analysis.status ===
+                    "transcribing" && (
+                    <div className="status working">
+                      ● 오디오 읽는 중…
+                    </div>
+                  )}
+
+                  {source.analysis.status === "done" && (
+                    <>
+                      <div className="status done">
+                        ● 오디오 분석완료
+                      </div>
+
+                      <div className="topic">
+                        <b>주제</b>
+                        {source.analysis.topic}
+                      </div>
+
+                      <div className="summary">
+                        {source.analysis.summary}
+                      </div>
+                    </>
+                  )}
+
+                  {source.analysis.status === "error" && (
+                    <div className="status error">
+                      분석 오류 · {source.analysis.error}
+                    </div>
+                  )}
+
+                  <span
+                    className="remove"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeSource(source.id);
+                    }}
+                  >
+                    삭제
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <section className="viewer">
+          {selected ? (
+            <>
+              <div className="player">
+                {selected.file.type.startsWith("video/") ? (
+                  <video
+                    key={selected.id}
+                    src={selected.objectUrl}
+                    controls
+                  />
+                ) : (
+                  <audio
+                    key={selected.id}
+                    src={selected.objectUrl}
+                    controls
+                  />
+                )}
+              </div>
+
+              <div className="sourceTitle">
+                <div>
+                  <h2>{selected.name}</h2>
+                  <span>
+                    {formatTime(selected.duration)} ·{" "}
+                    {formatBytes(selected.size)}
+                  </span>
+                </div>
+
+                <div
+                  className={`bigStatus ${selected.analysis.status}`}
+                >
+                  {selected.analysis.status === "done"
+                    ? "오디오 분석 완료"
+                    : selected.analysis.status === "transcribing"
+                    ? "오디오 분석 중"
+                    : selected.analysis.status === "uploading"
+                    ? `원본 준비 ${selected.analysis.progress}%`
+                    : selected.analysis.status === "error"
+                    ? "분석 오류"
+                    : "분석 대기"}
+                </div>
+              </div>
+
+              <div className="analysisPanel">
+                <div className="analysisSummary">
+                  <div>
+                    <span className="label">이 영상의 주제</span>
+                    <h3>
+                      {selected.analysis.topic ||
+                        "오디오 분석 후 자동 표시됩니다."}
+                    </h3>
+                  </div>
+
+                  <div>
+                    <span className="label">내용</span>
+                    <p>
+                      {selected.analysis.summary ||
+                        "영상이 등록되면 오디오 전체를 읽고 실제 내용을 정리합니다."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="transcript">
+                  <div className="transcriptHead">
+                    <strong>실제 오디오 · 타임코드</strong>
+                    <span>
+                      {selected.analysis.segments?.length || 0}개 구간
+                    </span>
+                  </div>
+
+                  {selected.analysis.status !== "done" && (
+                    <div className="transcriptEmpty">
+                      {selected.analysis.status === "error"
+                        ? selected.analysis.error
+                        : "오디오 분석이 끝나면 실제 발언이 여기에 나타납니다."}
+                    </div>
+                  )}
+
+                  {selected.analysis.segments?.map(
+                    (segment, index) => (
+                      <button
+                        type="button"
+                        className="transcriptRow"
+                        key={`${segment.start}-${index}`}
+                        onClick={() => {
+                          const player =
+                            document.querySelector<HTMLVideoElement>(
+                              ".player video"
+                            );
+
+                          if (player) {
+                            player.currentTime = segment.start;
+                            player.play().catch(() => {});
+                          }
+                        }}
+                      >
+                        <span className="time">
+                          {formatTime(segment.start)}
+                        </span>
+                        <span>{segment.text}</span>
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="noSelection">
+              <strong>1차 가편실</strong>
+              <p>
+                왼쪽에서 영상을 추가하십시오. 파일마다
+                오디오 분석이 자동으로 시작됩니다.
+              </p>
+            </div>
+          )}
+        </section>
+      </section>
+
+      <section className="storySection">
+        <div className="storyHeader">
+          <div>
+            <div className="eyebrow">전체 원본 통합 분석</div>
+            <h2>AI 방송 구성안</h2>
+            <p>
+              개별 영상 분석이 모두 끝나면 촬영 순서에
+              얽매이지 않고 실제 원본 내용으로 방송의
+              이야기 순서를 구성합니다.
+            </p>
+          </div>
+
+          <div className="storyProgress">
+            {sources.length === 0 && "원본을 추가하세요"}
+
+            {sources.length > 0 &&
+              !allDone &&
+              `원본 분석 ${doneCount}/${sources.length}`}
+
+            {storyStatus === "running" && "전체 이야기 구성 중…"}
+
+            {storyStatus === "done" && "구성 완료"}
+          </div>
+        </div>
+
+        {processingCount > 0 && (
+          <div className="storyWaiting">
+            현재 {processingCount}개 원본을 읽고 있습니다.
+            모든 영상의 실제 오디오를 확인한 뒤 전체
+            구성안을 만듭니다.
+          </div>
+        )}
+
+        {storyError && (
+          <div className="storyError">{storyError}</div>
+        )}
+
+        {story && (
+          <>
+            <div className="storyCore">
+              <div>
+                <span className="label">제목 방향</span>
+                <h3>{story.title || "-"}</h3>
+              </div>
+
+              <div>
+                <span className="label">이 방송의 핵심 이야기</span>
+                <p>{story.coreStory || "-"}</p>
+              </div>
+
+              <div>
+                <span className="label">이렇게 구성하는 이유</span>
+                <p>{story.dramaticReason || "-"}</p>
+              </div>
+            </div>
+
+            <div className="arc">
+              {(story.storyArc || []).map((item, index) => (
+                <div className="arcRow" key={`${item.sourceId}-${index}`}>
+                  <div className="arcNo">
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
+
+                  <div className="arcRole">{item.role}</div>
+
+                  <div className="arcBody">
+                    <strong>{item.sourceName}</strong>
+
+                    <div className="sourceTime">
+                      SOURCE {formatTime(item.sourceStart)} →{" "}
+                      {formatTime(item.sourceEnd)}
+                    </div>
+
+                    <blockquote>
+                      {item.transcript || "실제 발언 구간"}
+                    </blockquote>
+
+                    <p>{item.reason}</p>
+
+                    {!!item.holdAfter && (
+                      <div className="hold">
+                        여운 제안 {item.holdAfter}초
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {!!story.missingShots?.length && (
+              <div className="missing">
+                <strong>추가 화면 필요</strong>
+
+                {story.missingShots.map((item, index) => (
+                  <div key={index}>
+                    {item.reason} · {item.suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="nextRoom">
+              <div>
+                <strong>2차 편집실</strong>
+                <p>
+                  다음 단계에서는 이 구성안 순서대로 실제
+                  원본의 필요한 부분을 타임라인에 올려
+                  가편을 만듭니다.
+                </p>
+              </div>
+
+              <button type="button" disabled>
+                이 구성으로 편집하기 →
+              </button>
+            </div>
+          </>
+        )}
+
+        {sources.length > 0 &&
+          allDone &&
+          storyStatus === "error" && (
+            <button
+              type="button"
+              className="retry"
+              onClick={buildStory}
+            >
+              전체 구성 다시 만들기
+            </button>
+          )}
+      </section>
+
+      <style jsx>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        .page {
+          min-height: 100vh;
+          background: #f2f2ef;
+          color: #171717;
+          font-family: -apple-system, BlinkMacSystemFont,
+            "Apple SD Gothic Neo", sans-serif;
+          padding-bottom: 60px;
+        }
+
+        .topbar {
+          height: 74px;
+          background: white;
+          border-bottom: 1px solid #d6d6d6;
+          padding: 0 28px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .topbar h1 {
+          margin: 3px 0 0;
+          font-size: 23px;
+        }
+
+        .eyebrow {
+          font-size: 11px;
+          font-weight: 900;
+          color: #777;
+          letter-spacing: 0.04em;
+        }
+
+        .topActions {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+          font-weight: 800;
+        }
+
+        .topActions a {
+          color: #111;
+          text-decoration: none;
+        }
+
+        .truth {
+          max-width: 1700px;
+          margin: 14px auto 0;
+          background: #111;
+          color: white;
+          padding: 12px 16px;
+          display: flex;
+          gap: 14px;
+          font-size: 13px;
+        }
+
+        .workspace {
+          max-width: 1700px;
+          margin: 12px auto 0;
+          display: grid;
+          grid-template-columns: 470px minmax(0, 1fr);
+          gap: 12px;
+          padding: 0 12px;
+        }
+
+        .library,
+        .viewer,
+        .storySection {
+          background: white;
+          border: 1px solid #d4d4d4;
+        }
+
+        .libraryHead {
+          padding: 14px;
+          border-bottom: 1px solid #ddd;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .muted,
+        .fileMeta,
+        .sourceTitle span {
+          color: #777;
+          font-size: 12px;
+          margin-top: 4px;
+        }
+
+        .uploadButton {
+          background: #111;
+          color: white;
+          padding: 10px 14px;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .mediaList {
+          max-height: 780px;
+          overflow-y: auto;
+        }
+
+        .empty {
+          padding: 30px 18px;
+          color: #777;
+          line-height: 1.7;
+        }
+
+        .mediaRow {
+          width: 100%;
+          border: 0;
+          border-bottom: 1px solid #e3e3e3;
+          background: white;
+          padding: 12px;
+          display: grid;
+          grid-template-columns: 130px minmax(0, 1fr);
+          gap: 12px;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .mediaRow:hover,
+        .mediaRow.selected {
+          background: #f1f1ef;
+        }
+
+        .mediaRow.selected {
+          box-shadow: inset 4px 0 0 #111;
+        }
+
+        .thumb {
+          height: 78px;
+          background: #111;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .thumb video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .thumb span {
+          position: absolute;
+          right: 5px;
+          bottom: 5px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          font-size: 11px;
+          padding: 3px 5px;
+        }
+
+        .fileName {
+          font-weight: 900;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .status {
+          margin-top: 7px;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .status.working {
+          color: #555;
+        }
+
+        .status.done {
+          color: #176b35;
+        }
+
+        .status.error {
+          color: #a12222;
+        }
+
+        .progress {
+          margin-top: 5px;
+          height: 4px;
+          background: #ddd;
+        }
+
+        .progress i {
+          display: block;
+          height: 100%;
+          background: #111;
+        }
+
+        .topic {
+          margin-top: 7px;
+          font-size: 13px;
+          line-height: 1.45;
+        }
+
+        .topic b {
+          margin-right: 6px;
+        }
+
+        .summary {
+          margin-top: 5px;
+          color: #555;
+          font-size: 12px;
+          line-height: 1.5;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .remove {
+          display: inline-block;
+          margin-top: 7px;
+          color: #777;
+          text-decoration: underline;
+          font-size: 11px;
+        }
+
+        .viewer {
+          min-width: 0;
+        }
+
+        .player {
+          background: #0d0d0d;
+          min-height: 510px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .player video {
+          width: 100%;
+          max-height: 680px;
+        }
+
+        .player audio {
+          width: 80%;
+        }
+
+        .sourceTitle {
+          padding: 14px 18px;
+          border-bottom: 1px solid #ddd;
+          display: flex;
+          justify-content: space-between;
+          gap: 15px;
+          align-items: center;
+        }
+
+        .sourceTitle h2 {
+          margin: 0;
+          font-size: 18px;
+        }
+
+        .bigStatus {
+          padding: 8px 11px;
+          background: #eee;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .bigStatus.done {
+          background: #e8f4eb;
+        }
+
+        .analysisPanel {
+          display: grid;
+          grid-template-columns: 42% 58%;
+          min-height: 300px;
+        }
+
+        .analysisSummary {
+          padding: 20px;
+          border-right: 1px solid #ddd;
+        }
+
+        .analysisSummary h3 {
+          margin: 6px 0 25px;
+          font-size: 21px;
+          line-height: 1.45;
+        }
+
+        .analysisSummary p {
+          line-height: 1.75;
+          margin-top: 6px;
+        }
+
+        .label {
+          display: block;
+          font-size: 11px;
+          font-weight: 900;
+          color: #777;
+          margin-bottom: 4px;
+        }
+
+        .transcript {
+          min-width: 0;
+        }
+
+        .transcriptHead {
+          height: 46px;
+          border-bottom: 1px solid #ddd;
+          padding: 0 14px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .transcriptEmpty {
+          padding: 30px 15px;
+          color: #777;
+        }
+
+        .transcriptRow {
+          width: 100%;
+          border: 0;
+          border-bottom: 1px solid #eee;
+          background: white;
+          display: grid;
+          grid-template-columns: 65px 1fr;
+          gap: 10px;
+          padding: 10px 14px;
+          text-align: left;
+          cursor: pointer;
+          line-height: 1.5;
+        }
+
+        .transcriptRow:hover {
+          background: #f2f2ef;
+        }
+
+        .time {
+          font-weight: 900;
+          color: #666;
+        }
+
+        .noSelection {
+          min-height: 700px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: #666;
+        }
+
+        .noSelection strong {
+          color: #111;
+          font-size: 28px;
+        }
+
+        .storySection {
+          max-width: 1676px;
+          margin: 12px auto 0;
+        }
+
+        .storyHeader {
+          padding: 22px;
+          border-bottom: 1px solid #ddd;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .storyHeader h2 {
+          margin: 4px 0;
+          font-size: 25px;
+        }
+
+        .storyHeader p {
+          margin: 0;
+          color: #666;
+        }
+
+        .storyProgress {
+          background: #111;
+          color: white;
+          padding: 11px 15px;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .storyWaiting,
+        .storyError {
+          padding: 18px 22px;
+          background: #f0f0ed;
+        }
+
+        .storyError {
+          color: #9b1c1c;
+        }
+
+        .storyCore {
+          display: grid;
+          grid-template-columns: 1fr 1.4fr 1.4fr;
+          gap: 1px;
+          background: #ddd;
+          border-bottom: 1px solid #ddd;
+        }
+
+        .storyCore > div {
+          background: white;
+          padding: 20px;
+        }
+
+        .storyCore h3,
+        .storyCore p {
+          margin: 6px 0 0;
+          line-height: 1.6;
+        }
+
+        .arc {
+          padding: 18px 22px;
+        }
+
+        .arcRow {
+          display: grid;
+          grid-template-columns: 55px 130px minmax(0, 1fr);
+          border-bottom: 1px solid #ddd;
+          padding: 16px 0;
+        }
+
+        .arcNo {
+          font-size: 22px;
+          font-weight: 900;
+          color: #aaa;
+        }
+
+        .arcRole {
+          font-weight: 900;
+        }
+
+        .arcBody strong {
+          font-size: 16px;
+        }
+
+        .sourceTime {
+          color: #777;
+          font-size: 12px;
+          margin-top: 4px;
+        }
+
+        .arcBody blockquote {
+          margin: 10px 0;
+          padding: 10px 13px;
+          background: #f1f1ef;
+          border-left: 3px solid #111;
+          line-height: 1.6;
+        }
+
+        .arcBody p {
+          margin: 5px 0;
+          line-height: 1.6;
+        }
+
+        .hold {
+          display: inline-block;
+          margin-top: 6px;
+          padding: 5px 8px;
+          background: #eee;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .missing {
+          margin: 0 22px 18px;
+          padding: 16px;
+          background: #f2f2ef;
+          line-height: 1.7;
+        }
+
+        .nextRoom {
+          border-top: 1px solid #ddd;
+          padding: 20px 22px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .nextRoom p {
+          margin: 5px 0 0;
+          color: #666;
+        }
+
+        .nextRoom button,
+        .retry {
+          border: 0;
+          background: #111;
+          color: white;
+          padding: 13px 18px;
+          font-weight: 900;
+        }
+
+        .nextRoom button:disabled {
+          opacity: 0.35;
+        }
+
+        .retry {
+          margin: 20px;
+          cursor: pointer;
+        }
+
+        @media (max-width: 1000px) {
+          .workspace {
+            grid-template-columns: 1fr;
+          }
+
+          .library {
+            max-height: none;
+          }
+
+          .mediaList {
+            max-height: 500px;
+          }
+
+          .analysisPanel,
+          .storyCore {
+            grid-template-columns: 1fr;
+          }
+
+          .analysisSummary {
+            border-right: 0;
+            border-bottom: 1px solid #ddd;
+          }
+
+          .arcRow {
+            grid-template-columns: 45px 100px minmax(0, 1fr);
+          }
+        }
+      `}</style>
+    </main>
+  );
+}

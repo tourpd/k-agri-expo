@@ -1,0 +1,225 @@
+{
+  "main": {
+    "id": "72d12506b413c8c1",
+    "type": "split",
+    "children": [
+      {
+        "id": "5dcba1d6d9472289",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1ba34c92d0b6d75c",
+            "type": "leaf",
+            "state": {
+              "type": "pdf",
+              "state": {
+                "file": "CREATION_FORGE/01_ORIGINAL/KHOS-1782954455749_2-07고린도전서.pdf"
+              },
+              "icon": "lucide-file-text",
+              "title": "KHOS-1782954455749_2-07고린도전서"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0992e2d7f7def393",
+    "type": "split",
+    "children": [
+      {
+        "id": "e23f2430ff60e2cb",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3530990a191c4e6e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "627df397f409b0f1",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "검색"
+            }
+          },
+          {
+            "id": "fb5f678d55da09b0",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "북마크"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "e3872e5a70bc92ef",
+    "type": "split",
+    "children": [
+      {
+        "id": "fa870ecf6d4ade0f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "873db05ebbc85bb0",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "HUMANITY_BLACK_BOX/MASTER/COMMAND_CENTER.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "COMMAND_CENTER 의 백링크"
+            }
+          },
+          {
+            "id": "e39681494d23dc6d",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "HUMANITY_BLACK_BOX/MASTER/COMMAND_CENTER.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "COMMAND_CENTER 의 나가는 링크"
+            }
+          },
+          {
+            "id": "fdeb80ac6ff7aa9b",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "태그"
+            }
+          },
+          {
+            "id": "622c81eeeaabebc6",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "모든 속성"
+            }
+          },
+          {
+            "id": "a732015daccd16c4",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "HUMANITY_BLACK_BOX/MASTER/COMMAND_CENTER.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "COMMAND_CENTER 의 개요"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:빠른 전환기 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 일일 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "1ba34c92d0b6d75c",
+  "lastOpenFiles": [
+    "CREATION_FORGE/01_ORIGINAL/KHOS-1782954455749_1-31오바댜.pdf",
+    "CREATION_FORGE/01_ORIGINAL/KHOS-1782954455749_1-14역대하.pdf",
+    "CREATION_FORGE/01_ORIGINAL/KHOS-1782954455749_1-01창세기.pdf",
+    "CREATION_FORGE/00_INPUT/KHOS-1782958903688_1-27다니엘.pdf",
+    "CEO_DESK/INBOX/KHOS-1782927504927_1-01창세기.pdf",
+    "CEO_DESK/INBOX/KHOS-1782927504003_1-01창세기.pdf",
+    "CEO_DESK/ARCHIVE/KHOS-1782927507594_1-01창세기.pdf",
+    "CEO_DESK/ARCHIVE/KHOS-1782927507399_1-01창세기.pdf",
+    "CEO_DESK/ARCHIVE/KHOS-1782927505582_1-01창세기.pdf",
+    "HUMANITY_BLACK_BOX/MASTER/WORK_RULE.md",
+    "APPROVED_CORE/WRITER_ROOM/2026-07-02T02-48-18-417Z_KHOS-1782958903688_1-27다니엘.pdf_WRITER.json",
+    "APPROVED_CORE/WORLD_GRAPH/2026-07-02T02-48-18-417Z_KHOS-1782958903688_1-27다니엘.pdf_WORLD.json",
+    "APPROVED_CORE/APPROVAL_LOG/2026-07-02T02-48-18-417Z_KHOS-1782958903688_1-27다니엘.pdf_APPROVED.md",
+    "CREATION_FORGE/08_FOLLOWUP/1782960095073_FOLLOWUP.md",
+    "CREATION_FORGE/07_RECREATION/20260702_112254_RECREATION.md",
+    "CREATION_FORGE/06_WORLD_GRAPH/20260702_112254_WORLD_GRAPH.md",
+    "CREATION_FORGE/05_BUSINESS_ROOM/20260702_112254_BUSINESS_ROOM.md",
+    "CREATION_FORGE/04_WRITER_ROOM/20260702_112254_WRITER_ROOM.md",
+    "CREATION_FORGE/03_K_LIBRARY/20260702_112254_K_LIBRARY.md",
+    "CREATION_FORGE/07_RECREATION/20260702_105304_RECREATION.md",
+    "CREATION_FORGE/06_WORLD_GRAPH/20260702_105304_WORLD_GRAPH.md",
+    "CREATION_FORGE/05_BUSINESS_ROOM/20260702_105304_BUSINESS_ROOM.md",
+    "CREATION_FORGE/04_WRITER_ROOM/20260702_105304_WRITER_ROOM.md",
+    "CREATION_FORGE/03_K_LIBRARY/20260702_105304_K_LIBRARY.md",
+    "CREATION_FORGE/07_RECREATION/20260702_103904_RECREATION.md",
+    "CREATION_FORGE/06_WORLD_GRAPH/20260702_103904_WORLD_GRAPH.md",
+    "CREATION_FORGE/05_BUSINESS_ROOM/20260702_103904_BUSINESS_ROOM.md",
+    "CREATION_FORGE/04_WRITER_ROOM/20260702_103904_WRITER_ROOM.md",
+    "CREATION_FORGE/03_K_LIBRARY/20260702_103904_K_LIBRARY.md",
+    "CREATION_FORGE/07_RECREATION/20260702_103349_RECREATION.md",
+    "CREATION_FORGE/06_WORLD_GRAPH/20260702_103349_WORLD_GRAPH.md",
+    "CREATION_FORGE/05_BUSINESS_ROOM/20260702_103349_BUSINESS_ROOM.md",
+    "CREATION_FORGE/04_WRITER_ROOM/20260702_103349_WRITER_ROOM.md",
+    "CREATION_FORGE/03_K_LIBRARY/20260702_103349_K_LIBRARY.md",
+    "CREATION_FORGE/07_RECREATION/20260702_103329_RECREATION.md",
+    "CREATION_FORGE/06_WORLD_GRAPH/20260702_103329_WORLD_GRAPH.md"
+  ]
+}

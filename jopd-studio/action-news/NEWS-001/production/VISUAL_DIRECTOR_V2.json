@@ -1,0 +1,349 @@
+{
+  "version": "K_AGRI_ACTION_NEWS_VISUAL_DIRECTOR_BEATS_V2",
+  "model": "gpt-4.1-mini",
+  "beats": [
+    {
+      "beatId": "BEAT-001",
+      "segmentId": "SEG-001",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 5,
+      "purpose": "마늘과 양파 농사 관련 새 가격안정제 시작 알림과 제도 차별성 언급",
+      "preferredKinds": [
+        "FIELD_VIDEO",
+        "RELATED_FOOTAGE"
+      ],
+      "factIds": [
+        "FACT-002",
+        "FACT-003"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "마늘 농사 장면 영상",
+        "양파 농사 장면 영상",
+        "새 가격안정제 도입 영상자료"
+      ]
+    },
+    {
+      "beatId": "BEAT-002",
+      "segmentId": "SEG-001",
+      "relativeStartSeconds": 5,
+      "relativeEndSeconds": 10.52,
+      "purpose": "가격안정제는 누구나 똑같이 지원받지 않는다는 점 강조",
+      "preferredKinds": [
+        "TITLE_CARD",
+        "DATA_GRAPHIC"
+      ],
+      "factIds": [
+        "FACT-005",
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "가격안정제 지원 차등 조건 그래픽",
+        "제도 특징 설명용 타이틀카드"
+      ]
+    },
+    {
+      "beatId": "BEAT-003",
+      "segmentId": "SEG-002",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 9,
+      "purpose": "농림축산식품부가 2026년 첫 우선 품목으로 마늘과 양파 선정한 내용 설명",
+      "preferredKinds": [
+        "OFFICIAL_DOCUMENT",
+        "FIELD_VIDEO"
+      ],
+      "factIds": [
+        "FACT-002"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "농림부 2026년 가격안정제 공식 문서",
+        "마늘·양파 농사 현장 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-004",
+      "segmentId": "SEG-002",
+      "relativeStartSeconds": 9,
+      "relativeEndSeconds": 15.88,
+      "purpose": "기준가격이하일 때 정부 지원 차액 일부 또는 전부 지급 제도 설명",
+      "preferredKinds": [
+        "DATA_GRAPHIC",
+        "OFFICIAL_WEBPAGE"
+      ],
+      "factIds": [
+        "FACT-003"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "가격안정제 지원 차액 산출 공식 그래픽",
+        "정부 가격지원 제도 안내 페이지"
+      ]
+    },
+    {
+      "beatId": "BEAT-005",
+      "segmentId": "SEG-003",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 9,
+      "purpose": "기준가격 산정 방법과 경영비·자가노동비 반영 설명",
+      "preferredKinds": [
+        "DATA_GRAPHIC",
+        "OFFICIAL_DOCUMENT"
+      ],
+      "factIds": [
+        "FACT-002",
+        "FACT-004"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "기준가격 산정 방식 문서",
+        "경영비·자가노동비 산출 자료"
+      ]
+    },
+    {
+      "beatId": "BEAT-006",
+      "segmentId": "SEG-003",
+      "relativeStartSeconds": 9,
+      "relativeEndSeconds": 15.16,
+      "purpose": "기준가격 80% 현금 지급이 모든 농가에 해당하지 않는다는 설명",
+      "preferredKinds": [
+        "TITLE_CARD",
+        "DATA_GRAPHIC"
+      ],
+      "factIds": [
+        "FACT-004"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "지원 차등 내용 설명용 타이틀카드",
+        "가격 지급 기준 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-007",
+      "segmentId": "SEG-004",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 10.48,
+      "purpose": "지원 대상 기준인 면적, 경영체 등록 및 경작신고 요건 설명",
+      "preferredKinds": [
+        "OFFICIAL_DOCUMENT",
+        "DATA_GRAPHIC"
+      ],
+      "factIds": [
+        "FACT-005"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "가격안정제 지원 대상 기준 문서",
+        "지원 대상 요건 설명 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-008",
+      "segmentId": "SEG-005",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 9,
+      "purpose": "마늘·양파 재배면적 등록 및 변경 확인 권고의 의미 전달",
+      "preferredKinds": [
+        "FIELD_VIDEO",
+        "RELATED_FOOTAGE"
+      ],
+      "factIds": [
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "재배면적 등록 농가 현장 영상",
+        "면적 신고 관련 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-009",
+      "segmentId": "SEG-005",
+      "relativeStartSeconds": 9,
+      "relativeEndSeconds": 14.12,
+      "purpose": "파종·정식기 면적 신고 관련 제도 안내",
+      "preferredKinds": [
+        "ACTION_CARD",
+        "DATA_GRAPHIC"
+      ],
+      "factIds": [
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "재배면적 신고 절차 카드",
+        "정식기 신고 안내 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-010",
+      "segmentId": "SEG-006",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 9.2,
+      "purpose": "자조금 납부 여부 확인 및 미납 시 첫해 지급액 20% 차감 제도 소개",
+      "preferredKinds": [
+        "OFFICIAL_DOCUMENT",
+        "DATA_GRAPHIC"
+      ],
+      "factIds": [
+        "FACT-007"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "자조금 납부 관련 공식 문서",
+        "자조금 납부 조건 차감 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-011",
+      "segmentId": "SEG-007",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 9,
+      "purpose": "수입안정보험 보험금 수령 농가 차감 방안 설명",
+      "preferredKinds": [
+        "OFFICIAL_DOCUMENT",
+        "DATA_GRAPHIC"
+      ],
+      "factIds": [
+        "FACT-008"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "수입안정보험 차감 제도 문서",
+        "보험금 차감 관련 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-012",
+      "segmentId": "SEG-007",
+      "relativeStartSeconds": 9,
+      "relativeEndSeconds": 12.08,
+      "purpose": "중복지원 방지 조치 중요성 강조",
+      "preferredKinds": [
+        "TITLE_CARD"
+      ],
+      "factIds": [
+        "FACT-008"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "중복지원 방지 설명 타이틀카드"
+      ]
+    },
+    {
+      "beatId": "BEAT-013",
+      "segmentId": "SEG-008",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 9.96,
+      "purpose": "9월 10일 회의 심의 결과 농식품부 고시 통해 최종 확정 예정 공지",
+      "preferredKinds": [
+        "OFFICIAL_DOCUMENT",
+        "OFFICIAL_WEBPAGE"
+      ],
+      "factIds": [
+        "FACT-010"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "9월 10일 농식품부 회의 문서",
+        "가격안정제 고시 예정 안내 페이지"
+      ]
+    },
+    {
+      "beatId": "BEAT-014",
+      "segmentId": "SEG-009",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 5,
+      "purpose": "내 재배면적 등록 상태 확인 권고",
+      "preferredKinds": [
+        "FIELD_VIDEO",
+        "RELATED_FOOTAGE"
+      ],
+      "factIds": [
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "재배면적 등록 확인 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-015",
+      "segmentId": "SEG-009",
+      "relativeStartSeconds": 5,
+      "relativeEndSeconds": 7.5,
+      "purpose": "자조금 납부 여부 확인 강조",
+      "preferredKinds": [
+        "DATA_GRAPHIC",
+        "TITLE_CARD"
+      ],
+      "factIds": [
+        "FACT-007"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "자조금 납부 확인 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-016",
+      "segmentId": "SEG-009",
+      "relativeStartSeconds": 7.5,
+      "relativeEndSeconds": 9.76,
+      "purpose": "수입안정보험 여부 및 농식품부 고시 확인 중요성 안내",
+      "preferredKinds": [
+        "OFFICIAL_WEBPAGE",
+        "DATA_GRAPHIC"
+      ],
+      "factIds": [
+        "FACT-008",
+        "FACT-010"
+      ],
+      "evidenceRequired": true,
+      "searchIntents": [
+        "수입안정보험 확인 안내 페이지",
+        "농식품부 고시 관련 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-017",
+      "segmentId": "SEG-010",
+      "relativeStartSeconds": 0,
+      "relativeEndSeconds": 6,
+      "purpose": "농수산TV가 최종 고시 후 대상과 지급 기준 재확인 약속",
+      "preferredKinds": [
+        "TITLE_CARD",
+        "RELATED_FOOTAGE"
+      ],
+      "factIds": [
+        "FACT-010"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "최종 고시 안내 타이틀카드",
+        "뉴스 재확인 취재 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-018",
+      "segmentId": "SEG-010",
+      "relativeStartSeconds": 6,
+      "relativeEndSeconds": 12.48,
+      "purpose": "농민이 지원금을 놓치지 않도록 원문까지 철저히 확인하겠다는 다짐 전달",
+      "preferredKinds": [
+        "TITLE_CARD",
+        "OFFICIAL_DOCUMENT"
+      ],
+      "factIds": [
+        "FACT-010"
+      ],
+      "evidenceRequired": false,
+      "searchIntents": [
+        "지원금 원문 확인 문서",
+        "농민 대상 공지 타이틀카드"
+      ]
+    }
+  ]
+}

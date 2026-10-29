@@ -1,0 +1,180 @@
+{
+  "engine": "JOPD_BROADCAST_HUNTER",
+  "version": "1.0",
+  "policy": {
+    "verified_sources_only": true,
+    "preserve_source_provenance": true,
+    "never_invent_source_url": true,
+    "discovery_does_not_equal_approval": true,
+    "continuous_update": true
+  },
+  "sources": [
+    {
+      "id": "studio_c1_bullpen_baseball",
+      "name": "불꽃야구",
+      "domain": "VARIETY",
+      "platform": "YOUTUBE",
+      "research_focus": [
+        "caption_language",
+        "character",
+        "relationship",
+        "comedy_mechanism",
+        "editing_rhythm",
+        "emotional_curve"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "mbc_infinite_challenge",
+      "name": "무한도전",
+      "domain": "VARIETY",
+      "platform": "TV_ARCHIVE",
+      "research_focus": [
+        "character",
+        "relationship",
+        "conflict",
+        "comedy_mechanism",
+        "callback",
+        "caption_language",
+        "format_structure"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "sbs_good_world",
+      "name": "좋은 세상 만들기",
+      "domain": "RURAL_HUMAN_VARIETY",
+      "platform": "TV_ARCHIVE",
+      "research_focus": [
+        "human_story",
+        "relationship",
+        "rural_life",
+        "comedy_mechanism",
+        "emotional_curve"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "sbs_soonpoong_clinic",
+      "name": "순풍산부인과",
+      "domain": "SITCOM",
+      "platform": "TV_ARCHIVE",
+      "research_focus": [
+        "character",
+        "relationship",
+        "conflict",
+        "dialogue_rhythm",
+        "comedy_mechanism",
+        "repetition",
+        "callback",
+        "payoff"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "sbs_animal_farm",
+      "name": "TV 동물농장",
+      "domain": "FACTUAL",
+      "platform": "TV_YOUTUBE",
+      "research_focus": [
+        "hook",
+        "narration",
+        "information_reveal",
+        "characterization",
+        "emotional_curve",
+        "visual_storytelling"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "sbs_capture_world",
+      "name": "순간포착 세상에 이런 일이",
+      "domain": "FACTUAL_ENTERTAINMENT",
+      "platform": "TV_ARCHIVE",
+      "research_focus": [
+        "hook",
+        "mystery",
+        "information_reveal",
+        "human_story",
+        "reversal",
+        "payoff"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "kbs_gag_concert",
+      "name": "개그콘서트",
+      "domain": "SKETCH_COMEDY",
+      "platform": "TV_ARCHIVE",
+      "research_focus": [
+        "premise",
+        "character",
+        "dialogue_rhythm",
+        "comedy_mechanism",
+        "repetition",
+        "escalation",
+        "callback",
+        "payoff"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "feel_about_ad",
+      "name": "광고미학",
+      "domain": "ADVERTISING_REFERENCE",
+      "platform": "YOUTUBE",
+      "research_focus": [
+        "advertising_format",
+        "brand_reveal",
+        "parody_target",
+        "emotional_curve",
+        "reversal"
+      ],
+      "source_url": null,
+      "status": "NEEDS_SOURCE_VERIFICATION"
+    },
+    {
+      "id": "thai_advertising_watch",
+      "name": "태국 광고 연구",
+      "domain": "THAI_ADVERTISING",
+      "platform": "MULTI_SOURCE",
+      "research_focus": [
+        "hook",
+        "story_structure",
+        "humor",
+        "emotion",
+        "reversal",
+        "brand_reveal",
+        "music",
+        "sfx"
+      ],
+      "source_url": null,
+      "status": "DISCOVERY_REQUIRED"
+    },
+    {
+      "id": "radio_visual_radio_watch",
+      "name": "라디오·보이는 라디오 포맷 연구",
+      "domain": "VISUAL_RADIO",
+      "platform": "MULTI_SOURCE",
+      "research_focus": [
+        "host_character",
+        "audio_rhythm",
+        "segment_structure",
+        "listener_participation",
+        "camera_reaction",
+        "caption_language",
+        "music",
+        "sfx"
+      ],
+      "source_url": null,
+      "status": "DISCOVERY_REQUIRED"
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+#!/bin/bash
+
+ACTOR_KEY=$1
+ACTOR_NAME=$2
+ACTOR_ID=$3
+
+if [ -z "$ACTOR_KEY" ] || [ -z "$ACTOR_NAME" ] || [ -z "$ACTOR_ID" ]; then
+  echo "사용법:"
+  echo "./scripts/create-actor.sh WOONGSSAM 웅쌤 WOONGSSAM_DA_001"
+  exit 1
+fi
+
+BASE="KOREAN_MODERN_DANGUN_UNIVERSE/01_MASTER_CHARACTER/$ACTOR_KEY"
+
+mkdir -p "$BASE"/{00_IDENTITY,01_MASTER/{HERO,FACE,BODY,HEADBAND,PROP,EMOTION,HAND,REFERENCE},02_FACE,03_BODY,04_EMOTION,05_HAND,06_PROP,07_COSTUME,08_FLOW_SAFE,09_PROMPT,10_MEMORY,99_ARCHIVE}
+
+cat > "$BASE/00_IDENTITY/ACTOR_ID.md" << EOT
+# $ACTOR_NAME DIGITAL ACTOR ID
+
+ACTOR_ID:
+$ACTOR_ID
+
+ACTOR_KEY:
+$ACTOR_KEY
+
+ACTOR_NAME:
+$ACTOR_NAME
+
+UNIVERSE:
+KOREAN_MODERN_DANGUN_UNIVERSE
+
+TYPE:
+DIGITAL ACTOR
+
+STATUS:
+LOCKED
+
+DECLARATION:
+$ACTOR_NAME is a locked digital actor.
+
+DO NOT:
+- redesign
+- reinterpret
+- recreate
+- replace
+- modify face
+- modify body
+- modify proportions
+EOT
+
+cat > "$BASE/01_MASTER/ACTOR_MASTER_INDEX.md" << EOT
+# $ACTOR_NAME MASTER ASSET INDEX
+
+ACTOR_ID:
+$ACTOR_ID
+
+STATUS:
+LOCKED
+
+MASTER ASSETS:
+
+HERO MASTER:
+PENDING
+
+BODY MASTER:
+PENDING
+
+FACE MASTER:
+PENDING
+
+HEADBAND MASTER:
+PENDING
+
+PROP MASTER:
+PENDING
+
+EMOTION PACK:
+PENDING
+
+HAND PACK:
+PENDING
+
+COSTUME PACK:
+PENDING
+EOT
+
+cat > "$BASE/10_MEMORY/ACTOR_PHILOSOPHY.md" << EOT
+# $ACTOR_NAME ACTOR PHILOSOPHY
+
+ACTOR_ID:
+$ACTOR_ID
+
+CORE VALUE:
+사람을 널리 이롭게 해야 한다.
+
+PRACTICE:
+사람답게 살아야 한다.
+
+MESSAGE:
+마늘 먹고 사람 되자.
+
+STATUS:
+DRAFT
+EOT
+
+cat > "$BASE/09_PROMPT/LOCK_PROMPT.md" << EOT
+# $ACTOR_NAME LOCK PROMPT
+
+USE:
+$ACTOR_ID
+
+This is a locked digital actor.
+
+KEEP:
+- exact face
+- exact body
+- exact proportions
+- exact identity
+
+ALLOW:
+- expression
+- pose
+- costume
+- props
+- camera
+- lighting
+- scene
+
+FORBIDDEN:
+- redesign
+- new actor
+- style change
+- face change
+- body change
+EOT
+
+echo "✅ DIGITAL ACTOR CREATED:"
+echo "$BASE"

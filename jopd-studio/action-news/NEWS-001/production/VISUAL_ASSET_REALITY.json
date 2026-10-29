@@ -1,0 +1,383 @@
+{
+  "version": "K_AGRI_ACTION_NEWS_VISUAL_ASSET_REALITY_V1",
+  "sourceVisualDirectorVersion": "K_AGRI_ACTION_NEWS_VISUAL_DIRECTOR_BEATS_V2",
+  "officialDocumentGate": "PASS",
+  "beats": [
+    {
+      "beatId": "BEAT-001",
+      "segmentId": "SEG-001",
+      "status": "NEEDS_HUNTER",
+      "selectedKind": null,
+      "factIds": [
+        "FACT-002",
+        "FACT-003"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [
+        "FIELD_VIDEO",
+        "RELATED_FOOTAGE"
+      ],
+      "searchIntents": [
+        "마늘 농사 장면 영상",
+        "양파 농사 장면 영상",
+        "새 가격안정제 도입 영상자료"
+      ]
+    },
+    {
+      "beatId": "BEAT-002",
+      "segmentId": "SEG-001",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "TITLE_CARD",
+      "factIds": [
+        "FACT-005",
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "가격안정제 지원 차등 조건 그래픽",
+        "제도 특징 설명용 타이틀카드"
+      ]
+    },
+    {
+      "beatId": "BEAT-003",
+      "segmentId": "SEG-002",
+      "status": "READY_EXISTING",
+      "selectedKind": "OFFICIAL_DOCUMENT",
+      "factIds": [
+        "FACT-002"
+      ],
+      "evidenceRequired": true,
+      "assetPath": "/Users/sehwancho/projects/k-agri-expo/jopd-studio/action-news/NEWS-001/production/official-document-evidence-v2/original-pages/page-1.png",
+      "pageNumber": 1,
+      "evidenceRegion": {
+        "xMin": 44.64,
+        "yMin": 478.31368,
+        "xMax": 550.56066,
+        "yMax": 549.01964
+      },
+      "hunterKinds": [],
+      "searchIntents": [
+        "농림부 2026년 가격안정제 공식 문서",
+        "마늘·양파 농사 현장 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-004",
+      "segmentId": "SEG-002",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "DATA_GRAPHIC",
+      "factIds": [
+        "FACT-003"
+      ],
+      "evidenceRequired": true,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "가격안정제 지원 차액 산출 공식 그래픽",
+        "정부 가격지원 제도 안내 페이지"
+      ]
+    },
+    {
+      "beatId": "BEAT-005",
+      "segmentId": "SEG-003",
+      "status": "READY_EXISTING",
+      "selectedKind": "OFFICIAL_DOCUMENT",
+      "factIds": [
+        "FACT-002",
+        "FACT-004"
+      ],
+      "evidenceRequired": true,
+      "assetPath": "/Users/sehwancho/projects/k-agri-expo/jopd-studio/action-news/NEWS-001/production/official-document-evidence-v2/original-pages/page-1.png",
+      "pageNumber": 1,
+      "evidenceRegion": {
+        "xMin": 44.64,
+        "yMin": 478.31368,
+        "xMax": 550.56066,
+        "yMax": 549.01964
+      },
+      "hunterKinds": [],
+      "searchIntents": [
+        "기준가격 산정 방식 문서",
+        "경영비·자가노동비 산출 자료"
+      ]
+    },
+    {
+      "beatId": "BEAT-006",
+      "segmentId": "SEG-003",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "TITLE_CARD",
+      "factIds": [
+        "FACT-004"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "지원 차등 내용 설명용 타이틀카드",
+        "가격 지급 기준 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-007",
+      "segmentId": "SEG-004",
+      "status": "READY_EXISTING",
+      "selectedKind": "OFFICIAL_DOCUMENT",
+      "factIds": [
+        "FACT-005"
+      ],
+      "evidenceRequired": true,
+      "assetPath": "/Users/sehwancho/projects/k-agri-expo/jopd-studio/action-news/NEWS-001/production/official-document-evidence-v2/original-pages/page-2.png",
+      "pageNumber": 2,
+      "evidenceRegion": {
+        "xMin": 44.64,
+        "yMin": 583.67368,
+        "xMax": 550.56,
+        "yMax": 633.97964
+      },
+      "hunterKinds": [],
+      "searchIntents": [
+        "가격안정제 지원 대상 기준 문서",
+        "지원 대상 요건 설명 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-008",
+      "segmentId": "SEG-005",
+      "status": "NEEDS_HUNTER",
+      "selectedKind": null,
+      "factIds": [
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [
+        "FIELD_VIDEO",
+        "RELATED_FOOTAGE"
+      ],
+      "searchIntents": [
+        "재배면적 등록 농가 현장 영상",
+        "면적 신고 관련 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-009",
+      "segmentId": "SEG-005",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "ACTION_CARD",
+      "factIds": [
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "재배면적 신고 절차 카드",
+        "정식기 신고 안내 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-010",
+      "segmentId": "SEG-006",
+      "status": "READY_EXISTING",
+      "selectedKind": "OFFICIAL_DOCUMENT",
+      "factIds": [
+        "FACT-007"
+      ],
+      "evidenceRequired": true,
+      "assetPath": "/Users/sehwancho/projects/k-agri-expo/jopd-studio/action-news/NEWS-001/production/official-document-evidence-v2/original-pages/page-3.png",
+      "pageNumber": 3,
+      "evidenceRegion": {
+        "xMin": 44.64,
+        "yMin": 204.95368,
+        "xMax": 550.56564,
+        "yMax": 234.97964
+      },
+      "hunterKinds": [],
+      "searchIntents": [
+        "자조금 납부 관련 공식 문서",
+        "자조금 납부 조건 차감 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-011",
+      "segmentId": "SEG-007",
+      "status": "READY_EXISTING",
+      "selectedKind": "OFFICIAL_DOCUMENT",
+      "factIds": [
+        "FACT-008"
+      ],
+      "evidenceRequired": true,
+      "assetPath": "/Users/sehwancho/projects/k-agri-expo/jopd-studio/action-news/NEWS-001/production/official-document-evidence-v2/original-pages/page-2.png",
+      "pageNumber": 2,
+      "evidenceRegion": {
+        "xMin": 44.64,
+        "yMin": 644.63368,
+        "xMax": 550.559748,
+        "yMax": 694.93964
+      },
+      "hunterKinds": [],
+      "searchIntents": [
+        "수입안정보험 차감 제도 문서",
+        "보험금 차감 관련 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-012",
+      "segmentId": "SEG-007",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "TITLE_CARD",
+      "factIds": [
+        "FACT-008"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "중복지원 방지 설명 타이틀카드"
+      ]
+    },
+    {
+      "beatId": "BEAT-013",
+      "segmentId": "SEG-008",
+      "status": "READY_EXISTING",
+      "selectedKind": "OFFICIAL_DOCUMENT",
+      "factIds": [
+        "FACT-010"
+      ],
+      "evidenceRequired": true,
+      "assetPath": "/Users/sehwancho/projects/k-agri-expo/jopd-studio/action-news/NEWS-001/production/official-document-evidence-v2/original-pages/page-3.png",
+      "pageNumber": 3,
+      "evidenceRegion": {
+        "xMin": 44.64,
+        "yMin": 347.15368,
+        "xMax": 550.560576,
+        "yMax": 397.45964
+      },
+      "hunterKinds": [],
+      "searchIntents": [
+        "9월 10일 농식품부 회의 문서",
+        "가격안정제 고시 예정 안내 페이지"
+      ]
+    },
+    {
+      "beatId": "BEAT-014",
+      "segmentId": "SEG-009",
+      "status": "NEEDS_HUNTER",
+      "selectedKind": null,
+      "factIds": [
+        "FACT-006"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [
+        "FIELD_VIDEO",
+        "RELATED_FOOTAGE"
+      ],
+      "searchIntents": [
+        "재배면적 등록 확인 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-015",
+      "segmentId": "SEG-009",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "DATA_GRAPHIC",
+      "factIds": [
+        "FACT-007"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "자조금 납부 확인 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-016",
+      "segmentId": "SEG-009",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "DATA_GRAPHIC",
+      "factIds": [
+        "FACT-008",
+        "FACT-010"
+      ],
+      "evidenceRequired": true,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "수입안정보험 확인 안내 페이지",
+        "농식품부 고시 관련 그래픽"
+      ]
+    },
+    {
+      "beatId": "BEAT-017",
+      "segmentId": "SEG-010",
+      "status": "READY_TO_GENERATE",
+      "selectedKind": "TITLE_CARD",
+      "factIds": [
+        "FACT-010"
+      ],
+      "evidenceRequired": false,
+      "assetPath": null,
+      "pageNumber": null,
+      "evidenceRegion": null,
+      "hunterKinds": [],
+      "searchIntents": [
+        "최종 고시 안내 타이틀카드",
+        "뉴스 재확인 취재 영상"
+      ]
+    },
+    {
+      "beatId": "BEAT-018",
+      "segmentId": "SEG-010",
+      "status": "READY_EXISTING",
+      "selectedKind": "OFFICIAL_DOCUMENT",
+      "factIds": [
+        "FACT-010"
+      ],
+      "evidenceRequired": false,
+      "assetPath": "/Users/sehwancho/projects/k-agri-expo/jopd-studio/action-news/NEWS-001/production/official-document-evidence-v2/original-pages/page-3.png",
+      "pageNumber": 3,
+      "evidenceRegion": {
+        "xMin": 44.64,
+        "yMin": 347.15368,
+        "xMax": 550.560576,
+        "yMax": 397.45964
+      },
+      "hunterKinds": [],
+      "searchIntents": [
+        "지원금 원문 확인 문서",
+        "농민 대상 공지 타이틀카드"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "readyExisting": 7,
+    "readyToGenerate": 8,
+    "needsHunter": 3
+  }
+}

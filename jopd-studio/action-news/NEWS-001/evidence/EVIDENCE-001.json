@@ -1,0 +1,23 @@
+{
+  "news_id": "NEWS-001",
+  "evidence_id": "EVIDENCE-001",
+  "source_class": "OFFICIAL_PRIMARY",
+  "authority": "농림축산식품부",
+  "published_at": "2026-09-10T14:00:00+09:00",
+  "retrieved_at": "2026-09-24T07:21:51.963438+00:00",
+  "original_url": "https://www.mafra.go.kr/bbs/home/792/579145/artclView.do",
+  "local_source_file": "sources/MAFRA_2026-09-10_PRICE_STABILITY.html",
+  "verification": "SOURCE_ACQUIRED_AND_TEXT_OBSERVED",
+  "supports": [
+    "FACT-001",
+    "FACT-002",
+    "FACT-003",
+    "FACT-004",
+    "FACT-005",
+    "FACT-006",
+    "FACT-007",
+    "FACT-008",
+    "FACT-009",
+    "FACT-010"
+  ]
+}

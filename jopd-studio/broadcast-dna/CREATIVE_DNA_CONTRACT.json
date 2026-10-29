@@ -1,0 +1,160 @@
+{
+  "contract": "JOPD_BROADCAST_CREATIVE_DNA",
+  "version": "1.0",
+  "purpose": "방송·라디오·광고·유튜브·숏폼을 복제하지 않고 창작의도와 작동원리를 연구하여 조PD AI 수석작가가 새로운 작품을 만들 수 있는 장기 창작기억으로 축적한다.",
+
+  "core_rule": {
+    "principle": "WHAT보다 WHY를 먼저 연구한다.",
+    "promotion_gate": "왜 이런 창작 선택을 했는지 설명할 수 없는 관찰은 장기 Broadcast DNA로 승격하지 않는다."
+  },
+
+  "evidence_levels": [
+    "FACT",
+    "OFFICIAL_CREATOR_INTENT",
+    "INFERRED_CREATIVE_INTENT",
+    "REUSABLE_DNA",
+    "JOPD_APPLICATION"
+  ],
+
+  "study_record": {
+    "identity": {
+      "study_id": "",
+      "title": "",
+      "program_or_brand": "",
+      "country": "",
+      "media_type": "",
+      "genre": "",
+      "episode_or_clip": "",
+      "source_url": "",
+      "source_type": "",
+      "published_at": "",
+      "observed_at": ""
+    },
+
+    "creator_intent": {
+      "status": "OFFICIAL_OR_INFERRED",
+      "problem_to_solve": "",
+      "intended_audience": "",
+      "desired_audience_change": "",
+      "core_intent": "",
+      "evidence_or_reasoning": ""
+    },
+
+    "observations": [
+      {
+        "timecode": "",
+        "type": "FACT_OR_INFERENCE",
+        "observation": "",
+        "why_it_matters": ""
+      }
+    ],
+
+    "craft": {
+      "hook": [],
+      "premise": [],
+      "character": [],
+      "relationship": [],
+      "conflict": [],
+      "dialogue_rhythm": [],
+      "comedy_mechanism": [],
+      "caption_language": [],
+      "narration": [],
+      "information_reveal": [],
+      "emotional_curve": [],
+      "progression": [],
+      "reversal": [],
+      "callback": [],
+      "payoff": [],
+      "visual_storytelling": [],
+      "camera_and_shot_logic": [],
+      "editing_rhythm": [],
+      "music": [],
+      "sfx": [],
+      "audience_participation": [],
+      "radio_audio_logic": []
+    },
+
+    "why_it_works": [],
+
+    "reusable_dna": [
+      {
+        "dna_name": "",
+        "creative_problem": "",
+        "principle": "",
+        "mechanism": "",
+        "expected_audience_effect": "",
+        "when_to_use": "",
+        "when_not_to_use": "",
+        "failure_modes": []
+      }
+    ],
+
+    "production_translation": {
+      "tv": [],
+      "youtube": [],
+      "shorts": [],
+      "commercial": [],
+      "radio": [],
+      "visual_radio": [],
+      "podcast": [],
+      "ai_video": [],
+      "caption_cues": [],
+      "sfx_cues": [],
+      "bgm_cues": []
+    },
+
+    "jopd_application": {
+      "sales_king": [],
+      "k_agri_tv": [],
+      "radio": [],
+      "visual_radio": [],
+      "other": []
+    },
+
+    "copyright_guard": {
+      "store_long_verbatim_dialogue": false,
+      "store_scene_copy_for_reuse": false,
+      "store_reusable_principles": true,
+      "rule": "작품의 고유 표현을 복제하지 않고 창작 원리와 구조만 추상화한다."
+    }
+  },
+
+  "memory_promotion_rules": [
+    "실제 관찰 근거가 있어야 한다.",
+    "공식 창작의도와 연구자의 추론을 구분한다.",
+    "창작의도에 대한 직접 근거가 없으면 INFERRED_CREATIVE_INTENT로 기록한다.",
+    "단순히 재미있었다는 평가는 DNA가 아니다.",
+    "재사용 가능한 원리와 작동 메커니즘을 설명해야 한다.",
+    "어떤 상황에서 사용하면 안 되는지도 기록한다.",
+    "조PD 작품에서 새롭게 사용할 방법까지 연결한다.",
+    "원작의 긴 대사나 고유 장면을 장기 창작기억으로 복제하지 않는다."
+  ],
+
+  "hunter_pipeline": [
+    "DISCOVERED",
+    "SOURCE_VERIFIED",
+    "RESEARCH_QUEUED",
+    "OBSERVED",
+    "INTENT_ANALYZED",
+    "DNA_EXTRACTED",
+    "REVIEWED",
+    "APPROVED_MEMORY"
+  ],
+
+  "future_domains": [
+    "KOREAN_TV",
+    "GLOBAL_TV",
+    "SITCOM",
+    "VARIETY",
+    "COMEDY",
+    "DOCUMENTARY",
+    "FACTUAL",
+    "ADVERTISING",
+    "THAI_ADVERTISING",
+    "YOUTUBE",
+    "SHORTFORM",
+    "RADIO",
+    "PODCAST",
+    "VISUAL_RADIO"
+  ]
+}

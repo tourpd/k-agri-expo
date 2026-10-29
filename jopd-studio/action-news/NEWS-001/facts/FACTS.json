@@ -1,0 +1,97 @@
+{
+  "news_id": "NEWS-001",
+  "generated_at": "2026-09-24T07:21:51.963438+00:00",
+  "authority_rule": "OFFICIAL_PRIMARY_SOURCE_ONLY_FOR_THESE_FACTS",
+  "facts": [
+    {
+      "fact_id": "FACT-001",
+      "class": "OFFICIAL_FACT",
+      "statement": "농림축산식품부는 2026년 9월 10일 제1차 농산물가격안정심의위원회를 개최해 농산물가격안정제 대상품목과 기준가격 산정방식 등 세부 운영방안을 심의했다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-002",
+      "class": "OFFICIAL_FACT",
+      "statement": "농산물가격안정제는 해당 연도 농산물 평균가격이 기준가격보다 낮아지는 경우 정부가 그 차액의 전부 또는 일부를 지원하는 제도다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-003",
+      "class": "OFFICIAL_FACT",
+      "statement": "2026년 도입 우선 품목으로 마늘과 양파가 선정됐다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-004",
+      "class": "OFFICIAL_FACT",
+      "statement": "심의된 기준가격 산정방식은 경영비 전액과 자가노동비 전액 또는 일정 비율을 포함해 평년 도매가격의 80% 수준이 되도록 하는 것이다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-005",
+      "class": "OFFICIAL_FACT",
+      "statement": "지원 대상은 동일 품목을 10a(1,000㎡) 이상 재배하고 경영체 등록 또는 경작신고를 한 농업인·농업법인으로 심의됐다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-006",
+      "class": "OFFICIAL_FACT",
+      "statement": "가격안정제 지원을 받으려는 농가는 파종·정식기에 농업경영체 등록 및 변경 또는 필요한 경우 자조금단체 경작신고를 통해 실제 재배면적을 신고하도록 했다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-007",
+      "class": "OFFICIAL_FACT",
+      "statement": "자조금을 미납한 농가는 지급액이 첫해 20% 차감되며 이후 차감비율을 높여 나가기로 심의됐다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-008",
+      "class": "OFFICIAL_FACT",
+      "statement": "지급 대상 농가가 수입안정보험 보험금을 수령한 경우 해당 금액만큼 차감 지급해 중복지원을 방지하기로 했다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-009",
+      "class": "OFFICIAL_FACT",
+      "statement": "기준가격은 해당 연도 생산비 통계 발표 이후 위원회 심의를 거쳐 매년 고시하게 된다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "VERIFIED_FROM_OFFICIAL_SOURCE"
+    },
+    {
+      "fact_id": "FACT-010",
+      "class": "OFFICIAL_FACT",
+      "statement": "2026년 9월 10일 회의에서 심의한 대상품목 및 차액 지급비율 등은 향후 농림축산식품부 고시를 통해 확정될 예정이라고 농식품부는 밝혔다.",
+      "evidence_ids": [
+        "EVIDENCE-001"
+      ],
+      "status": "PENDING_FINAL_NOTICE"
+    }
+  ]
+}

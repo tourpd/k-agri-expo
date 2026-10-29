@@ -1,0 +1,88 @@
+{
+  "version": "1.0",
+  "purpose": "조PD AI 수석작가가 방송·코미디·시트콤·교양·광고의 작품 표현을 복제하지 않고 재사용 가능한 창작 문법을 연구·축적하기 위한 Registry",
+  "research_dimensions": [
+    "hook",
+    "premise",
+    "character",
+    "relationship",
+    "conflict",
+    "dialogue_rhythm",
+    "comedy_mechanism",
+    "caption_language",
+    "narration",
+    "information_reveal",
+    "emotional_curve",
+    "progression",
+    "reversal",
+    "callback",
+    "payoff",
+    "visual_storytelling",
+    "editing_rhythm",
+    "format_structure",
+    "brand_reveal",
+    "parody_target",
+    "jopd_reuse"
+  ],
+  "targets": [
+    {
+      "name": "불꽃야구",
+      "domain": "sports_variety",
+      "focus": ["caption_language", "character", "emotional_curve", "editing_rhythm", "callback"]
+    },
+    {
+      "name": "무한도전",
+      "domain": "variety",
+      "focus": ["comedy_mechanism", "relationship", "character", "callback", "caption_language", "progression"]
+    },
+    {
+      "name": "좋은 세상 만들기",
+      "domain": "rural_human_variety",
+      "focus": ["character", "relationship", "dialogue_rhythm", "comedy_mechanism", "emotional_curve", "narration"]
+    },
+    {
+      "name": "순풍산부인과",
+      "domain": "sitcom",
+      "focus": ["character", "relationship", "dialogue_rhythm", "comedy_mechanism", "reversal", "callback", "payoff"]
+    },
+    {
+      "name": "TV 동물농장",
+      "domain": "observational_factual",
+      "focus": ["hook", "information_reveal", "character", "emotional_curve", "narration", "payoff"]
+    },
+    {
+      "name": "순간포착 세상에 이런 일이",
+      "domain": "factual_entertainment",
+      "focus": ["hook", "information_reveal", "progression", "character", "emotional_curve", "payoff"]
+    },
+    {
+      "name": "개그콘서트",
+      "domain": "sketch_comedy",
+      "focus": ["premise", "comedy_mechanism", "dialogue_rhythm", "repetition_variation", "callback", "payoff"]
+    },
+    {
+      "name": "광고미학",
+      "domain": "advertising_reference",
+      "focus": ["hook", "visual_storytelling", "reversal", "brand_reveal", "parody_target", "format_structure"]
+    },
+    {
+      "name": "글로벌 TV 광고",
+      "domain": "advertising",
+      "focus": ["premise", "hook", "visual_storytelling", "brand_reveal", "format_structure", "parody_target"]
+    },
+    {
+      "name": "태국 광고",
+      "domain": "thai_advertising",
+      "focus": ["comedy_mechanism", "deadpan", "absurdity", "reversal", "emotional_curve", "brand_reveal", "visual_storytelling"]
+    }
+  ],
+  "rules": [
+    "작품명만 보고 DNA를 추정하지 않는다.",
+    "실제 에피소드·클립·광고 단위의 관찰 근거를 남긴다.",
+    "원문의 고유 대사와 장면을 장기 창작기억으로 복제하지 않는다.",
+    "재사용 가능한 창작 원리와 구조로 추상화한다.",
+    "사실 관찰과 연구자의 해석을 구분한다.",
+    "하나의 작품 문법을 그대로 모방하지 않고 여러 DNA를 목적에 맞게 조합한다.",
+    "조PD가 선택·수정·거절한 결과를 향후 조PD 창작판단 기억으로 축적한다."
+  ]
+}

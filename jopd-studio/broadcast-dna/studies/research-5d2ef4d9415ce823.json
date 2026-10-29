@@ -1,0 +1,870 @@
+{
+  "researchId": "research-5d2ef4d9415ce823",
+  "createdAt": "2026-09-22T17:37:48.519Z",
+  "researchQuestion": "이 방송은 실제 시간축의 대사·화면·음향 신호를 어떻게 결합해 장소 정보, 사람의 체험, 감정 흐름과 시청 지속성을 만드는가? 제공된 Evidence가 증명하지 않는 BGM 종류, SFX 정체, 제작자 공식 의도, 실제 시청자 반응은 추측하지 말고 INSUFFICIENT_EVIDENCE로 남겨라.",
+  "queueItemId": null,
+  "truthClass": "RESEARCHED_NOW",
+  "model": "gpt-5.6-terra",
+  "evidenceCount": 2,
+  "sourceUrls": [
+    "https://www.youtube.com/watch?v=GICQPFkHyaU"
+  ],
+  "evidenceManifest": [
+    {
+      "evidenceType": "MULTIMODAL",
+      "sourceUrl": "https://www.youtube.com/watch?v=GICQPFkHyaU",
+      "sourceTitle": "주말엔 어디가? 서울 노들섬 수변문화공간",
+      "workTitle": "주말엔 어디가? 서울 노들섬 수변문화공간",
+      "episodeTitle": null,
+      "genre": [
+        "FACTUAL",
+        "INFORMATION",
+        "HUMAN_INTERVIEW"
+      ],
+      "startMs": 0,
+      "endMs": 121696,
+      "provenanceNote": "MULTIMODAL_EVIDENCE_ID=da09a923ba84ec0bba4c; VERSION=JOPD_BROADCAST_MULTIMODAL_EVIDENCE_V1; TIMEBASE=SECONDS_FROM_SOURCE_START; TIMELINE_UNITS=25; AUDIO=TRANSCRIPTION_EVIDENCE; VISUAL=FRAME_OBSERVATION_EVIDENCE; NOT_COMMENTS; NOT_AUDIO_MUSIC_OBSERVATION; NOT_CREATOR_INTERVIEW"
+    },
+    {
+      "evidenceType": "AUDIO_OBSERVATION",
+      "sourceUrl": "https://www.youtube.com/watch?v=GICQPFkHyaU",
+      "sourceTitle": "주말엔 어디가? 서울 노들섬 수변문화공간",
+      "workTitle": "주말엔 어디가? 서울 노들섬 수변문화공간",
+      "episodeTitle": null,
+      "genre": [
+        "FACTUAL",
+        "INFORMATION",
+        "HUMAN_INTERVIEW"
+      ],
+      "startMs": 0,
+      "endMs": 121696,
+      "provenanceNote": "AUDIO_OBSERVATION_ID=47972fef3214a3bd5444; VERSION=JOPD_BROADCAST_AUDIO_OBSERVATION_EVIDENCE_V1; OBSERVED=RMS_DB,PEAK_DB,SILENCE; NOT_MUSIC_IDENTIFICATION; NOT_SFX_IDENTIFICATION; NOT_EMOTION_INFERENCE"
+    }
+  ],
+  "analysis": {
+    "work": {
+      "title": "주말엔 어디가? 서울 노들섬 수변문화공간",
+      "episode": "UNKNOWN",
+      "source_url": "https://www.youtube.com/watch?v=GICQPFkHyaU",
+      "country": "UNKNOWN",
+      "language": "Korean",
+      "media_type": "MULTIMODAL_FACTUAL_INFORMATION_HUMAN_INTERVIEW",
+      "genre": [
+        "FACTUAL",
+        "INFORMATION",
+        "HUMAN_INTERVIEW"
+      ],
+      "duration_ms": 121696,
+      "output_truth_label": "RESEARCHED_NOW",
+      "source_provenance": [
+        "MULTIMODAL_EVIDENCE_ID=da09a923ba84ec0bba4c",
+        "AUDIO_OBSERVATION_ID=47972fef3214a3bd5444",
+        "Frame observations and aligned Korean audio transcription supplied in evidence",
+        "No comments evidence",
+        "No music identification evidence",
+        "No SFX identification evidence",
+        "No creator interview evidence"
+      ]
+    },
+    "research_question": "이 방송은 실제 시간축의 대사·화면·음향 신호를 어떻게 결합해 장소 정보, 사람의 체험, 감정 흐름과 시청 지속성을 만드는가? 제공된 Evidence가 증명하지 않는 BGM 종류, SFX 정체, 제작자 공식 의도, 실제 시청자 반응은 추측하지 않는다.",
+    "evidence_assessment": {
+      "has_multimodal_timeline": true,
+      "has_aligned_speech_transcript": true,
+      "has_frame_level_visual_observations": true,
+      "has_audio_level_measurements": true,
+      "has_music_identification": false,
+      "has_sfx_identification": false,
+      "has_verified_silence_segment": false,
+      "has_creator_interview_or_production_note": false,
+      "has_comments_or_audience_reaction_data": false,
+      "temporal_precision_limit": "대부분의 시청각 관찰은 5초 단위 구간이다. 개별 발화·컷의 정확한 프레임 단위 시작점과 종료점은 확인할 수 없다.",
+      "audio_limit": "모든 5초 구간에서 SILENCE=false가 기록되었으나, 이는 발화·음악·현장음·효과음의 종류나 존재를 구분하거나 특정하지 않는다. RMS/Peak 값은 음량 관찰치일 뿐 정서적 효과 또는 음원 정체의 증거가 아니다.",
+      "overall_assessment": "장소 소개, 공간 변화, 방문객의 체험 발화, 전문가·관계자 정보, 일몰 장면과 초대형 결말이 시간순으로 결합되는 구조는 분석 가능하다. 다만 편집 전환의 정확한 속도, BGM·SFX 기능, 실제 시청자 반응, 공식 제작 의도는 INSUFFICIENT_EVIDENCE이다."
+    },
+    "scenes": [
+      {
+        "scene_id": "S1",
+        "start_ms": 0,
+        "end_ms": 25000,
+        "situation_before": "시청자는 노들섬 수변문화공간의 위치, 개방 배경, 방문 이유를 아직 충분히 알지 못한 상태다.",
+        "location": "노들섬과 한강 주변 공원·정원",
+        "characters": [
+          "내레이션 화자",
+          "피크닉 방문객 김지윤",
+          "공원 이용객들"
+        ],
+        "scene_goal": "장소를 한강 위 섬으로 공간적으로 고정하고, '비밀정원'이라는 미해결 질문과 재개장·변화 정보를 제시한다.",
+        "before": "항공 와이드샷에서 섬, 강, 다리, 도심이 먼저 보인다.",
+        "action": "내레이션이 가을의 노들섬을 소개하고, 방문객은 날씨 때문에 피크닉을 왔으며 비밀정원을 찾으러 왔다고 말한다. 이어 내레이션은 방치된 주차장과 쓰레기장이 새 공간으로 변했다고 설명한다.",
+        "dialogue_function": [
+          "장소의 계절·지리적 맥락 제시",
+          "방문객의 실제 방문 동기 제시",
+          "비밀정원이라는 정보 공백 생성",
+          "재개발 전후의 대비 틀 제시"
+        ],
+        "information_change": "시청자는 노들섬이 단순한 공원이 아니라 새로 열렸고, 과거 방치 공간이 변화한 수변문화공간이라는 정보를 얻는다.",
+        "expectation": "비밀정원이 실제로 어떤 모습이며, 이전 공간과 어떻게 다른지 뒤이어 확인할 것으로 기대하게 된다.",
+        "scene_change": "지리적 장소 소개가 '발견할 대상이 있는 새 공간'이라는 탐색 구조로 전환된다.",
+        "scene_payoff": "20~25초의 여러 정원 구역 콜라주가 초반 질문에 부분적으로 응답하며, 이후 구역별 소개의 목록을 제공한다.",
+        "evidence_refs": [
+          "E1:T0",
+          "E1:T1",
+          "E1:T2",
+          "E1:T3",
+          "E1:T4",
+          "E2:0-25s"
+        ]
+      },
+      {
+        "scene_id": "S2",
+        "start_ms": 25000,
+        "end_ms": 75000,
+        "situation_before": "시청자는 여러 정원이 존재한다는 사실과 이전 방치 공간이 변화했다는 설명을 들었으나, 각 구역이 방문자에게 어떤 사용 경험을 주는지는 아직 구체적으로 알지 못한다.",
+        "location": "생태정원, 한강 수변으로 향하는 틈새정원, 놀이정원 및 노들섬 공원 구역",
+        "characters": [
+          "내레이션 화자",
+          "이원석",
+          "여성 방문객",
+          "어린이와 가족 방문객",
+          "공원 이용객들"
+        ],
+        "scene_goal": "추상적 공간 정보를 이용 장면과 방문객 체험 발화로 전환하고, 과거 모습과 현재 모습을 반복 대비해 공간 변화의 가시성을 만든다.",
+        "before": "정원 구역들의 명칭만 콜라주로 제시된 상태다.",
+        "action": "생태정원의 한강 피크닉 기능을 설명한 뒤, 이원석의 피로가 시각적으로 날아갔다는 체험 발화를 배치한다. 수변 길목의 틈새정원을 설명하면서 변화 전 계단·건물 외관을 보여주고, 이어 현재 이용자가 계단을 오르는 모습을 제시한다. 놀이정원에서는 변화 전 공터를 보인 뒤 현재의 가족·어린이 이용 공간과 어머니의 발화를 배치한다. 마지막에 지도 그래픽으로 여러 정원의 구성을 정리한다.",
+        "dialogue_function": [
+          "공간의 사용법 설명",
+          "방문자의 신체·정서 체험 언어화",
+          "사진 촬영 가능성 제시",
+          "가족 이용 가치의 사회적 증언",
+          "다수 구역 정보를 지도 형태로 정리"
+        ],
+        "information_change": "시청자는 생태정원이 한강을 마주한 피크닉 공간이고, 틈새정원이 수변으로 가는 이동 통로이며, 놀이정원이 어린이 이용을 고려한 공간이라는 정보를 얻는다. 또한 전후 화면을 통해 변화가 추상적 주장에만 머물지 않도록 보게 된다.",
+        "expectation": "공간이 휴식·사진·가족 활동에 각각 어떻게 쓰이는지 계속 확인하고, 누가 이 공간을 설계했는지 알게 될 것으로 기대한다.",
+        "scene_change": "장소의 객관적 구역 안내가 방문자의 피로 해소, 사진 촬영, 가족 놀이 등 생활 체험으로 확장된다.",
+        "scene_payoff": "70~75초의 지도 그래픽과 '7가지 정원' 내레이션이 앞서 분산된 구역 정보를 한 번에 체계화한다.",
+        "evidence_refs": [
+          "E1:T5",
+          "E1:T6",
+          "E1:T7",
+          "E1:T8",
+          "E1:T9",
+          "E1:T10",
+          "E1:T11",
+          "E1:T12",
+          "E1:T13",
+          "E1:T14",
+          "E2:25-75s"
+        ]
+      },
+      {
+        "scene_id": "S3",
+        "start_ms": 75000,
+        "end_ms": 100000,
+        "situation_before": "시청자는 현장에서 사용되는 정원·산책·놀이 공간을 보았지만, 설계 주체와 향후 공간 확장 계획은 아직 알지 못한다.",
+        "location": "노들섬 현장 및 토마스 헤더윅 관련 영상·인터뷰 화면",
+        "characters": [
+          "내레이션 화자",
+          "토마스 헤더윅",
+          "이재익 노들예술섬사업팀장"
+        ],
+        "scene_goal": "방문자 중심의 체험 소개 뒤에 설계자와 단계적 완성 계획을 배치해, 현재 공간을 더 큰 프로젝트의 일부로 재해석한다.",
+        "before": "70~75초 지도에서 7개 정원의 현재 구성이 정리된다.",
+        "action": "내레이션은 설계자를 토마스 헤더윅으로 소개한다. 이어 헤더윅의 발화 자막은 서울에 오면 꼭 들를 곳이 되기를 바란다는 방향을 제시한다. 사업팀장은 개장을 시작으로 2028년 수상정원과 2030년 하늘예술공원을 완공해 입체적 공간을 단계적으로 만들 계획이라고 말한다.",
+        "dialogue_function": [
+          "설계 책임자·전문성의 출처 제시",
+          "장소의 목표를 발화 형태로 제시",
+          "현재 개방을 미래 확장 계획에 연결",
+          "미래 시점을 구체적 연도로 고정"
+        ],
+        "information_change": "시청자는 현재 보이는 수변문화공간이 완결된 단일 공원이 아니라, 단계적으로 확장될 계획과 연결되어 있음을 알게 된다.",
+        "expectation": "현재의 낮 풍경 뒤에 다른 시간대 또는 다른 정서적 모습이 이어질 가능성이 생긴다.",
+        "scene_change": "현장 이용 경험에서 설계·계획·미래 완성이라는 제도적 정보 층위로 이동한다.",
+        "scene_payoff": "95~100초의 '노을이 지자 또 다른 얼굴'이라는 내레이션이 계획·설명 중심 구간을 다시 감각적 현장 장면으로 전환하는 연결고리가 된다.",
+        "evidence_refs": [
+          "E1:T15",
+          "E1:T16",
+          "E1:T17",
+          "E1:T18",
+          "E1:T19",
+          "E2:75-100s"
+        ]
+      },
+      {
+        "scene_id": "S4",
+        "start_ms": 100000,
+        "end_ms": 121696,
+        "situation_before": "시청자는 낮의 공원 사용, 방문자의 휴식·가족 이용, 향후 개발 계획을 이미 알고 있다.",
+        "location": "해질녘 노들섬 한강 수변 및 잔디밭",
+        "characters": [
+          "내레이션 화자",
+          "노을을 촬영하는 방문객",
+          "고서윤",
+          "친구들",
+          "마지막 초대 발화자 2명"
+        ],
+        "scene_goal": "낮의 기능적 장소 정보를 일몰의 개인적 체험과 친근한 초대 메시지로 마무리한다.",
+        "before": "사업팀장의 향후 계획 설명이 끝나고, 내레이션이 노을과 함께 장소의 다른 모습을 예고한다.",
+        "action": "강, 다리, 전철 또는 기차가 보이는 해질녘 와이드샷이 제시된다. 방문객이 스마트폰으로 노을을 촬영하고, 고서윤은 좋아하는 친구들과 와서 행복하다고 말한다. 이어 '노을 맛집'과 방문 초대 발화가 나오며, 잔디밭의 두 인물이 카메라에 손을 흔든다.",
+        "dialogue_function": [
+          "시간대 변화의 의미 부여",
+          "개인적 행복의 짧은 증언",
+          "장소의 별칭화된 평가 제시",
+          "직접적 방문 초대와 종결"
+        ],
+        "information_change": "시청자는 낮에 소개된 장소가 해질녘에도 사진 촬영과 친구 간 방문 경험의 장면이 될 수 있다는 추가 사용·정서 맥락을 얻는다.",
+        "expectation": "정보 전달이 최종적으로 '가볼 만한 장소'라는 제안으로 닫힐 것이라는 방향이 강화된다.",
+        "scene_change": "설계·개발의 거시 정보가 개인의 사진 촬영, 친구와의 행복, 시청자에게 건네는 초대라는 미시적 경험으로 축소된다.",
+        "scene_payoff": "마지막 질문형 내레이션과 손 흔드는 화면이 방송의 정보 전달을 친근한 작별·방문 제안으로 끝낸다.",
+        "evidence_refs": [
+          "E1:T20",
+          "E1:T21",
+          "E1:T22",
+          "E1:T23",
+          "E1:T24",
+          "E2:100-121.696s"
+        ]
+      }
+    ],
+    "moments": [
+      {
+        "moment_type": [
+          "CURIOSITY",
+          "INFORMATION_REVEAL"
+        ],
+        "start_ms": 0,
+        "end_ms": 25000,
+        "before": {
+          "situation": "노들섬의 구체적 시설과 변화 배경이 아직 제시되기 전이다.",
+          "audience_knows": [
+            "한강 위 섬과 다리가 보이는 장소가 노들섬이라는 점",
+            "화면 자막에 '노들섬의 비밀 정원 첫 개방'이 보인다는 점"
+          ],
+          "characters_know": [
+            "김지윤은 날씨가 좋아 피크닉을 왔고 비밀정원을 찾으러 왔다고 말한다."
+          ],
+          "expectation": "비밀정원이 무엇인지, 왜 새로 개방됐는지 확인하게 될 것이라는 기대가 생성된다.",
+          "emotion": "탐색적 관심"
+        },
+        "setup": "항공 와이드샷이 섬·강·다리·도심의 관계를 한 화면에 배치하고, 재개장 날짜 자막과 방문객의 피크닉 발화가 장소의 현재성을 더한다.",
+        "escalation": [
+          "방문객이 비밀정원을 찾으러 왔다고 말한다.",
+          "내레이션이 질문형으로 '노들섬에 비밀정원이 있다?'를 제기한다.",
+          "방치된 주차장과 쓰레기장이 새 공간으로 변했다는 설명이 들어간다."
+        ],
+        "trigger": {
+          "type": "QUESTION_TO_EXPLANATORY_REVEAL",
+          "action": "질문 뒤 정원 구역들이 콜라주와 명칭으로 제시된다.",
+          "dialogue_function": "추상적 호기심을 재개장·변화·구역 정보로 전환한다.",
+          "visual_event": "여러 정원 구역의 이미지를 한 프레임 콜라주로 제시하고 각 구역명을 표기한다.",
+          "audio_event": "대사·내레이션이 지속되는 것은 확인되지만 BGM·SFX의 정체는 INSUFFICIENT_EVIDENCE이다."
+        },
+        "reaction": {
+          "character_reaction": "20~25초 대사에 '너무 멋진데요?'라는 긍정 평가가 포함된다.",
+          "camera_reaction": "항공 와이드샷, 방문객 클로즈업, 공원 이용 장면, 콜라주 그래픽으로 관찰 대상이 이동한다.",
+          "caption_reaction": "'비밀정원?'과 정원 구역명, 재개장 날짜가 정보 단위를 보강한다.",
+          "music_reaction": "INSUFFICIENT_EVIDENCE",
+          "sfx_reaction": "INSUFFICIENT_EVIDENCE",
+          "audience_reaction": "COMMENTS evidence가 없으므로 INSUFFICIENT_EVIDENCE"
+        },
+        "after": {
+          "new_situation": "시청자는 이후 생태정원·틈새정원·놀이정원의 실제 장면을 볼 준비를 갖는다.",
+          "emotion": "막연한 호기심에서 구체적 탐색 기대",
+          "conflict_change": "갈등이 아니라 정보 공백이 일부 해소된다.",
+          "next_expectation": "각 정원이 실제로 어떻게 이용되는지 확인"
+        },
+        "primary_mechanism": "INFORMATION_GAP_TO_PARTIAL_REVEAL",
+        "secondary_mechanisms": [
+          "LOCATION_ESTABLISHMENT",
+          "BEFORE_AFTER_PROMISE",
+          "CAPTION_INFORMATION"
+        ],
+        "primary_cause": "방문객의 '비밀정원' 탐색 발화와 질문형 내레이션이 아직 보이지 않은 공간을 시청 과제로 만든다.",
+        "necessary_conditions": [
+          "노들섬이라는 장소를 먼저 항공 화면과 자막으로 식별할 것",
+          "비밀정원의 실체를 질문 전에 모두 보여주지 않을 것",
+          "뒤이어 구역 콜라주 또는 실제 공간 소개가 있을 것"
+        ],
+        "amplifiers": [
+          "섬·강·다리·도심을 함께 담은 항공 와이드샷",
+          "재개장일 및 비밀정원 관련 화면 자막",
+          "방치 공간이 변신했다는 전후 대비 설명"
+        ],
+        "decorations": [
+          "BGM 또는 SFX: INSUFFICIENT_EVIDENCE"
+        ],
+        "why_it_works": "장소명을 먼저 제시하는 데 그치지 않고, 방문객의 목적을 '찾으러 왔다'로 설정한 뒤 질문형 내레이션으로 동일한 공백을 시청자에게 이전한다. 이어 과거 방치 공간이라는 대비 정보를 주기 때문에, 다음 화면은 단순한 공원 풍경이 아니라 변화의 결과를 확인하는 증거로 기능한다.",
+        "counterfactual_tests": [
+          {
+            "test": "비밀정원을 찾으러 왔다는 방문객 발화를 제거할 경우",
+            "result": "공간 소개는 가능하지만 시청자가 해결할 구체적 질문이 약해진다.",
+            "classification": "NECESSARY_CONDITION"
+          },
+          {
+            "test": "방치된 주차장·쓰레기장이라는 과거 설명을 제거할 경우",
+            "result": "정원의 아름다움은 전달될 수 있으나 변화의 규모와 새로움에 대한 해석이 약해진다.",
+            "classification": "AMPLIFIER"
+          },
+          {
+            "test": "정원 구역 콜라주를 제거할 경우",
+            "result": "초기 질문의 부분적 응답과 뒤 구역 소개의 안내 체계가 약해질 가능성이 높다.",
+            "classification": "AMPLIFIER"
+          },
+          {
+            "test": "음향 장치를 제거할 경우",
+            "result": "음향 요소의 종류와 역할이 제공 증거로 식별되지 않아 판단할 수 없다.",
+            "classification": "INSUFFICIENT_EVIDENCE"
+          }
+        ],
+        "human_psychology": "사람은 아직 보이지 않은 대상이 질문 형태로 제시되고, 그 대상이 숨겨진 것·새로 열린 것처럼 명명될 때 뒤이은 화면에서 해답을 찾으려는 탐색 동기를 가질 수 있다.",
+        "evidence_refs": [
+          "E1:T0-T4",
+          "E2:0-25s"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "moment_type": [
+          "EMOTION",
+          "INFORMATION_REVEAL"
+        ],
+        "start_ms": 25000,
+        "end_ms": 75000,
+        "before": {
+          "situation": "시청자는 여러 정원 이름을 들었지만, 방문자가 실제로 어떤 휴식·사진·가족 체험을 하는지는 아직 부분적으로만 안다.",
+          "audience_knows": [
+            "생태·놀이·그라스·틈새 등 여러 정원이 존재한다.",
+            "공간이 과거 방치된 주차장과 쓰레기장에서 변신했다는 설명을 들었다."
+          ],
+          "characters_know": [
+            "이원석은 그날 피곤한 상태였다고 말한다.",
+            "어머니 인터뷰 참여자는 아이들이 놀 수 있는 공간이 보인다고 말한다."
+          ],
+          "expectation": "명칭으로 소개된 공간이 실제 이용 장면과 연결될 것이라는 기대",
+          "emotion": "정보 중심의 관심"
+        },
+        "setup": "생태정원을 한강을 마주하고 피크닉을 즐길 수 있는 공간으로 설명한 뒤, 강변에서 앉거나 걷는 다수 이용자를 와이드샷으로 보여준다.",
+        "escalation": [
+          "이원석이 피곤했지만 시각적으로 피로가 날아가는 느낌이었다고 말한다.",
+          "내레이션은 강바람에 마음까지 시원해지는 느낌이라는 표현으로 체험 언어를 이어간다.",
+          "틈새정원의 변화 전 외관과 현재 계단 이용 장면이 연결된다.",
+          "사진 명소가 될 것 같다는 발화와 '사진 찍어야죠'라는 짧은 응답이 나온다.",
+          "놀이정원의 변화 전 공터가 나온 뒤, 현재 가족·어린이 이용 공간과 어머니의 긍정 발화가 제시된다."
+        ],
+        "trigger": {
+          "type": "ABSTRACT_SPACE_TO_EMBODIED_TESTIMONY_AND_VISUAL_CONTRAST",
+          "action": "공간 설명 직후 방문자의 피로 해소·사진 촬영·아이 놀이 관련 체험 발화와 이용 장면이 배치된다.",
+          "dialogue_function": "시설 정보를 신체 감각, 여가 행동, 가족 사용성의 언어로 번역한다.",
+          "visual_event": "한강변 사람들, 변화 전 공간, 현재 계단 이용, 가족·어린이가 있는 정원 장면이 순차적으로 제시된다.",
+          "audio_event": "각 구간에서 음성은 지속되며 SILENCE=false이다. 발화 외 오디오 층의 종류와 정체는 INSUFFICIENT_EVIDENCE이다."
+        },
+        "reaction": {
+          "character_reaction": "이원석은 피로가 날아가는 느낌을 말하고, 여성 방문객은 아이들이 놀 공간이 있어 좋다고 말한다.",
+          "camera_reaction": "인터뷰 인물 클로즈업 또는 미디엄 클로즈업과, 사람들이 휴식·이동하는 와이드 공간 화면이 교차한다.",
+          "caption_reaction": "인터뷰이 이름·나이·발화 자막이 개인 체험의 발화자를 특정한다. '변화 전' 자막은 전후 비교의 해석 방향을 명시한다.",
+          "music_reaction": "INSUFFICIENT_EVIDENCE",
+          "sfx_reaction": "INSUFFICIENT_EVIDENCE",
+          "audience_reaction": "COMMENTS evidence가 없으므로 INSUFFICIENT_EVIDENCE"
+        },
+        "after": {
+          "new_situation": "정원은 명칭 목록이 아니라 휴식, 사진, 아이 놀이가 가능한 사용 공간으로 이해된다.",
+          "emotion": "장소 정보에서 개인 체험에 대한 공감 가능성으로 이동",
+          "conflict_change": "초반의 '정원이 실제로 어떤 곳인가'라는 공백이 사례별로 해소된다.",
+          "next_expectation": "이 공간을 설계한 주체와 전체 계획을 알고 싶다는 정보적 기대"
+        },
+        "primary_mechanism": "HUMAN_TESTIMONY_PLUS_BEFORE_AFTER_VISUAL_EVIDENCE",
+        "secondary_mechanisms": [
+          "EMBODIED_DESCRIPTION",
+          "FAMILY_USE_CASE",
+          "PHOTO_OPPORTUNITY",
+          "SPATIAL_ORIENTATION",
+          "CONTRAST"
+        ],
+        "primary_cause": "내레이션의 구역 설명을 곧바로 방문자의 구체적 체감 발화와 실제 이용 화면에 연결한 점이다.",
+        "necessary_conditions": [
+          "각 공간의 기능을 먼저 또는 동시에 식별할 수 있어야 한다.",
+          "방문객의 발화가 해당 공간 또는 이용 화면과 시간적으로 인접해야 한다.",
+          "현재 공간의 이용 모습을 보여줘야 한다."
+        ],
+        "amplifiers": [
+          "변화 전 화면과 '변화 전' 자막",
+          "강·다리·도심이 보이는 와이드샷",
+          "인터뷰이의 이름·나이·발화 자막",
+          "70~75초 지도 그래픽을 통한 구역 정보 재정리"
+        ],
+        "decorations": [
+          "정확한 BGM 종류 및 기능: INSUFFICIENT_EVIDENCE",
+          "정확한 SFX 정체 및 기능: INSUFFICIENT_EVIDENCE"
+        ],
+        "why_it_works": "공간의 가치가 '예쁘다'라는 추상 평가에만 머물지 않는다. 피곤한 방문객의 시각적 휴식, 사진을 찍으려는 행동, 아이가 놀 수 있는 공간을 보는 보호자의 평가처럼 서로 다른 생활 목적을 연속 배치한다. 여기에 이전의 비어 있거나 기능이 불분명한 공간과 현재 이용 장면을 맞붙여, 변화의 주장을 방문 장면으로 검증하는 구조가 된다.",
+        "counterfactual_tests": [
+          {
+            "test": "방문객 체험 발화를 제거할 경우",
+            "result": "공간 기능은 내레이션으로 남지만 피로 해소·가족 이용 같은 개인적 체감의 전달력이 낮아진다.",
+            "classification": "NECESSARY_CONDITION"
+          },
+          {
+            "test": "변화 전 화면을 제거할 경우",
+            "result": "현재 공간의 사용성은 전달되지만 재개발의 변환 규모를 직접 비교하는 근거가 약해진다.",
+            "classification": "AMPLIFIER"
+          },
+          {
+            "test": "현재 이용자 와이드샷을 제거할 경우",
+            "result": "인터뷰 발화가 실제 현장 사용과 결속되는 정도가 약해진다.",
+            "classification": "NECESSARY_CONDITION"
+          },
+          {
+            "test": "지도 그래픽을 제거할 경우",
+            "result": "개별 사례는 유지되지만 7개 정원의 전체 구조를 한 번에 파악하기 어려워진다.",
+            "classification": "AMPLIFIER"
+          }
+        ],
+        "human_psychology": "시청자는 추상적 장소 설명보다 '내 피로가 풀린다', '아이와 갈 수 있다', '사진을 찍는다'처럼 자신의 생활 목적에 대입 가능한 타인의 경험을 통해 공간의 효용을 상상할 수 있다. 전후 대비는 현재 장면을 단순 풍경이 아니라 변화의 결과로 읽게 한다.",
+        "evidence_refs": [
+          "E1:T5-T14",
+          "E2:25-75s"
+        ],
+        "confidence": "HIGH"
+      },
+      {
+        "moment_type": [
+          "INFORMATION_REVEAL",
+          "CURIOSITY"
+        ],
+        "start_ms": 75000,
+        "end_ms": 100000,
+        "before": {
+          "situation": "방문자의 현재 체험은 확인됐지만, 공간의 설계 배경과 이후 확장 범위는 아직 제시되지 않았다.",
+          "audience_knows": [
+            "노들섬에는 서로 다른 테마의 정원이 있다.",
+            "현재 공간이 이전 방치 구역에서 변화했다.",
+            "방문자들이 휴식·사진·가족 활동을 하고 있다."
+          ],
+          "characters_know": [
+            "토마스 헤더윅은 화면 자막상 노들섬 건축 디자이너로 소개된다.",
+            "이재익 사업팀장은 단계적 완성 계획을 발화한다."
+          ],
+          "expectation": "현재 공간의 배경이나 다음 발전 단계에 대한 설명이 이어질 수 있다.",
+          "emotion": "안정된 정보 수용"
+        },
+        "setup": "7가지 정원의 지도 정리 뒤, 내레이션이 설계자를 세계적 건축가로 소개한다.",
+        "escalation": [
+          "설계자 이름과 관련 건축물 설명 자막이 제시된다.",
+          "설계자의 발화 자막이 서울 방문 시 꼭 들를 곳이 되기를 바란다는 목표를 제시한다.",
+          "사업팀장이 2028년과 2030년의 계획을 구체적 연도와 함께 말한다."
+        ],
+        "trigger": {
+          "type": "PRESENT_SPACE_TO_FUTURE_PROJECT_REFRAME",
+          "action": "현재 개방 공간의 소개가 설계자·사업 책임자의 발화와 미래 완공 계획으로 확장된다.",
+          "dialogue_function": "현재 장소를 단발성 개장 정보가 아니라 단계적 프로젝트의 일부로 재구성한다.",
+          "visual_event": "설계자 관련 출처 표기 영상, 실내 인터뷰 화면, 강변 현장 인터뷰 화면이 순차적으로 제시된다.",
+          "audio_event": "음성은 지속되고 각 5초 단위에 SILENCE=false가 기록된다. BGM·SFX 종류와 전환 기능은 INSUFFICIENT_EVIDENCE이다."
+        },
+        "reaction": {
+          "character_reaction": "설계자와 사업팀장이 각각 장소의 지향점과 향후 계획을 말한다.",
+          "camera_reaction": "현장 풍경에서 인물 중심 인터뷰·관련 건축 영상으로 전환된다.",
+          "caption_reaction": "인물의 소속·역할, 출처, 미래 계획 문구가 화면에 표기된다.",
+          "music_reaction": "INSUFFICIENT_EVIDENCE",
+          "sfx_reaction": "INSUFFICIENT_EVIDENCE",
+          "audience_reaction": "COMMENTS evidence가 없으므로 INSUFFICIENT_EVIDENCE"
+        },
+        "after": {
+          "new_situation": "시청자는 현재의 수변문화공간을 2028년·2030년 완공 계획과 연결해 이해할 수 있다.",
+          "emotion": "현재 만족의 체험에서 미래에 대한 확장 기대",
+          "conflict_change": "설계·계획의 정보 공백이 부분적으로 해소된다.",
+          "next_expectation": "현재 공간이 시간대에 따라 어떤 모습을 보이는지 확인"
+        },
+        "primary_mechanism": "AUTHORITY_AND_FUTURE_TIMELINE",
+        "secondary_mechanisms": [
+          "EXPERT_IDENTIFICATION",
+          "SPECIFIC_DATE",
+          "SCALE_EXPANSION",
+          "SOURCE_CAPTION"
+        ],
+        "primary_cause": "설계자 및 사업 책임자의 역할을 명시하고, 미래 계획을 2028년·2030년이라는 구체적 연도로 제시한 점이다.",
+        "necessary_conditions": [
+          "시청자가 이미 현재 공간의 모습과 이용 사례를 본 상태일 것",
+          "발화자의 역할 또는 전문성 맥락이 자막·내레이션으로 식별될 것",
+          "미래 계획이 구체적 공간 또는 일정 정보와 연결될 것"
+        ],
+        "amplifiers": [
+          "출처 표기",
+          "인물명·직책 자막",
+          "강변 현장 인터뷰 화면",
+          "구체적인 연도 언급"
+        ],
+        "decorations": [
+          "전문가 소개 장면의 음악적 권위감 조성 여부: INSUFFICIENT_EVIDENCE"
+        ],
+        "why_it_works": "앞선 구간이 방문자의 현재 경험을 충분히 제공한 뒤에 설계자와 사업 계획을 배치하므로, 전문성 정보가 추상적 명성 소개에만 머물지 않고 이미 본 공간을 설명하는 맥락을 얻는다. 또한 구체적 연도는 '계속 완성 중인 장소'라는 미래 지향적 질문을 남긴다.",
+        "counterfactual_tests": [
+          {
+            "test": "설계자·사업팀장의 역할 자막을 제거할 경우",
+            "result": "발화의 출처와 전문성 맥락이 약해져 계획 정보의 해석 근거가 줄어든다.",
+            "classification": "NECESSARY_CONDITION"
+          },
+          {
+            "test": "2028년·2030년의 연도를 제거할 경우",
+            "result": "단계적 완성이라는 방향은 남지만 미래 계획의 구체성과 기억 가능성이 약해진다.",
+            "classification": "AMPLIFIER"
+          },
+          {
+            "test": "방문객 체험 소개보다 먼저 이 계획을 배치할 경우",
+            "result": "실제 공간이 어떤 체험을 만드는지 알기 전이므로 계획 정보가 덜 구체적으로 받아들여질 가능성이 있다. 단, 실제 대체 편집의 효과는 검증되지 않았다.",
+            "classification": "RESEARCHER_INTERPRETATION"
+          }
+        ],
+        "human_psychology": "사람은 현재 보이는 결과가 누가 설계했고 어디로 이어지는지 알 때 개별 풍경을 더 큰 시간적 서사 안에 놓을 수 있다. 구체적 연도는 막연한 미래보다 진행의 감각을 제공할 수 있다.",
+        "evidence_refs": [
+          "E1:T15-T19",
+          "E2:75-100s"
+        ],
+        "confidence": "MEDIUM"
+      },
+      {
+        "moment_type": [
+          "EMOTION",
+          "RELATIONSHIP_CHANGE",
+          "INFORMATION_REVEAL"
+        ],
+        "start_ms": 95000,
+        "end_ms": 121696,
+        "before": {
+          "situation": "시청자는 낮의 정원, 공간 설계자, 향후 확장 계획을 본 상태다.",
+          "audience_knows": [
+            "노들섬은 휴식·피크닉·사진·가족 활동이 가능한 새 수변문화공간으로 소개됐다.",
+            "단계적 확장 계획이 언급됐다."
+          ],
+          "characters_know": [
+            "노을을 촬영하는 방문객들은 해질녘 현장에 있다.",
+            "고서윤은 좋아하는 친구들과 함께 와서 행복하다고 말한다."
+          ],
+          "expectation": "방송이 장소 정보의 결론 또는 방문 권유로 이어질 수 있다.",
+          "emotion": "정보 전달 이후의 정리 단계"
+        },
+        "setup": "95~100초 내레이션이 노을이 지자 노들섬이 다른 얼굴을 보여준다고 말하며 시간대 변화의 프레임을 만든다.",
+        "escalation": [
+          "해질녘 한강, 다리, 전철 또는 기차가 보이는 와이드샷이 제시된다.",
+          "내레이션은 붉게 물든 한강을 배경으로 사람들이 하루의 마지막 장면을 담는다고 말한다.",
+          "여성이 스마트폰으로 노을을 촬영하는 행동이 보인다.",
+          "고서윤이 친구들과 와서 행복하다고 발화한다.",
+          "'노을 맛집'이라는 짧은 평가와 노들섬 방문 초대가 이어진다."
+        ],
+        "trigger": {
+          "type": "TIME_OF_DAY_SHIFT_TO_PERSONAL_INVITATION",
+          "action": "낮의 공원·계획 정보에서 해질녘 촬영 행동과 친구 관계의 행복 발화로 전환한 뒤, 직접 초대로 마무리한다.",
+          "dialogue_function": "장소를 기능 목록이 아니라 하루의 끝을 기록하고 친구와 공유하는 경험으로 의미화한다.",
+          "visual_event": "노을의 강변 와이드샷, 스마트폰 촬영, 친구들과 있는 인터뷰이, 손을 흔드는 두 인물이 이어진다.",
+          "audio_event": "100~121.696초 전 구간에 SILENCE=false가 관찰된다. BGM·SFX의 존재·종류·정서 기능은 INSUFFICIENT_EVIDENCE이다."
+        },
+        "reaction": {
+          "character_reaction": "고서윤은 미소를 보이며 주먹을 쥔 채 카메라를 향하고, 마지막 두 인물은 카메라에 손을 흔든다.",
+          "camera_reaction": "강·다리 중심 와이드샷에서 인물과 스마트폰 촬영 행동을 담은 중간·클로즈업 계열 화면으로 이동한다.",
+          "caption_reaction": "'저녁이 되면 더욱 특별해지는 노들섬', '노들섬의 노을을 한껏 눈에 담는 사람들', 인터뷰이 이름·발화, 방문 초대 문구가 제시된다.",
+          "music_reaction": "INSUFFICIENT_EVIDENCE",
+          "sfx_reaction": "INSUFFICIENT_EVIDENCE",
+          "audience_reaction": "COMMENTS evidence가 없으므로 INSUFFICIENT_EVIDENCE"
+        },
+        "after": {
+          "new_situation": "방송은 노들섬을 가을의 정취를 넓히는 방문 대상으로 제안하며 끝난다.",
+          "emotion": "장소의 설명에서 친근한 초대와 가벼운 긍정 정서로 종결",
+          "conflict_change": "초반의 비밀정원·새 공간에 대한 정보 공백은 기능, 체험, 계획, 시간대별 풍경의 층위로 대부분 해소된다.",
+          "next_expectation": "후속 콘텐츠나 실제 방문 여부는 증거상 확인할 수 없다."
+        },
+        "primary_mechanism": "FUNCTIONAL_INFORMATION_TO_PERSONAL_SHARED_EXPERIENCE",
+        "secondary_mechanisms": [
+          "DAY_TO_SUNSET_CONTRAST",
+          "PHOTO_TAKING_ACTION",
+          "FRIENDSHIP_TESTIMONY",
+          "DIRECT_INVITATION",
+          "VISUAL_FAREWELL"
+        ],
+        "primary_cause": "낮의 공간 기능을 이미 설명한 뒤, 해질녘의 시각적 변화와 친구와의 행복이라는 개인 발화를 배치해 장소의 가치를 관계·기억의 장면으로 전환한 점이다.",
+        "necessary_conditions": [
+          "앞선 구간에서 낮의 장소 기능과 이용 사례가 제시될 것",
+          "해질녘이라는 시간대 변화가 내레이션과 화면으로 식별될 것",
+          "방문객의 촬영 또는 친구 관계 행동·발화가 시간적으로 인접할 것",
+          "종결부에 방문 제안이 있을 것"
+        ],
+        "amplifiers": [
+          "붉은 한강, 다리, 전철 또는 기차가 포함된 와이드 풍경",
+          "스마트폰으로 노을을 촬영하는 행동",
+          "인터뷰이 이름·나이·행복 발화 자막",
+          "카메라를 향한 손 흔들기",
+          "질문형 마지막 내레이션"
+        ],
+        "decorations": [
+          "BGM의 감정 증폭 기능: INSUFFICIENT_EVIDENCE",
+          "SFX의 감정 증폭 기능: INSUFFICIENT_EVIDENCE"
+        ],
+        "why_it_works": "방송은 마지막에 새 시설의 목록을 반복하지 않는다. 먼저 낮에 이 장소가 어떻게 쓰이는지를 보여준 뒤, 같은 장소가 해질녘에는 사진을 남기고 친구와 하루를 마무리하는 장면이 된다고 재정의한다. 따라서 마지막 초대는 단순한 홍보 문구가 아니라 앞서 제시된 휴식·가족·사진·노을 경험을 압축한 제안으로 작동한다.",
+        "counterfactual_tests": [
+          {
+            "test": "해질녘 풍경을 제거하고 낮 장면에서 바로 초대 문구로 끝낼 경우",
+            "result": "방송은 방문 권유를 할 수 있으나, 장소가 시간대에 따라 다른 경험을 만든다는 추가 의미층이 약해진다.",
+            "classification": "NECESSARY_CONDITION"
+          },
+          {
+            "test": "친구들과 와서 행복하다는 발화를 제거할 경우",
+            "result": "노을과 사진의 시각적 경험은 남지만 관계적·개인적 체험의 언어화가 줄어든다.",
+            "classification": "AMPLIFIER"
+          },
+          {
+            "test": "스마트폰 촬영 행동을 제거할 경우",
+            "result": "하루의 마지막 장면을 담는다는 내레이션의 구체적 시각 증거가 줄어든다.",
+            "classification": "AMPLIFIER"
+          },
+          {
+            "test": "마지막 손 흔들기와 직접 초대를 제거할 경우",
+            "result": "정보 프로그램의 종결은 가능하지만 시청자를 향한 대화적 마감과 친근한 작별의 기능이 약해진다.",
+            "classification": "AMPLIFIER"
+          },
+          {
+            "test": "음악을 제거할 경우",
+            "result": "음악의 존재·종류·기능이 확인되지 않아 효과를 판단할 수 없다.",
+            "classification": "INSUFFICIENT_EVIDENCE"
+          }
+        ],
+        "human_psychology": "공간의 가치는 시설 정보만으로 결정되지 않고, 사람들은 그곳에서 누구와 무엇을 기록하고 하루를 어떻게 마무리하는지로 장소를 기억할 수 있다. 시간대 변화는 동일 장소에 새로움과 완결감을 부여할 수 있으며, 직접 초대는 시청자를 관찰자 위치에서 잠재 방문자 위치로 옮긴다.",
+        "evidence_refs": [
+          "E1:T19-T24",
+          "E2:95-121.696s"
+        ],
+        "confidence": "HIGH"
+      }
+    ],
+    "audience_intelligence": [
+      {
+        "status": "INSUFFICIENT_EVIDENCE",
+        "reason": "제공된 Evidence는 COMMENTS가 아니며, 조회·좋아요·댓글·공유·시청 유지율·설문 등 실제 시청자 반응 자료를 포함하지 않는다.",
+        "audience_signals": []
+      }
+    ],
+    "creator_intent": {
+      "status": "INFERRED_CREATIVE_INTENT",
+      "official_creator_intent": "INSUFFICIENT_EVIDENCE. 제작자 인터뷰, 제작 노트, 공식 의도 설명은 제공되지 않았다.",
+      "inferred_creative_intent": "관찰된 편집 순서를 근거로 하면, 이 방송은 노들섬 수변문화공간을 단순 위치 정보로 소개하기보다 '새로 열린 비밀정원'이라는 질문으로 시작해, 전후 변화, 방문자 체험, 설계·미래 계획, 노을과 친구 관계의 경험 순으로 확장함으로써 방문 가능성을 상상하게 하려는 구성으로 해석할 수 있다. 이는 실제 제작자의 발언이 아니라 연구자 해석이다.",
+      "evidence_basis": [
+        "0~25초: 비밀정원 질문, 재개장·방치 공간의 변화 설명",
+        "25~75초: 생태·틈새·놀이정원과 방문객 체험·전후 화면",
+        "75~100초: 설계자와 단계적 완성 계획",
+        "95~121.696초: 일몰, 촬영, 친구와의 행복, 방문 초대"
+      ]
+    },
+    "reusable_dna": [
+      {
+        "dna_id": "DNA_1_LOCATION_TO_QUESTION_TO_PROOF",
+        "condition": "새로 개방되었거나 변화한 장소를 짧은 정보 콘텐츠로 소개해야 한다.",
+        "audience_expectation": "시청자는 장소의 위치뿐 아니라 '무엇이 새롭고 왜 봐야 하는가'에 대한 답을 기다린다.",
+        "character_behavior": "방문자는 자신의 방문 목적을 짧고 구체적으로 말한다. 예: 찾으러 왔다, 쉬러 왔다, 사진을 찍으러 왔다.",
+        "trigger": "내레이션이 방문 목적을 질문형 정보 공백으로 확대하고, 직후 공간의 실제 모습 또는 구역 목록을 제시한다.",
+        "response": "장소 소개가 지명 안내에서 탐색 과제로 바뀌며, 다음 화면을 볼 이유가 생긴다.",
+        "payoff": "후속 구간에서 구역·활동·전후 변화가 질문의 해답을 단계적으로 제공한다.",
+        "failure_condition": [
+          "질문 뒤에 구체적 공간 증거나 답이 없으면 호기심이 방치된다.",
+          "장소의 기본 위치·정체를 먼저 잡지 않으면 질문 대상이 불명확하다.",
+          "질문과 해답의 간격이 너무 길면 초기 약속이 약해질 수 있다."
+        ],
+        "jopd_transfer_test": "판매왕 콘텐츠라면 고객이 '누구나 좋은 차'를 찾는다고 말한 뒤, 판매왕이 일반적인 차종 설명이 아니라 고객이 미처 보지 못한 실제 사용 장면을 하나씩 밝혀주는 구조로 바꿀 수 있다. 원작의 장소·정원·대사는 복제하지 않는다.",
+        "retrieval_tags": [
+          "FACTUAL",
+          "LOCATION_INTRODUCTION",
+          "CURIOSITY",
+          "INFORMATION_GAP",
+          "QUESTION_HOOK",
+          "BEFORE_AFTER"
+        ]
+      },
+      {
+        "dna_id": "DNA_2_SPACE_TO_EMBODIED_USE_CASE",
+        "condition": "시설·공간·서비스의 기능이 추상적 명칭으로만 전달될 위험이 있다.",
+        "audience_expectation": "시청자는 그 공간이 실제 자신 또는 타인의 삶에서 어떻게 쓰이는지 알고 싶어 한다.",
+        "character_behavior": "서로 다른 방문자가 피로 회복, 사진 촬영, 아이 돌봄처럼 상이한 생활 목적을 짧게 언어화하거나 행동으로 보인다.",
+        "trigger": "기능 설명 직후 해당 기능을 사용하는 사람의 행동과 발화를 붙인다.",
+        "response": "시설 설명이 사용 시나리오와 감각적·관계적 경험으로 번역된다.",
+        "payoff": "여러 사례가 누적되어 장소가 단일 타깃이 아닌 복수 목적의 공간으로 이해된다.",
+        "failure_condition": [
+          "인터뷰 발화가 공간 화면과 멀리 떨어지면 어떤 시설에 대한 경험인지 불명확해진다.",
+          "모든 체험이 같은 종류이면 이용자 폭이 좁게 보일 수 있다.",
+          "실제 사용 장면 없이 긍정 형용사만 반복하면 신뢰 가능한 구체성이 약해진다."
+        ],
+        "jopd_transfer_test": "자동차 판매 콘텐츠에서 차의 사양을 나열하는 대신, 출퇴근 피로, 아이 카시트, 주차, 여행 짐 같은 서로 다른 고객 목적을 행동과 짧은 발화로 연결한다.",
+        "retrieval_tags": [
+          "HUMAN_INTERVIEW",
+          "USE_CASE",
+          "EMBODIED_EXPERIENCE",
+          "FAMILY",
+          "PHOTO",
+          "RELAXATION",
+          "TESTIMONY"
+        ]
+      },
+      {
+        "dna_id": "DNA_3_PRESENT_EXPERIENCE_TO_FUTURE_SCALE",
+        "condition": "현재 이용 장면만으로는 프로젝트의 배경·지속성·확장성을 전달하기 어렵다.",
+        "audience_expectation": "현재 보이는 결과가 일회성인지, 누가 만들었고 앞으로 무엇이 이어지는지 궁금해질 수 있다.",
+        "character_behavior": "설계자 또는 책임자가 장소의 지향점과 단계적 계획을 역할·소속이 식별된 상태에서 말한다.",
+        "trigger": "방문자의 현재 체험을 보여준 뒤, 구체적 연도나 단계가 포함된 미래 계획을 제시한다.",
+        "response": "현재의 작은 경험이 더 큰 시간축과 프로젝트 범위 안에서 재해석된다.",
+        "payoff": "현재 만족에 미래 기대가 추가된다.",
+        "failure_condition": [
+          "전문가 정보가 현재 장소의 실제 화면과 연결되지 않으면 명성 나열로 보일 수 있다.",
+          "구체적 일정·공간명이 없으면 단계적 계획의 실체감이 떨어질 수 있다.",
+          "계획 설명이 너무 길면 이용자 체험에서 형성된 감각적 몰입이 끊길 수 있다."
+        ],
+        "jopd_transfer_test": "판매왕 이야기에서 고객의 당장 필요한 이동 문제를 먼저 해결한 후, 판매왕이 단기 판매가 아니라 가족 생애주기와 향후 교체 계획까지 고려한다는 사실을 드러내는 구조로 활용할 수 있다.",
+        "retrieval_tags": [
+          "FACTUAL",
+          "EXPERT",
+          "FUTURE_PLAN",
+          "AUTHORITY",
+          "SPECIFIC_DATE",
+          "SCALE_EXPANSION"
+        ]
+      },
+      {
+        "dna_id": "DNA_4_FUNCTION_TO_MEMORY_TO_INVITATION",
+        "condition": "정보 콘텐츠의 끝에서 단순한 요약보다 장소 방문의 정서적 이유를 남기고 싶다.",
+        "audience_expectation": "앞서 배운 장소 정보가 최종적으로 어떤 개인 경험으로 이어지는지 정리될 수 있다.",
+        "character_behavior": "방문자는 시간대가 변한 장소에서 사진을 찍고, 친구·가족과의 관계 속 행복이나 기억을 짧게 표현한다.",
+        "trigger": "낮의 기능 정보가 충분히 축적된 뒤, 일몰 등 시간대 변화와 개인 행동을 결합하고 직접 초대로 종결한다.",
+        "response": "장소는 시설 목록이 아니라 누군가와 하루의 한 장면을 남기는 곳으로 재의미화된다.",
+        "payoff": "마지막 초대가 앞선 공간 정보·체험·관계 감각을 압축하는 결말이 된다.",
+        "failure_condition": [
+          "낮의 기능과 체험이 축적되지 않으면 감정적 종결이 뜬금없어질 수 있다.",
+          "시간대 변화만 있고 사람의 행동·발화가 없으면 장소의 개인적 의미화가 약해질 수 있다.",
+          "직접 초대가 너무 이르면 결말의 누적 효과가 감소할 수 있다."
+        ],
+        "jopd_transfer_test": "판매왕 콘텐츠에서 차량 기능을 설명한 뒤, 고객이 가족을 태우고 귀가하거나 여행 출발 사진을 남기는 장면으로 기능을 기억·관계의 가치로 전환할 수 있다.",
+        "retrieval_tags": [
+          "EMOTION",
+          "SUNSET",
+          "PHOTO_TAKING",
+          "FRIENDSHIP",
+          "INVITATION",
+          "CLOSING",
+          "FACTUAL_TO_HUMAN_STORY"
+        ]
+      }
+    ],
+    "failure_conditions": [
+      {
+        "condition": "BGM·SFX의 기능을 특정하거나 감정 효과의 원인으로 단정",
+        "reason": "제공된 오디오 증거는 RMS, Peak, 무음 여부와 대사 전사뿐이며 음악·효과음의 식별 증거가 없다.",
+        "status": "INSUFFICIENT_EVIDENCE"
+      },
+      {
+        "condition": "실제 시청자가 호기심·감동·방문 의욕을 느꼈다고 단정",
+        "reason": "댓글, 시청 유지율, 설문, 반응 영상 등 AUDIENCE_SIGNAL evidence가 없다.",
+        "status": "INSUFFICIENT_EVIDENCE"
+      },
+      {
+        "condition": "제작자가 관광 홍보 또는 감동 유발을 실제 의도로 삼았다고 단정",
+        "reason": "공식 제작자 인터뷰·제작 노트·공식 의도 자료가 없다.",
+        "status": "INSUFFICIENT_EVIDENCE"
+      },
+      {
+        "condition": "방문객 발화만으로 공간의 객관적 품질 또는 전체 이용자 만족도를 증명",
+        "reason": "관찰된 발화는 개별 인터뷰 참여자의 경험이며 대표 표본 여부를 알 수 없다.",
+        "status": "SOURCE_SCOPE_LIMIT"
+      },
+      {
+        "condition": "전후 화면만으로 모든 공간이 동일한 방식으로 재개발됐다고 일반화",
+        "reason": "증거는 일부 구간의 변화 전·후 화면과 내레이션을 제공할 뿐, 전 영역의 공사 범위·시점·과정을 검증하지 않는다.",
+        "status": "SOURCE_SCOPE_LIMIT"
+      },
+      {
+        "condition": "질문형 훅을 만들고 해답을 늦추기만 하는 구성",
+        "reason": "후속 장면이 질문과 직접 연결되지 않으면 시청 지속의 약속이 깨질 수 있다.",
+        "status": "REUSABLE_DNA_FAILURE"
+      },
+      {
+        "condition": "인터뷰 발화를 공간·행동 화면 없이 연속 배치",
+        "reason": "피로 회복, 사진 명소, 가족 이용 가능성 같은 체험이 추상적 평가로 남아 설득력과 장면성이 낮아질 수 있다.",
+        "status": "REUSABLE_DNA_FAILURE"
+      },
+      {
+        "condition": "설계자·계획 정보가 너무 이르게 또는 길게 배치",
+        "reason": "시청자가 현재 공간의 체험을 이해하기 전에 제도·전문가 정보가 길어지면 장소의 감각적 접근성이 약해질 수 있다. 실제 이탈 여부는 INSUFFICIENT_EVIDENCE이다.",
+        "status": "RESEARCHER_INTERPRETATION"
+      }
+    ],
+    "retrieval_tags": [
+      "RESEARCHED_NOW",
+      "FACTUAL",
+      "INFORMATION",
+      "HUMAN_INTERVIEW",
+      "LOCATION_INTRODUCTION",
+      "SEOUL",
+      "NODEULSEOM",
+      "RIVERSIDE_CULTURAL_SPACE",
+      "GARDEN",
+      "QUESTION_HOOK",
+      "INFORMATION_GAP",
+      "BEFORE_AFTER",
+      "SPATIAL_ORIENTATION",
+      "CAPTION_INFORMATION",
+      "VISITOR_TESTIMONY",
+      "EMBODIED_EXPERIENCE",
+      "RELAXATION",
+      "FAMILY_USE",
+      "PHOTO_OPPORTUNITY",
+      "EXPERT_INTERVIEW",
+      "FUTURE_PLAN",
+      "SUNSET",
+      "FRIENDSHIP",
+      "DIRECT_INVITATION",
+      "FACTUAL_TO_HUMAN_STORY",
+      "NO_AUDIENCE_COMMENTS",
+      "MUSIC_INSUFFICIENT_EVIDENCE",
+      "SFX_INSUFFICIENT_EVIDENCE",
+      "CREATOR_INTENT_INFERRED"
+    ],
+    "research_gaps": [
+      {
+        "gap": "정확한 BGM 종류, 시작·종료 시점, 믹싱 레벨, 감정적 기능",
+        "status": "INSUFFICIENT_EVIDENCE",
+        "needed_evidence": "음악 트랙 또는 음악 존재 여부가 식별된 오디오 분석, 제작 음향 정보, 프레임·초 단위 음향 주석"
+      },
+      {
+        "gap": "효과음·현장음의 정체와 편집 기능",
+        "status": "INSUFFICIENT_EVIDENCE",
+        "needed_evidence": "분리된 오디오 트랙 또는 SFX·ambient sound 주석"
+      },
+      {
+        "gap": "시청자가 실제로 반응한 장면, 웃음·감동·방문 의향, 이탈 구간",
+        "status": "INSUFFICIENT_EVIDENCE",
+        "needed_evidence": "댓글, 커뮤니티 반응, 시청 유지율, 설문, 공유·저장 데이터"
+      },
+      {
+        "gap": "제작자의 실제 기획 의도와 편집 선택의 공식 이유",
+        "status": "INSUFFICIENT_EVIDENCE",
+        "needed_evidence": "제작진 인터뷰, 보도자료, 제작 노트, 방송사 공식 설명"
+      },
+      {
+        "gap": "정확한 컷 길이, 전환 방식, 프레임 단위 리액션과 발화 타이밍",
+        "status": "PARTIALLY_OBSERVED",
+        "needed_evidence": "1초 이하 정밀 타임코드 또는 원본 영상의 프레임 단위 주석"
+      },
+      {
+        "gap": "인터뷰 참여자 발화의 대표성 및 실제 방문객 전체 경험",
+        "status": "INSUFFICIENT_EVIDENCE",
+        "needed_evidence": "표본 설계 정보, 추가 인터뷰, 현장 조사, 이용자 데이터"
+      }
+    ],
+    "quality_gate": {
+      "has_real_evidence": true,
+      "has_temporal_context": true,
+      "has_before_context": true,
+      "has_trigger_analysis": true,
+      "has_causal_explanation": true,
+      "has_counterfactual_reasoning": true,
+      "has_failure_conditions": true,
+      "has_reusable_dna": true,
+      "has_audience_evidence": false,
+      "has_official_creator_intent": false,
+      "music_sfx_claims_limited_to_evidence": true,
+      "eligible_for_memory_promotion": true,
+      "promotion_reason": "제공된 멀티모달 증거에 기반해 0~121.696초의 장면 구조, 직전 맥락, 대사 기능, 화면·자막의 정보 변화, 핵심 전환 Trigger, 반사실 검증, 실패 조건, 재사용 가능한 DNA를 기록했다. 다만 승인 메모리는 실제 시청자 반응·공식 제작 의도·음악 및 SFX 식별에 관한 주장 없이, 해당 항목들을 INSUFFICIENT_EVIDENCE로 제한한 범위에서만 사용해야 한다."
+    }
+  }
+}

@@ -1,0 +1,387 @@
+{
+  "news_id": "NEWS-001",
+  "status": "FIRST_CUT_TIMELINE_V1",
+  "audio": "production/narration.mp3",
+  "audio_duration_seconds": 121.2,
+  "spoken_end_seconds": 119.64,
+  "subtitle_source": "ARTICLE_TEXT_WITH_TRANSCRIPTION_TIMING",
+  "source_label": "농림축산식품부 · 2026.09.10",
+  "cuts": [
+    {
+      "segment_id": "SEG-001",
+      "start_seconds": 0.0,
+      "end_seconds": 10.52,
+      "duration_seconds": 10.52,
+      "role": "HOOK",
+      "narration": "마늘이나 양파 농사를 짓고 계십니까? 올해부터 새 가격안정제가 시작됩니다. 하지만 가만히 있으면 누구나 똑같이 지원받는 제도는 아닙니다.",
+      "fact_ids": [
+        "FACT-002",
+        "FACT-003",
+        "FACT-005",
+        "FACT-006"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-002",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-007"
+          ],
+          "highlight": "해당 연도 농산물 평균가격이 기준가격보다 낮아지는 경우, 정부가 그 차액의 전부 또는 일부를 지원",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-003",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-009"
+          ],
+          "highlight": "2026년 도입 품목으로 ... 마늘, 양파를 우선 선정",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-005",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-017"
+          ],
+          "highlight": "동일 품목을 10a(1,000㎡) 이상 재배하고, 경영체 등록 또는 경작신고",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-006",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-021"
+          ],
+          "highlight": "파종·정식기에 농업경영체 등록 및 변경 ... 실재배면적을 의무적으로 신고",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-002",
+      "start_seconds": 10.52,
+      "end_seconds": 26.4,
+      "duration_seconds": 15.88,
+      "role": "WHAT_CHANGED",
+      "narration": "농림축산식품부는 2026년 첫 농산물가격안정제 우선 품목으로 마늘과 양파를 선정했습니다. 해당 연도 평균가격이 기준가격보다 낮아지면 정부가 그 차액의 전부 또는 일부를 지원하는 제도입니다.",
+      "fact_ids": [
+        "FACT-002",
+        "FACT-003"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-002",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-007"
+          ],
+          "highlight": "해당 연도 농산물 평균가격이 기준가격보다 낮아지는 경우, 정부가 그 차액의 전부 또는 일부를 지원",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-003",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-009"
+          ],
+          "highlight": "2026년 도입 품목으로 ... 마늘, 양파를 우선 선정",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-003",
+      "start_seconds": 26.4,
+      "end_seconds": 41.56,
+      "duration_seconds": 15.16,
+      "role": "MONEY",
+      "narration": "심의된 기준가격 산정방식은 경영비와 자가노동비를 반영해 평년 도매가격의 80% 수준이 되도록 하는 것입니다. 하지만 이것이 모든 농가에 평년가격의 80%를 현금으로 지급한다는 뜻은 아닙니다.",
+      "fact_ids": [
+        "FACT-002",
+        "FACT-004"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-002",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-007"
+          ],
+          "highlight": "해당 연도 농산물 평균가격이 기준가격보다 낮아지는 경우, 정부가 그 차액의 전부 또는 일부를 지원",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-004",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-012"
+          ],
+          "highlight": "경영비를 전액 포함 ... 자가노동비 ... 평년 도매가격의 80% 수준",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-004",
+      "start_seconds": 41.56,
+      "end_seconds": 52.04,
+      "duration_seconds": 10.48,
+      "role": "ELIGIBILITY",
+      "narration": "현재 심의된 지원 대상은 같은 품목을 10아르, 1천 제곱미터 이상 재배하고 경영체 등록 또는 경작신고를 한 농업인과 농업법인입니다.",
+      "fact_ids": [
+        "FACT-005"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-005",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-017"
+          ],
+          "highlight": "동일 품목을 10a(1,000㎡) 이상 재배하고, 경영체 등록 또는 경작신고",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-005",
+      "start_seconds": 52.04,
+      "end_seconds": 66.16,
+      "duration_seconds": 14.12,
+      "role": "ACTION_1",
+      "narration": "첫째, 실제 마늘·양파 재배면적이 농업경영체 등록이나 변경 내용에 제대로 들어가 있는지 확인해야 합니다. 지원을 받으려는 농가는 파종·정식기에 실제 재배면적을 신고하도록 했습니다.",
+      "fact_ids": [
+        "FACT-006"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-006",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-021"
+          ],
+          "highlight": "파종·정식기에 농업경영체 등록 및 변경 ... 실재배면적을 의무적으로 신고",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-006",
+      "start_seconds": 66.16,
+      "end_seconds": 75.36,
+      "duration_seconds": 9.2,
+      "role": "ACTION_2",
+      "narration": "둘째, 자조금 납부 여부도 확인해야 합니다. 자조금을 내지 않은 농가는 첫해 지급액을 20% 차감하는 방안이 심의됐습니다.",
+      "fact_ids": [
+        "FACT-007"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-007",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-022"
+          ],
+          "highlight": "자조금을 미납한 농가는 지급액이 첫 해에는 20% 차감",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-007",
+      "start_seconds": 75.36,
+      "end_seconds": 87.44,
+      "duration_seconds": 12.08,
+      "role": "ACTION_3",
+      "narration": "셋째, 수입안정보험 보험금을 받은 농가는 그 금액만큼 가격안정제 지급액에서 차감하는 방안이 마련됐습니다. 같은 손실에 대한 중복지원을 막기 위한 조치입니다.",
+      "fact_ids": [
+        "FACT-008"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-008",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-019"
+          ],
+          "highlight": "수입안정보험 ... 보험금을 수령한 경우에는 그 금액만큼 차감 지급",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-008",
+      "start_seconds": 87.44,
+      "end_seconds": 97.4,
+      "duration_seconds": 9.96,
+      "role": "CAUTION",
+      "narration": "그리고 가장 중요한 점이 있습니다. 9월 10일 회의에서 심의한 대상품목과 차액 지급비율 등은 농식품부 고시를 통해 최종 확정될 예정입니다.",
+      "fact_ids": [
+        "FACT-010"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-010",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-024"
+          ],
+          "highlight": "대상품목 및 차액 지급비율 등은 향후 농식품부 고시를 통해 확정",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-009",
+      "start_seconds": 97.4,
+      "end_seconds": 107.16,
+      "duration_seconds": 9.76,
+      "role": "ACTION_4",
+      "narration": "따라서 지금은 내 재배면적 등록 상태와 자조금, 수입안정보험 여부를 확인하고, 이어지는 농식품부 최종 고시를 반드시 확인해야 합니다.",
+      "fact_ids": [
+        "FACT-006",
+        "FACT-007",
+        "FACT-008",
+        "FACT-010"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-006",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-021"
+          ],
+          "highlight": "파종·정식기에 농업경영체 등록 및 변경 ... 실재배면적을 의무적으로 신고",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-007",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-022"
+          ],
+          "highlight": "자조금을 미납한 농가는 지급액이 첫 해에는 20% 차감",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-008",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-019"
+          ],
+          "highlight": "수입안정보험 ... 보험금을 수령한 경우에는 그 금액만큼 차감 지급",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        },
+        {
+          "fact_id": "FACT-010",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-024"
+          ],
+          "highlight": "대상품목 및 차액 지급비율 등은 향후 농식품부 고시를 통해 확정",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    },
+    {
+      "segment_id": "SEG-010",
+      "start_seconds": 107.16,
+      "end_seconds": 119.64,
+      "duration_seconds": 12.48,
+      "role": "CLOSE",
+      "narration": "한국농수산TV는 최종 고시가 나오면 실제 대상과 지급 기준이 어떻게 확정됐는지 다시 확인해 전해드리겠습니다. 농민이 몰라서 받을 돈을 놓치지 않도록 원문까지 확인하겠습니다.",
+      "fact_ids": [
+        "FACT-010"
+      ],
+      "evidence": [
+        {
+          "fact_id": "FACT-010",
+          "source_sentence_ids": [
+            "SOURCE-SENTENCE-024"
+          ],
+          "highlight": "대상품목 및 차액 지급비율 등은 향후 농식품부 고시를 통해 확정",
+          "visual_action": {
+            "default": "SHOW_OFFICIAL_SOURCE",
+            "emphasis": "RED_UNDERLINE_OR_BOX",
+            "zoom": "ZOOM_TO_SUPPORTING_TEXT"
+          }
+        }
+      ],
+      "screen_rule": "OFFICIAL_SOURCE_EVIDENCE"
+    }
+  ],
+  "source": {
+    "evidence_id": "EVIDENCE-001",
+    "authority": "농림축산식품부",
+    "local_file": "sources/MAFRA_2026-09-10_PRICE_STABILITY.html"
+  },
+  "visual_rule": {
+    "default": "SHOW_OFFICIAL_SOURCE",
+    "emphasis": "RED_UNDERLINE_OR_BOX",
+    "zoom": "ZOOM_TO_SUPPORTING_TEXT",
+    "source_label": "농림축산식품부 · 2026.09.10",
+    "no_fake_evidence": true
+  }
+}

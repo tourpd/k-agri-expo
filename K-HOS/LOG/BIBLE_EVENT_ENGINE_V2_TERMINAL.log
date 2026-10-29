@@ -1,0 +1,9 @@
+K-HOS BIBLE EVENT ENGINE V2 START
+MODEL: gpt-4.1-mini
+START_AT: 0
+RUN FILES: 3
+CURRENT EVENT ID: 0
+OK 1/1192 01창세기/창1.md events=10 total=10
+OK 2/1192 01창세기/창2.md events=7 total=17
+OK 3/1192 01창세기/창3.md events=12 total=29
+RUN COMPLETE files=3 events=29

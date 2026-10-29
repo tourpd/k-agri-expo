@@ -1,0 +1,68 @@
+{
+  "engine": "JOPD_BROADCAST_HUNTER",
+  "version": "1.0",
+  "purpose": "새로운 방송·라디오·광고·유튜브·숏폼 자료를 발견하고 출처를 보존한 뒤 Researcher 분석 대상으로 전달한다.",
+  "pipeline": [
+    "DISCOVERED",
+    "SOURCE_VERIFIED",
+    "RESEARCH_QUEUED",
+    "OBSERVED",
+    "INTENT_ANALYZED",
+    "DNA_EXTRACTED",
+    "REVIEWED",
+    "APPROVED_MEMORY"
+  ],
+  "targets": [
+    "KOREAN_TV",
+    "SITCOM",
+    "VARIETY",
+    "COMEDY",
+    "DOCUMENTARY",
+    "FACTUAL",
+    "ADVERTISING",
+    "THAI_ADVERTISING",
+    "YOUTUBE",
+    "SHORTFORM",
+    "RADIO",
+    "PODCAST",
+    "VISUAL_RADIO"
+  ],
+  "items": [
+    {
+      "id": "broadcast-21702d0ff7b542c0",
+      "status": "DISCOVERED",
+      "title": "SBS STORY — TV 동물농장 공식 연구 소스",
+      "url": "https://www.youtube.com/@SBSstory.official",
+      "canonicalUrl": "https://www.youtube.com/@SBSstory.official",
+      "sourceRegistryId": "sbs_animal_farm",
+      "platform": "YOUTUBE",
+      "domain": "FACTUAL",
+      "publishedAt": null,
+      "discoveredAt": "2026-09-22T10:47:36.208Z",
+      "discoveredBy": "JOPD_BROADCAST_HUNTER_BOOTSTRAP",
+      "discoveryReason": "TV 동물농장 방송 DNA 연구를 위한 공식 채널 provenance 등록",
+      "provenance": {
+        "originalUrl": "https://www.youtube.com/@SBSstory.official",
+        "firstSeenAt": "2026-09-22T10:47:36.208Z"
+      }
+    },
+    {
+      "id": "broadcast-65f66e3e85cb2e4a",
+      "status": "DISCOVERED",
+      "title": "마늘·양파 가격안정 관련 첫 ACTION NEWS 취재",
+      "url": "https://www.nongmin.com/article/20260918500689",
+      "canonicalUrl": "https://www.nongmin.com/article/20260918500689",
+      "sourceRegistryId": null,
+      "platform": "WEB",
+      "domain": "nongmin.com",
+      "publishedAt": "2026-09-18",
+      "discoveredAt": "2026-09-24T07:18:19.580Z",
+      "discoveredBy": "JOPD_ACTION_NEWS",
+      "discoveryReason": "ACTION NEWS #001. 마늘·양파 가격안정 관련 보도에서 출발하여 공식 원자료를 확인하고 농민 영향·행동까지 취재한다. 이 기사는 DISCOVERY SIGNAL이며 공식 사실 Authority로 간주하지 않는다.",
+      "provenance": {
+        "originalUrl": "https://www.nongmin.com/article/20260918500689",
+        "firstSeenAt": "2026-09-24T07:18:19.580Z"
+      }
+    }
+  ]
+}

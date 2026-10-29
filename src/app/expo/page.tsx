@@ -19,6 +19,7 @@ import ExpoFarmerConsultSection from "@/components/expo/ExpoFarmerConsultSection
 import ExpoProblemSection from "@/components/expo/ExpoProblemSection";
 import ExpoNewProductsSection from "@/components/expo/ExpoNewProductsSection";
 import ExpoFooter from "@/components/expo/ExpoFooter";
+import ExpoHomeLayout from "@/components/expo/home/ExpoHomeLayout";
 
 import type { CmsSettings, HomeSlot } from "@/types/expo-home";
 import { groupSlots } from "@/lib/expo/home-utils";
@@ -1151,48 +1152,22 @@ export default async function ExpoIndexPage() {
   }));
 
   return (
-    <main style={S.page} className="expo-home">
-      <style>{RESPONSIVE_CSS}</style>
-
-      <ExpoTopBar />
-
-      <ExpoHeroSection
-        hero={hero}
-        cms={cms}
-        heroTitle={heroTitle}
-        heroSubtitle={heroSubtitle}
-        heroDescription={heroDescription}
-      />
-
-      <JointGroupBuyBanner />
-
-      <AgriTradeCenterEntry />
-
-      <section className="expo-section" style={{ padding: "16px 20px 0" }}>
-        <ExpoCategoryEntrySection />
-      </section>
-
-      <ExpoHotIssuesSection items={hotIssues} />
-
-      {promotions.length > 0 ? (
-  <ExpoPromotionHero
-    item={promotions.find((item) => item.is_featured) || promotions[0]}
-    mode="public"
-  />
-) : liveShow ? (
-  <ExpoLiveSection item={liveShow as any} />
-) : null}
-
-      <ExpoDealsSection items={homeDeals} />
-
-      <ExpoFarmerConsultSection questions={monthlyQuestionItems as any} />
-
-      <ExpoProblemSection contents={problemContents as any} />
-
-      <ExpoNewProductsSection items={autoNewProducts} />
-
-      <ExpoFooter />
-    </main>
+    <ExpoHomeLayout
+      hero={hero}
+      cms={cms}
+      heroTitle={heroTitle}
+      heroSubtitle={heroSubtitle}
+      heroDescription={heroDescription}
+      promotions={promotions as any}
+      liveShow={liveShow as any}
+      hotIssues={hotIssues as any}
+      homeDeals={homeDeals as any}
+      monthlyQuestionItems={monthlyQuestionItems as any}
+      problemContents={problemContents as any}
+      autoNewProducts={autoNewProducts as any}
+      responsiveCss={RESPONSIVE_CSS}
+      pageStyle={S.page}
+    />
   );
 }
 

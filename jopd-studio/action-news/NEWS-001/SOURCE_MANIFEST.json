@@ -1,0 +1,12 @@
+{
+  "news_id": "NEWS-001",
+  "source_class": "OFFICIAL_PRIMARY",
+  "authority": "농림축산식품부",
+  "title": "평년 도매가격의 80% 수준으로 농가소득 보장, 농산물가격안정제 본격 시행",
+  "published_at": "2026-09-10T14:00:00+09:00",
+  "retrieved_at": "2026-09-24T07:20:37.053192+00:00",
+  "original_url": "https://www.mafra.go.kr/bbs/home/792/579145/artclView.do",
+  "hunter_discovery_id": "broadcast-65f66e3e85cb2e4a",
+  "local_evidence_file": "jopd-studio/action-news/NEWS-001/sources/MAFRA_2026-09-10_PRICE_STABILITY.html",
+  "status": "ACQUIRED_NOT_YET_FACT_EXTRACTED"
+}

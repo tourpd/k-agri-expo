@@ -1,0 +1,626 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Channel =
+  | "한국농수산TV"
+  | "PandaTV"
+  | "K-AGRI"
+  | "PV5"
+  | "기업 홍보영상";
+
+type Duration = "쇼츠" | "3분" | "10분" | "20분";
+
+type ProgramType =
+  | "현장취재"
+  | "농민 성공사례"
+  | "제품 검증"
+  | "농법 소개"
+  | "다큐멘터리"
+  | "뉴스형"
+  | "인터뷰"
+  | "기업 홍보영상";
+
+const channels: Channel[] = [
+  "한국농수산TV",
+  "PandaTV",
+  "K-AGRI",
+  "PV5",
+  "기업 홍보영상",
+];
+
+const durations: Duration[] = ["쇼츠", "3분", "10분", "20분"];
+
+const programTypes: ProgramType[] = [
+  "현장취재",
+  "농민 성공사례",
+  "제품 검증",
+  "농법 소개",
+  "다큐멘터리",
+  "뉴스형",
+  "인터뷰",
+  "기업 홍보영상",
+];
+
+export default function StudioPage() {
+  const [channel, setChannel] =
+    useState<Channel>("한국농수산TV");
+
+  const [duration, setDuration] =
+    useState<Duration>("10분");
+
+  const [programType, setProgramType] =
+    useState<ProgramType>("현장취재");
+
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [memo, setMemo] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [showResult, setShowResult] = useState(false);
+
+  const fileSummary = useMemo(() => {
+    if (files.length === 0) return "선택된 파일 없음";
+    if (files.length === 1) return files[0].name;
+    return `${files[0].name} 외 ${files.length - 1}개`;
+  }, [files]);
+
+  function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    setFiles(Array.from(event.target.files ?? []));
+  }
+
+  function handleCreateBroadcast() {
+    setShowResult(true);
+
+    setTimeout(() => {
+      document
+        .getElementById("pd-result")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+    }, 100);
+  }
+
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f4f4f1",
+        color: "#171717",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif',
+      }}
+    >
+      <header
+        style={{
+          background: "#fff",
+          borderBottom: "1px solid #ddd",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1500,
+            margin: "0 auto",
+            padding: "26px 32px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                color: "#777",
+              }}
+            >
+              JOPD AI STUDIO
+            </div>
+
+            <h1
+              style={{
+                margin: "5px 0 0",
+                fontSize: 32,
+                fontWeight: 900,
+              }}
+            >
+              조PD AI 방송국
+            </h1>
+          </div>
+
+          <div
+            style={{
+              background: "#eee",
+              padding: "11px 16px",
+              fontWeight: 800,
+            }}
+          >
+            방송 기획 엔진 · MVP 1
+          </div>
+        </div>
+      </header>
+
+      <div
+        style={{
+          maxWidth: 1500,
+          margin: "0 auto",
+          padding: 32,
+        }}
+      >
+        <section
+          style={{
+            background: "#111",
+            color: "#fff",
+            padding: 32,
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              color: "#aaa",
+              fontSize: 14,
+              fontWeight: 800,
+            }}
+          >
+            자료 → 판단 → 기획 → 대본 → 영상
+          </div>
+
+          <h2
+            style={{
+              fontSize: 30,
+              lineHeight: 1.35,
+              margin: "10px 0",
+            }}
+          >
+            무엇을 찍을지 고민하지 마세요.
+            <br />
+            자료부터 넣으세요.
+          </h2>
+
+          <p
+            style={{
+              color: "#ccc",
+              fontSize: 17,
+              lineHeight: 1.7,
+            }}
+          >
+            조PD AI 방송국이 소재의 핵심, 인물, 숫자,
+            갈등과 훅을 찾아 방송 구조를 설계합니다.
+          </p>
+        </section>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "minmax(0,1fr) minmax(320px,420px)",
+            gap: 24,
+            alignItems: "start",
+          }}
+        >
+          <div>
+            <Section title="1. 어느 채널에 방송할까요?">
+              <div style={gridStyle}>
+                {channels.map((item) => (
+                  <Choice
+                    key={item}
+                    active={channel === item}
+                    onClick={() => setChannel(item)}
+                  >
+                    {item}
+                  </Choice>
+                ))}
+              </div>
+            </Section>
+
+            <Section title="2. 방송 자료를 넣어주세요">
+              <p style={{ color: "#666" }}>
+                기사 · PDF · 사진 · 촬영영상 · 음성 ·
+                메모를 한꺼번에 넣을 수 있습니다.
+              </p>
+
+              <label
+                style={{
+                  marginTop: 20,
+                  minHeight: 220,
+                  border: "2px dashed #bbb",
+                  background: "#fafafa",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: "50%",
+                    background: "#111",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 36,
+                  }}
+                >
+                  +
+                </div>
+
+                <strong
+                  style={{
+                    marginTop: 15,
+                    fontSize: 20,
+                  }}
+                >
+                  파일 추가
+                </strong>
+
+                <span
+                  style={{
+                    marginTop: 8,
+                    color: "#777",
+                  }}
+                >
+                  PDF · 사진 · 영상 · 음성
+                </span>
+
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  style={{ display: "none" }}
+                  accept=".pdf,.txt,.doc,.docx,image/*,video/*,audio/*"
+                />
+              </label>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: 14,
+                  background: "#eee",
+                  fontWeight: 700,
+                }}
+              >
+                {fileSummary}
+              </div>
+
+              <label style={labelStyle}>
+                유튜브 / 기사 / 홈페이지 URL
+              </label>
+
+              <input
+                value={sourceUrl}
+                onChange={(e) =>
+                  setSourceUrl(e.target.value)
+                }
+                placeholder="https://"
+                style={inputStyle}
+              />
+
+              <label style={labelStyle}>
+                조PD 추가 지시
+              </label>
+
+              <textarea
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
+                rows={6}
+                placeholder="예: 농민이 실제로 얼마나 돈을 버는지 중심으로 구성해. 가장 강한 숫자를 앞에 배치해."
+                style={{
+                  ...inputStyle,
+                  resize: "vertical",
+                  lineHeight: 1.7,
+                }}
+              />
+            </Section>
+
+            <Section title="3. 영상 길이를 선택하세요">
+              <div style={gridStyle}>
+                {durations.map((item) => (
+                  <Choice
+                    key={item}
+                    active={duration === item}
+                    onClick={() => setDuration(item)}
+                  >
+                    {item}
+                  </Choice>
+                ))}
+              </div>
+            </Section>
+
+            <Section title="4. 어떤 방송으로 만들까요?">
+              <div style={gridStyle}>
+                {programTypes.map((item) => (
+                  <Choice
+                    key={item}
+                    active={programType === item}
+                    onClick={() => setProgramType(item)}
+                  >
+                    {item}
+                  </Choice>
+                ))}
+              </div>
+            </Section>
+
+            <button
+              type="button"
+              onClick={handleCreateBroadcast}
+              style={{
+                width: "100%",
+                border: 0,
+                background: "#111",
+                color: "#fff",
+                padding: 22,
+                fontSize: 22,
+                fontWeight: 900,
+                cursor: "pointer",
+              }}
+            >
+              방송 만들기 →
+            </button>
+          </div>
+
+          <aside
+            style={{
+              background: "#fff",
+              border: "1px solid #ddd",
+              padding: 24,
+              position: "sticky",
+              top: 20,
+            }}
+          >
+            <div
+              style={{
+                color: "#777",
+                fontSize: 12,
+                fontWeight: 900,
+              }}
+            >
+              JOPD PD ENGINE
+            </div>
+
+            <h2 style={{ fontSize: 24 }}>
+              방송 전에 먼저 판단
+            </h2>
+
+            {[
+              "이 소재를 왜 지금 방송해야 하는가?",
+              "시청자가 가장 궁금해할 것은 무엇인가?",
+              "가장 강한 인물은 누구인가?",
+              "가장 강한 숫자는 무엇인가?",
+              "문제와 갈등은 무엇인가?",
+              "반전은 무엇인가?",
+              "첫 5초에 무엇을 보여줄 것인가?",
+              "현장에서 무엇을 추가로 찍어야 하는가?",
+            ].map((text, index) => (
+              <div
+                key={text}
+                style={{
+                  padding: "14px 0",
+                  borderBottom: "1px solid #eee",
+                  display: "grid",
+                  gridTemplateColumns: "35px 1fr",
+                  gap: 10,
+                }}
+              >
+                <span
+                  style={{
+                    color: "#999",
+                    fontSize: 12,
+                    fontWeight: 900,
+                  }}
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <strong
+                  style={{
+                    fontSize: 14,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {text}
+                </strong>
+              </div>
+            ))}
+
+            <div
+              style={{
+                marginTop: 22,
+                padding: 18,
+                background: "#eee",
+                fontWeight: 800,
+                lineHeight: 1.8,
+              }}
+            >
+              {channel}
+              <br />
+              {duration} · {programType}
+            </div>
+          </aside>
+        </div>
+
+        {showResult && (
+          <section
+            id="pd-result"
+            style={{
+              marginTop: 32,
+              background: "#fff",
+              border: "1px solid #ddd",
+              padding: 28,
+            }}
+          >
+            <div
+              style={{
+                color: "#777",
+                fontSize: 12,
+                fontWeight: 900,
+              }}
+            >
+              PD ANALYSIS
+            </div>
+
+            <h2 style={{ fontSize: 28 }}>
+              방송 기획 결과
+            </h2>
+
+            <Result label="채널" value={channel} />
+            <Result label="영상 길이" value={duration} />
+            <Result
+              label="방송 유형"
+              value={programType}
+            />
+            <Result
+              label="입력 파일"
+              value={fileSummary}
+            />
+            <Result
+              label="URL"
+              value={sourceUrl || "입력하지 않음"}
+            />
+            <Result
+              label="조PD 지시"
+              value={memo || "추가 지시 없음"}
+            />
+
+            <div
+              style={{
+                marginTop: 24,
+                background: "#111",
+                color: "#fff",
+                padding: 22,
+              }}
+            >
+              <strong>다음 단계</strong>
+
+              <p
+                style={{
+                  color: "#ccc",
+                  lineHeight: 1.7,
+                }}
+              >
+                다음 개발에서 실제 AI PD 엔진을 연결합니다.
+                자료를 분석해 제목, 훅, 핵심 숫자,
+                중심인물, 갈등, 방송 구성표를 생성합니다.
+              </p>
+            </div>
+          </section>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      style={{
+        background: "#fff",
+        border: "1px solid #ddd",
+        padding: 28,
+        marginBottom: 20,
+      }}
+    >
+      <h2
+        style={{
+          marginTop: 0,
+          fontSize: 22,
+        }}
+      >
+        {title}
+      </h2>
+
+      {children}
+    </section>
+  );
+}
+
+function Choice({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        minHeight: 58,
+        border: active
+          ? "1px solid #111"
+          : "1px solid #ccc",
+        background: active ? "#111" : "#fff",
+        color: active ? "#fff" : "#111",
+        padding: 12,
+        fontSize: 16,
+        fontWeight: 800,
+        cursor: "pointer",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Result({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "150px 1fr",
+        gap: 20,
+        padding: "15px 0",
+        borderBottom: "1px solid #eee",
+      }}
+    >
+      <strong>{label}</strong>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+const gridStyle: React.CSSProperties = {
+  marginTop: 18,
+  display: "grid",
+  gridTemplateColumns:
+    "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: 10,
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  marginTop: 24,
+  marginBottom: 8,
+  fontWeight: 900,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box",
+  border: "1px solid #ccc",
+  background: "#fff",
+  color: "#111",
+  padding: 15,
+  fontSize: 16,
+};

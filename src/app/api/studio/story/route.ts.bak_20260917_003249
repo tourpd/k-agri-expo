@@ -1,0 +1,682 @@
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
+import {
+  normalizeTranscriptText,
+  isLowValueClosing,
+  looksLikeQuestion,
+} from "@/lib/jopd-studio/transcript-normalizer";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function extractOutputText(data: any) {
+  if (typeof data?.output_text === "string") {
+    return data.output_text;
+  }
+
+  const pieces: string[] = [];
+
+  for (const item of data?.output || []) {
+    for (const content of item?.content || []) {
+      if (typeof content?.text === "string") {
+        pieces.push(content.text);
+      }
+    }
+  }
+
+  return pieces.join("\n");
+}
+
+function parseJson(text: string) {
+  const cleaned = text
+    .replace(/^```json/i, "")
+    .replace(/^```/, "")
+    .replace(/```$/, "")
+    .trim();
+
+  return JSON.parse(cleaned);
+}
+
+function actualTranscriptForRange(
+  source: any,
+  start: number,
+  end: number
+) {
+  const overlapping = (source.segments || []).filter(
+    (seg: any) =>
+      Number(seg.end) > start &&
+      Number(seg.start) < end
+  );
+
+  return overlapping
+    .map((seg: any) => seg.text)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildQACandidates(sources: any[]) {
+  const result: any[] = [];
+
+  for (const source of sources) {
+    const segments = source.segments || [];
+
+    for (let i = 0; i < segments.length; i++) {
+      const q = segments[i];
+
+      if (!q.isQuestion) continue;
+
+      const answers: any[] = [];
+      const maxEnd = Number(q.end) + 90;
+
+      for (
+        let j = i + 1;
+        j < segments.length && answers.length < 5;
+        j++
+      ) {
+        const seg = segments[j];
+
+        if (Number(seg.start) > maxEnd) break;
+
+        if (seg.isQuestion && answers.length > 0) break;
+
+        if (!seg.lowValueClosing) {
+          answers.push({
+            start: seg.start,
+            end: seg.end,
+            text: seg.text,
+          });
+        }
+      }
+
+      result.push({
+        sourceId: source.sourceId,
+        sourceName: source.sourceName,
+        questionStart: q.start,
+        questionEnd: q.end,
+        question: q.text,
+        answerWindow: answers,
+      });
+    }
+  }
+
+  return result;
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    const rawSources = Array.isArray(body.sources)
+      ? body.sources
+      : [];
+
+    const directorIntent = String(
+      body.directorIntent || ""
+    ).trim();
+
+    if (!rawSources.length) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "분석된 원본이 없습니다.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY 없음");
+    }
+
+    const model =
+      process.env.OPENAI_CRM_MODEL ||
+      process.env.OPENAI_JOPD_MODEL;
+
+    if (!model) {
+      throw new Error(
+        "OPENAI_CRM_MODEL 또는 OPENAI_JOPD_MODEL 설정이 필요합니다."
+      );
+    }
+
+    /*
+     * SOURCE TRUTH:
+     * rawText는 보존하고 분석용 text만 용어 정규화.
+     */
+    const sources = rawSources.map((source: any) => {
+      const segments = Array.isArray(source.segments)
+        ? source.segments.map((seg: any) => {
+            const rawText = String(seg.text || "");
+            const text =
+              normalizeTranscriptText(rawText);
+
+            return {
+              start: Number(seg.start || 0),
+              end: Number(seg.end || 0),
+              rawText,
+              text,
+              isQuestion: looksLikeQuestion(text),
+              lowValueClosing:
+                isLowValueClosing(text),
+            };
+          })
+        : [];
+
+      return {
+        sourceId: String(source.sourceId || ""),
+        sourceName: String(source.sourceName || ""),
+        duration: Number(source.duration || 0),
+        segments,
+      };
+    });
+
+    const questionCandidates = sources.flatMap(
+      (source: any) =>
+        source.segments
+          .filter((seg: any) => seg.isQuestion)
+          .map((seg: any) => ({
+            sourceId: source.sourceId,
+            sourceName: source.sourceName,
+            start: seg.start,
+            end: seg.end,
+            text: seg.text,
+          }))
+    );
+
+    /*
+     * 질문 뒤 실제 답변 후보를 서버가 먼저 묶는다.
+     * AI가 질문은 찾고 답을 놓치는 문제를 줄인다.
+     */
+    const qaCandidates =
+      buildQACandidates(sources);
+
+    const system = `
+당신은 JOPD AI 방송국의
+"1차 가편실 STORY PRODUCER"다.
+
+당신의 임무는 단순 요약이 아니다.
+
+여러 촬영 원본을 모두 읽고,
+PD가 만들고 싶은 방송 의도가 있다면 그것을
+최우선 편집 방향으로 삼아 실제 방송 설계도를 만든다.
+
+====================================
+두 종류의 진실을 반드시 구분한다
+====================================
+
+A. SOURCE FACT
+실제 촬영 원본에 존재하는 발언과 사실.
+
+B. PRODUCED ELEMENT
+방송을 완성하기 위해 새로 제작하는 표현 요소.
+
+예:
+- AI NARRATION
+- OPENING
+- ENDING
+- LOCATION_ZOOM
+- EXTERNAL_INSERT
+- ARCHIVE
+- GRAPHIC
+- AI_VISUAL
+- BREATH
+
+SOURCE에 없는 것을 SOURCE라고 만들어서는 안 된다.
+
+그러나 SOURCE에 없는 연결 문장,
+오프닝, 엔딩, 위치 설명, 보충 화면은
+방송 제작 요소로 제안할 수 있다.
+
+핵심 원칙:
+
+"사실은 창작하지 않는다.
+ 표현은 제작할 수 있다."
+
+====================================
+PD DIRECTOR'S INTENT
+====================================
+
+PD가 directorIntent를 입력했다면
+그것은 이 방송에서 무엇을 말할 것인지에 대한
+최상위 편집 방향이다.
+
+AI가 발견한 주제와
+PD가 만들고 싶은 주제는 구분한다.
+
+PD 의도에 포함된 주장 가운데
+원본으로 확인되지 않는 사실은
+SOURCE FACT처럼 취급하지 않는다.
+
+검증이 필요한 내용은
+RESEARCH_NEEDED 제작 요소로 표시한다.
+
+PD 의도를 억지로 원본 인터뷰의 발언인 것처럼
+변조하지 않는다.
+
+====================================
+SOURCE TRUTH
+====================================
+
+SOURCE 블록에는 반드시 실제 sourceId,
+sourceName, sourceStart, sourceEnd가 있어야 한다.
+
+없는 발언, 숫자, 사람, 장소, 사건을
+SOURCE로 만들지 않는다.
+
+같은 파일에서 여러 구간을 사용할 수 있다.
+
+질문은 매우 중요하다.
+
+특히:
+WHY / WHAT / HOW / PROBLEM / RESULT
+
+질문과 실제 답변을 연결해서 판단한다.
+
+일반적인 "감사합니다",
+"시청해주셔서 감사합니다" 같은 인사는
+그 자체로 의미 있는 ENDING이 아니다.
+
+====================================
+STORY GAP ENGINE
+====================================
+
+SOURCE만 이어 붙였을 때 이야기가 끊기거나
+시청자가 이해하기 어렵다면 부족한 요소를 찾는다.
+
+1. 연결 논리가 부족
+→ NARRATION
+
+2. 강한 오프닝이 원본에 없음
+→ OPENING 제작
+
+3. 의미 있는 엔딩이 원본에 없음
+→ ENDING 제작
+
+4. 장소 이해가 중요하지만 화면이 부족
+→ LOCATION_ZOOM
+
+LOCATION_ZOOM은 예를 들어
+지구 → 대한민국 → 지역 → 현장으로
+줌인하는 Earth/위성지도형 표현을 제안할 수 있다.
+
+5. 관련 실제 자료화면이 필요
+→ ARCHIVE 또는 EXTERNAL_INSERT
+
+외부 영상은 자동으로 사용 가능하다고 가정하지 않는다.
+rightsStatus는 반드시 "CHECK_REQUIRED"로 한다.
+
+6. 설명 화면이 필요
+→ GRAPHIC
+
+7. 적절한 실제 화면을 확보하기 어렵고
+재현이 적합
+→ AI_VISUAL
+
+AI_VISUAL은 실제 촬영 영상인 것처럼
+속이면 안 된다.
+AI 생성/재현임을 내부 메타데이터로 명시한다.
+
+8. 감정적인 발언 뒤에 여운이 필요
+→ BREATH
+
+모든 빈 공간을 내레이션으로 채우지 않는다.
+
+====================================
+영상 재료 우선순위
+====================================
+
+가능하면 다음 순서로 판단한다.
+
+1 SOURCE
+2 ARCHIVE / K-LIBRARY
+3 사용권 확인 가능한 EXTERNAL_INSERT
+4 LOCATION_ZOOM / MAP / GRAPHIC
+5 AI_VISUAL
+
+AI 영상은 실제 원본을 대체하기 위한
+첫 번째 선택이 아니다.
+
+====================================
+OPENING / ENDING
+====================================
+
+강한 실제 SOURCE 오프닝이 있으면 우선 사용한다.
+
+없다면 OPENING 제작안을 만든다.
+
+OPENING은 필요하면:
+- NARRATION
+- SOURCE 영상
+- LOCATION_ZOOM
+- GRAPHIC
+- AI_VISUAL
+조합을 제안할 수 있다.
+
+ENDING도 실제 SOURCE가 강하면 우선한다.
+
+없다면 PD 의도와 원본에서 확인된 사실을 바탕으로
+ENDING NARRATION을 제작할 수 있다.
+
+제작자의 희망이나 메시지는
+사실처럼 말하지 말고
+"바람/기원/의견"이라는 성격이 드러나야 한다.
+
+====================================
+극적 구성
+====================================
+
+단순 촬영 시간순으로 정리하지 않는다.
+
+다음을 찾는다.
+
+- HOOK
+- 핵심 질문
+- 질문의 실제 답
+- 주인공/핵심 인물
+- 문제
+- 중요한 숫자
+- 발견
+- 감정 변화
+- 기대
+- 결과
+- 미래
+- 여운
+
+불필요한 INFORMATION을 반복하지 않는다.
+
+각 STORY 블록은 반드시
+새로운 정보, 질문, 답, 갈등, 감정,
+전환 중 하나를 만들어야 한다.
+
+실제 CLIMAX가 없다면
+억지로 만들지 않는다.
+
+climaxStatus = "MISSING"으로 한다.
+
+====================================
+출력
+====================================
+
+JSON만 출력한다.
+
+{
+  "title": "",
+  "sourceDiscoveredStory": "",
+  "directorStory": "",
+  "coreStory": "",
+  "dramaticReason": "",
+
+  "centralQuestion": {
+    "question": "",
+    "answerSummary": "",
+    "sourceId": "",
+    "sourceName": "",
+    "sourceStart": 0,
+    "sourceEnd": 0
+  },
+
+  "storyQuestions": [
+    {
+      "type": "WHY|WHAT|HOW|PROBLEM|RESULT|OTHER",
+      "question": "",
+      "answerSummary": "",
+      "importance": "HIGH|MEDIUM|LOW",
+      "sourceId": "",
+      "sourceName": "",
+      "sourceStart": 0,
+      "sourceEnd": 0
+    }
+  ],
+
+  "storyArc": [
+    {
+      "kind": "SOURCE|NARRATION|BREATH|LOCATION_ZOOM|EXTERNAL_INSERT|ARCHIVE|GRAPHIC|AI_VISUAL|RESEARCH_NEEDED",
+      "role": "OPENING|HOOK|QUESTION|SETUP|PERSON|ANSWER|PROBLEM|DISCOVERY|INFORMATION|EMOTION|CLIMAX|BRIDGE|ENDING",
+      "reason": "",
+
+      "sourceId": "",
+      "sourceName": "",
+      "sourceStart": 0,
+      "sourceEnd": 0,
+
+      "transcript": "",
+
+      "narration": "",
+      "visualInstruction": "",
+      "searchQuery": "",
+      "rightsStatus": "",
+      "disclosure": "",
+      "holdAfter": 0
+    }
+  ],
+
+  "climaxStatus": "FOUND|MISSING",
+  "endingStatus": "FOUND|PRODUCED|MISSING",
+
+  "emotionalArc": [
+    {
+      "stage": "",
+      "emotion": "",
+      "reason": ""
+    }
+  ],
+
+  "excludedSources": [
+    {
+      "sourceName": "",
+      "reason": ""
+    }
+  ],
+
+  "missingShots": [
+    {
+      "reason": "",
+      "suggestion": ""
+    }
+  ]
+}
+
+storyArc는 보통 5~10개 핵심 블록으로 구성한다.
+내용이 충분하지 않으면 억지로 개수를 채우지 않는다.
+
+SOURCE가 아닌 제작 블록은
+sourceId/sourceName/sourceStart/sourceEnd를
+빈 값/0으로 둔다.
+
+NARRATION에는 실제 성우가 읽을 수 있는
+짧고 자연스러운 방송 문장을 작성한다.
+
+단, 원본에서 확인되지 않은 새로운 사실을
+NARRATION으로 단정하지 않는다.
+
+LOCATION_ZOOM / EXTERNAL_INSERT /
+ARCHIVE / GRAPHIC / AI_VISUAL에는
+visualInstruction을 구체적으로 작성한다.
+
+EXTERNAL_INSERT에는
+검색에 사용할 searchQuery와
+rightsStatus="CHECK_REQUIRED"를 넣는다.
+`;
+
+    const input = {
+      directorIntent,
+      sources,
+      questionCandidates,
+      qaCandidates,
+    };
+
+    const response = await fetch(
+      "https://api.openai.com/v1/responses",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          instructions: system,
+          input: JSON.stringify(input),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `STORY ENGINE 실패: ${await response.text()}`
+      );
+    }
+
+    const data = await response.json();
+
+    const story = parseJson(
+      extractOutputText(data)
+    );
+
+    const sourceMap = new Map(
+      sources.map((source: any) => [
+        source.sourceId,
+        source,
+      ])
+    );
+
+    /*
+     * 가장 중요한 SOURCE TRUTH 보강.
+     *
+     * AI가 SOURCE transcript를 써도 믿지 않는다.
+     * 실제 source/time과 겹치는 원본 전사문을
+     * 서버가 다시 찾아 transcript를 덮어쓴다.
+     */
+    const validArc = (
+      Array.isArray(story.storyArc)
+        ? story.storyArc
+        : []
+    )
+      .map((item: any) => {
+        const kind = String(
+          item.kind ||
+            (item.sourceId ? "SOURCE" : "NARRATION")
+        ).toUpperCase();
+
+        if (kind !== "SOURCE") {
+          return {
+            ...item,
+            kind,
+            sourceId: "",
+            sourceName: "",
+            sourceStart: 0,
+            sourceEnd: 0,
+          };
+        }
+
+        const source = sourceMap.get(
+          item.sourceId
+        ) as any;
+
+        if (!source) return null;
+
+        const start = Number(item.sourceStart);
+        const end = Number(item.sourceEnd);
+
+        if (
+          !Number.isFinite(start) ||
+          !Number.isFinite(end) ||
+          end <= start ||
+          start < 0 ||
+          end > Number(source.duration) + 0.5
+        ) {
+          return null;
+        }
+
+        const actualTranscript =
+          actualTranscriptForRange(
+            source,
+            start,
+            end
+          );
+
+        if (!actualTranscript) {
+          return null;
+        }
+
+        if (
+          item.role === "ENDING" &&
+          isLowValueClosing(actualTranscript)
+        ) {
+          return null;
+        }
+
+        return {
+          ...item,
+          kind: "SOURCE",
+          sourceName: source.sourceName,
+          transcript: actualTranscript,
+        };
+      })
+      .filter(Boolean);
+
+    /*
+     * 중앙 질문 역시 가능한 경우 실제 질문 후보로
+     * 교정한다.
+     */
+    let centralQuestion = story.centralQuestion;
+
+    if (
+      centralQuestion &&
+      centralQuestion.sourceId
+    ) {
+      const matched = questionCandidates.find(
+        (q: any) =>
+          q.sourceId === centralQuestion.sourceId &&
+          Math.abs(
+            Number(q.start) -
+              Number(centralQuestion.sourceStart || 0)
+          ) < 3
+      );
+
+      if (matched) {
+        centralQuestion = {
+          ...centralQuestion,
+          question: matched.text,
+          sourceName: matched.sourceName,
+          sourceStart: matched.start,
+          sourceEnd: matched.end,
+        };
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      detectedQuestions: questionCandidates,
+      qaCandidates,
+
+      story: {
+        ...story,
+        centralQuestion,
+        storyArc: validArc,
+        directorStory:
+          story.directorStory ||
+          directorIntent ||
+          "",
+      },
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}

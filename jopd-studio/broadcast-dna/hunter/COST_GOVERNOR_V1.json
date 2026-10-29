@@ -1,0 +1,119 @@
+{
+  "version": "JOPD_BROADCAST_HUNTER_COST_GOVERNOR_V1",
+  "principle": "DISCOVER_CHEAP_RESEARCH_SELECTIVELY_REUSE_MEMORY",
+  "mission": "방송 연구 품질을 훼손하지 않으면서 OpenAI API 사용량과 중복 연구 비용을 최소화한다.",
+
+  "rules": {
+    "local_first": true,
+    "deduplicate_before_ai": true,
+    "reuse_existing_evidence": true,
+    "reuse_approved_memory": true,
+    "never_research_same_source_without_reason": true,
+    "deep_research_requires_candidate_gate": true,
+    "expensive_model_requires_escalation": true,
+    "budget_exhaustion_stops_paid_research_not_discovery": true
+  },
+
+  "pipeline": [
+    {
+      "stage": "DISCOVERY",
+      "default_cost_class": "FREE_LOCAL",
+      "policy": "yt-dlp와 로컬 메타데이터로 넓게 발견한다. 이 단계에서는 LLM을 호출하지 않는다."
+    },
+    {
+      "stage": "DEDUPLICATION",
+      "default_cost_class": "FREE_LOCAL",
+      "policy": "URL, video id, source hash, 기존 Evidence, 기존 Research, Approved Memory를 검사하여 이미 처리한 콘텐츠는 다시 연구하지 않는다."
+    },
+    {
+      "stage": "CHEAP_RELEVANCE_GATE",
+      "default_cost_class": "FREE_LOCAL_FIRST",
+      "policy": "제목, 설명, 채널, 길이, 키워드, 기존 연구 태그로 연구가치가 낮은 콘텐츠를 먼저 제거한다."
+    },
+    {
+      "stage": "EVIDENCE_ACQUISITION",
+      "default_cost_class": "MOSTLY_LOCAL",
+      "policy": "다운로드, ffmpeg, 프레임 추출은 로컬 처리한다. 이미 존재하는 Evidence는 재생성하지 않는다."
+    },
+    {
+      "stage": "TRANSCRIPTION",
+      "default_cost_class": "PAID_ONLY_IF_NEEDED",
+      "policy": "공식 자막이나 신뢰 가능한 기존 transcript가 있으면 재전사하지 않는다. 없을 때만 음성 전사를 호출한다."
+    },
+    {
+      "stage": "VISUAL_INTELLIGENCE",
+      "default_cost_class": "PAID_SELECTIVE",
+      "policy": "모든 프레임을 분석하지 않는다. 대표 프레임과 변화 지점을 우선 분석하고 필요할 때만 밀도를 높인다."
+    },
+    {
+      "stage": "DEEP_RESEARCH",
+      "default_cost_class": "PAID_HIGH_VALUE_ONLY",
+      "policy": "관련성, 새로움, 연구가치, 기존 Memory 중복 여부를 통과한 콘텐츠만 Deep Research한다."
+    },
+    {
+      "stage": "MEMORY_PROMOTION",
+      "default_cost_class": "FREE_DETERMINISTIC_FIRST",
+      "policy": "Evidence Promotion Gate는 가능한 한 로컬 규칙 검사로 수행한다. 모델 자신의 promotion 판정을 권위로 사용하지 않는다."
+    },
+    {
+      "stage": "WRITER_RETRIEVAL",
+      "default_cost_class": "REUSE_FIRST",
+      "policy": "새 연구를 시작하기 전에 APPROVED_MEMORY를 검색한다. 충분한 지식이 있으면 원본 콘텐츠를 다시 연구하지 않는다."
+    }
+  ],
+
+  "research_priority": {
+    "HIGH": [
+      "조PD가 직접 지정한 작품 또는 연구 질문",
+      "기존 Memory에 없는 새로운 창작 메커니즘",
+      "웃음 또는 감정의 강한 Moment 후보",
+      "반복 활용 가능한 캐릭터 관계 구조",
+      "K-AGRI 또는 판매왕 세계관에 높은 전이 가능성이 있는 구조"
+    ],
+    "LOW": [
+      "이미 충분히 연구된 동일 메커니즘",
+      "중복 업로드",
+      "제목만 다른 동일 영상",
+      "연구 질문과 무관한 영상",
+      "근거 확보 가능성이 매우 낮은 콘텐츠"
+    ]
+  },
+
+  "escalation": {
+    "default": "CHEAPEST_CAPABLE_PATH",
+    "rule": "싼 단계에서 해결되지 않을 때만 다음 비용 단계로 승격한다.",
+    "sequence": [
+      "LOCAL_METADATA",
+      "EXISTING_SUBTITLE_OR_TRANSCRIPT",
+      "SELECTIVE_TRANSCRIPTION",
+      "SELECTIVE_VISUAL",
+      "DEEP_RESEARCH",
+      "HIGHER_COST_RESEARCH_ONLY_IF_REQUIRED"
+    ]
+  },
+
+  "accounting_required": {
+    "per_work": true,
+    "fields": [
+      "source_id",
+      "discovery_cost",
+      "transcription_model",
+      "visual_model",
+      "deep_research_model",
+      "input_tokens",
+      "output_tokens",
+      "estimated_cost",
+      "approved_moment_count",
+      "approved_dna_count",
+      "duplicate_avoided",
+      "reused_memory"
+    ]
+  },
+
+  "future_budget_controls": {
+    "daily_budget": "CONFIGURABLE",
+    "per_work_budget": "CONFIGURABLE",
+    "monthly_budget": "CONFIGURABLE",
+    "on_limit": "STOP_NEW_PAID_RESEARCH_AND_KEEP_FREE_DISCOVERY_QUEUEING"
+  }
+}

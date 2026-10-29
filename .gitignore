@@ -51,5 +51,8 @@ temp/
 backup-videos
 data
 
-# Supabase local temp
-supabase/.temp/
+# Claude 2026-10-16: 백업 보관함은 git에 올리지 않음
+_backups_before/
+
+storage/backups/
+storage/logs/

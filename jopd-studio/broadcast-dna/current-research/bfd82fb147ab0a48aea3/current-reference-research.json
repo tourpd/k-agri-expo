@@ -1,0 +1,599 @@
+{
+  "version": "JOPD_CURRENT_REFERENCE_RESEARCH_V1",
+  "sourceUrl": "https://www.youtube.com/watch?v=XlzLoQD3MC8",
+  "sourceTitle": "CURRENT REFERENCE XlzLoQD3MC8",
+  "cacheKey": "bfd82fb147ab0a48aea3",
+  "cacheHit": false,
+  "research": {
+    "researchId": "research-cc223552afe794e1",
+    "createdAt": "2026-09-23T19:41:24.325Z",
+    "researchQuestion": "이 작품 \"CURRENT REFERENCE XlzLoQD3MC8\"을 요약하지 말고 방송 창작 구조로 해부하라.\n\n실제 제공된 Evidence만 사용한다.\n\n특히 다음을 연구한다.\n\n1. 첫 훅 이전과 이후에 실제로 무엇이 달라지는가.\n2. 어떤 정보 공백 또는 질문이 다음 장면을 보게 만드는가.\n3. 사람, 행동, 대사, 화면, 공간이 어떤 순서로 결합되는가.\n4. 강한 순간마다 BEFORE → SETUP → EXPECTATION → ESCALATION → TRIGGER → REACTION → AFTER를 복원한다.\n5. PRIMARY_CAUSE, NECESSARY_CONDITION, AMPLIFIER, DECORATION을 구분한다.\n6. 단순히 \"재미있다\", \"감동적이다\", \"반전이다\"라고 설명하지 않는다.\n7. 제거했을 때 구조가 약해지는 요소를 반사실적으로 검토한다.\n8. 다른 작품에 재사용 가능한 DNA를 장면 복제가 아닌 추상 원리로 추출한다.\n9. 이 DNA가 자동차 대리점, 로컬 비즈니스, 사람 중심 브랜디드 콘텐츠에 어떻게 변형될 수 있는지 원리 수준에서 제시한다.\n10. Performance Evidence는 실제 관측 성과일 뿐 성공 원인의 증거로 사용하지 않는다.\n11. Evidence가 부족한 판단은 INSUFFICIENT_EVIDENCE로 남긴다.",
+    "queueItemId": null,
+    "truthClass": "RESEARCHED_NOW",
+    "model": "gpt-4.1-mini",
+    "evidenceCount": 3,
+    "sourceUrls": [
+      "https://www.youtube.com/watch?v=XlzLoQD3MC8"
+    ],
+    "evidenceManifest": [
+      {
+        "evidenceType": "MULTIMODAL",
+        "sourceUrl": "https://www.youtube.com/watch?v=XlzLoQD3MC8",
+        "sourceTitle": "CURRENT REFERENCE XlzLoQD3MC8",
+        "workTitle": "CURRENT REFERENCE XlzLoQD3MC8",
+        "episodeTitle": null,
+        "genre": [],
+        "startMs": 0,
+        "endMs": 60094,
+        "provenanceNote": "MULTIMODAL_EVIDENCE_ID=0eed6f7a404cef61987c; VERSION=JOPD_BROADCAST_MULTIMODAL_EVIDENCE_V1; TIMEBASE=SECONDS_FROM_SOURCE_START; TIMELINE_UNITS=7; AUDIO=TRANSCRIPTION_EVIDENCE; VISUAL=FRAME_OBSERVATION_EVIDENCE; NOT_COMMENTS; NOT_AUDIO_MUSIC_OBSERVATION; NOT_CREATOR_INTERVIEW"
+      },
+      {
+        "evidenceType": "AUDIO_OBSERVATION",
+        "sourceUrl": "https://www.youtube.com/watch?v=XlzLoQD3MC8",
+        "sourceTitle": "CURRENT REFERENCE XlzLoQD3MC8",
+        "workTitle": "CURRENT REFERENCE XlzLoQD3MC8",
+        "episodeTitle": null,
+        "genre": [],
+        "startMs": 0,
+        "endMs": 60094,
+        "provenanceNote": "OBSERVED_AUDIO_SIGNAL; NOT_MUSIC_IDENTIFICATION; NOT_SFX_IDENTIFICATION"
+      },
+      {
+        "evidenceType": "YOUTUBE_PERFORMANCE",
+        "sourceUrl": "https://www.youtube.com/watch?v=XlzLoQD3MC8",
+        "sourceTitle": "[Mercedes-Benz Care&Trust Campaign] 당신의 옆자리엔 누가 있나요",
+        "workTitle": "[Mercedes-Benz Care&Trust Campaign] 당신의 옆자리엔 누가 있나요",
+        "episodeTitle": null,
+        "genre": [],
+        "startMs": null,
+        "endMs": null,
+        "provenanceNote": "YouTube platform metadata observed at 2026-09-23T19:40:32.057Z"
+      }
+    ],
+    "analysis": {
+      "work": {
+        "work_id": "XlzLoQD3MC8",
+        "title": "[Mercedes-Benz Care&Trust Campaign] 당신의 옆자리엔 누가 있나요",
+        "program_or_brand": "Mercedes-Benz",
+        "country": "UNKNOWN",
+        "language": "Korean",
+        "media_type": "Video Advertisement",
+        "genre": [
+          "Emotional Branded Content",
+          "Automotive Advertisement"
+        ],
+        "source_provenance": [
+          "https://www.youtube.com/watch?v=XlzLoQD3MC8",
+          "MULTIMODAL_EVIDENCE_ID=0eed6f7a404cef61987c",
+          "OBSERVED_AUDIO_SIGNAL",
+          "YOUTUBE_PERFORMANCE_METADATA"
+        ],
+        "creator_intent": {
+          "status": "INFERRED_CREATIVE_INTENT",
+          "problem_to_solve": "How to emotionally connect the audience to the Mercedes-Benz brand through themes of trust, care, and lifelong companionship symbolized by the relationship between the driver and the car, using cinematic and auditory storytelling.",
+          "desired_audience_change": "To evoke feelings of gratitude, trust, and emotional attachment to the Mercedes-Benz brand as a lifelong partner.",
+          "evidence": []
+        }
+      },
+      "research_question": "이 작품 \"CURRENT REFERENCE XlzLoQD3MC8\"을 요약하지 말고 방송 창작 구조로 해부하라.\n\n실제 제공된 Evidence만 사용한다.\n\n특히 다음을 연구한다.\n\n1. 첫 훅 이전과 이후에 실제로 무엇이 달라지는가.\n2. 어떤 정보 공백 또는 질문이 다음 장면을 보게 만드는가.\n3. 사람, 행동, 대사, 화면, 공간이 어떤 순서로 결합되는가.\n4. 강한 순간마다 BEFORE → SETUP → EXPECTATION → ESCALATION → TRIGGER → REACTION → AFTER를 복원한다.\n5. PRIMARY_CAUSE, NECESSARY_CONDITION, AMPLIFIER, DECORATION을 구분한다.\n6. 단순히 \"재미있다\", \"감동적이다\", \"반전이다\"라고 설명하지 않는다.\n7. 제거했을 때 구조가 약해지는 요소를 반사실적으로 검토한다.\n8. 다른 작품에 재사용 가능한 DNA를 장면 복제가 아닌 추상 원리로 추출한다.\n9. 이 DNA가 자동차 대리점, 로컬 비즈니스, 사람 중심 브랜디드 콘텐츠에 어떻게 변형될 수 있는지 원리 수준에서 제시한다.\n10. Performance Evidence는 실제 관측 성과일 뿐 성공 원인의 증거로 사용하지 않는다.\n11. Evidence가 부족한 판단은 INSUFFICIENT_EVIDENCE로 남긴다.",
+      "evidence_assessment": {
+        "multimodal_evidence": "풍경, 인물, 공간과 오디오가 함께 관측되어 시청자가 경험하는 감정 흐름을 분석 가능함",
+        "audio_evidence": "음성 파형과 볼륨 변화만 관찰 가능하며 음악 장르나 감정 해석 불가능",
+        "performance_metadata": "유튜브 조회수, 좋아요, 댓글 수 등 제공됨. 단순 지표로 성공 원인 판단 불가",
+        "limitations": "대사 전체 텍스트는 있으나 세부 감정 해석 및 제작자 공식 의도는 부재",
+        "judgment": "음향-영상 관찰 기반으로 구조 및 심리 분석 가능하나 창작 의도 해석은 추론의 영역"
+      },
+      "scenes": [
+        {
+          "scene_id": "scene_1",
+          "work_id": "XlzLoQD3MC8",
+          "episode_id": null,
+          "start_ms": 0,
+          "end_ms": 10000,
+          "situation_before": "광활한 해변과 노을 하늘 아래 남성이 바다를 바라보고 있음",
+          "location": "해변가, 노을진 시간",
+          "characters": [
+            "남성 1명 (실루엣)"
+          ],
+          "character_state": [
+            {
+              "character": "남성",
+              "wants": "내면의 감성적 기억을 되새기며 평화와 회상을 느끼고자 함",
+              "knows": [
+                "바다, 섬, 해가 지는 순간의 감성적 분위기"
+              ],
+              "does_not_know": [],
+              "hides": [],
+              "expects": "내레이션과 감성적 영상이 연결되어 진심이 전해질 것",
+              "emotional_state": "회상과 평화, 감성적 몰입"
+            }
+          ],
+          "relationship_state": [],
+          "conflict_before": "없음",
+          "scene_goal": "시청자 감성 집중과 정서적 진입부 조성",
+          "scene_change": "감정이 깊어지는 대사와 내레이션 시작",
+          "scene_payoff": "첫 훅 전 감성 분위기 완성"
+        },
+        {
+          "scene_id": "scene_2",
+          "work_id": "XlzLoQD3MC8",
+          "episode_id": null,
+          "start_ms": 10000,
+          "end_ms": 20000,
+          "situation_before": "감성적 풍경에서 차 내부로 전환, 남성 미소띤 얼굴 근접 샷",
+          "location": "차 내부 (흑백), 앞좌석",
+          "characters": [
+            "남성 1명"
+          ],
+          "character_state": [
+            {
+              "character": "남성",
+              "wants": "내면의 감사와 기억을 구체화하며 시청자와 감정 공유",
+              "knows": [
+                "과거 설렘과 아름다움",
+                "진심 어린 감사"
+              ],
+              "does_not_know": [],
+              "hides": [],
+              "expects": "이야기가 점점 더 개인적이고 집중적으로 전개될 것",
+              "emotional_state": "감사와 부드러운 감성"
+            }
+          ],
+          "relationship_state": [],
+          "conflict_before": "없음, 감성 고조 상태",
+          "scene_goal": "감정 집중과 브랜드 신뢰 기초 마련",
+          "scene_change": "주인공의 손 클로즈업으로 긴장감 삽입",
+          "scene_payoff": "내면의 중심 메시지 강화"
+        },
+        {
+          "scene_id": "scene_3",
+          "work_id": "XlzLoQD3MC8",
+          "episode_id": null,
+          "start_ms": 20000,
+          "end_ms": 30000,
+          "situation_before": "차 내부, 남성 손 클로즈업, 운전대를 움켜잡음",
+          "location": "차 내부 (운전석)",
+          "characters": [
+            "남성 1명"
+          ],
+          "character_state": [
+            {
+              "character": "남성",
+              "wants": "운전하는 행위에서 삶의 중심과 책임감을 묘사하려 함",
+              "knows": [
+                "오랜 시간 지켜온 동반자로서 자동차 의미"
+              ],
+              "does_not_know": [],
+              "hides": [],
+              "expects": "긴장과 집중이 감정적 메시지와 결합될 것",
+              "emotional_state": "집중, 책임감, 긴장감"
+            }
+          ],
+          "relationship_state": [],
+          "conflict_before": "감성 메시지와 행동의 조화 필요",
+          "scene_goal": "행동과 감정을 결합하여 브랜드 신뢰 표현",
+          "scene_change": "인물 감정이 고조됨",
+          "scene_payoff": "심리적 몰입 강화"
+        },
+        {
+          "scene_id": "scene_4",
+          "work_id": "XlzLoQD3MC8",
+          "episode_id": null,
+          "start_ms": 30000,
+          "end_ms": 40000,
+          "situation_before": "차 내부 클로즈업에서 해변가 정면 클로즈업 전환, 남성 눈 감음",
+          "location": "해변가",
+          "characters": [
+            "남성 1명"
+          ],
+          "character_state": [
+            {
+              "character": "남성",
+              "wants": "감정의 내면적 고조와 평화를 한 순간에 나타내고자 함",
+              "knows": [
+                "과거와 현재의 깊은 연결"
+              ],
+              "does_not_know": [],
+              "hides": [],
+              "expects": "감정 연출의 완성",
+              "emotional_state": "내면 집중, 평화, 감사"
+            }
+          ],
+          "relationship_state": [],
+          "conflict_before": "감성 메시지가 적절히 마무리되어야 함",
+          "scene_goal": "브랜드와 인물의 정서적 연결 완성",
+          "scene_change": "감정적 작은 긴장 완화와 비주얼 집중",
+          "scene_payoff": "감정 피크 조성"
+        },
+        {
+          "scene_id": "scene_5",
+          "work_id": "XlzLoQD3MC8",
+          "episode_id": null,
+          "start_ms": 40000,
+          "end_ms": 50000,
+          "situation_before": "해변가에서 남성과 여성 한 쌍, 자동차 옆에 있음, 일몰 배경",
+          "location": "해변가",
+          "characters": [
+            "남성 1명",
+            "여성 1명"
+          ],
+          "character_state": [
+            {
+              "character": "남성",
+              "wants": "함께 하는 존재로서 사랑과 신뢰를 상징",
+              "knows": [
+                "자신과 여성의 감정적 관계",
+                "자동차가 그 관계의 상징임"
+              ],
+              "does_not_know": [],
+              "hides": [],
+              "expects": "시청자가 관계의 깊이를 인식할 것",
+              "emotional_state": "사랑, 신뢰, 안정감"
+            },
+            {
+              "character": "여성",
+              "wants": "남성과 공유하는 특별한 관계를 나타내려 함",
+              "knows": [
+                "남성과의 정서적 상호작용",
+                "해변과 자동차의 의미"
+              ],
+              "does_not_know": [],
+              "hides": [],
+              "expects": "진솔함과 공감을 전달하는 역할",
+              "emotional_state": "조화, 사랑, 존재감"
+            }
+          ],
+          "relationship_state": [
+            {
+              "between": "남성 ↔ 여성",
+              "status": "친밀하고 신뢰하는 연인 관계",
+              "power_dynamic": "대등",
+              "mutual_understanding": "높음"
+            }
+          ],
+          "conflict_before": "없음 - 감정적 완성도를 위해 조성",
+          "scene_goal": "브랜드가 사랑과 신뢰의 매개임을 명확히 함",
+          "scene_change": "해변, 인물, 자동차 결합으로 메시지 시각화",
+          "scene_payoff": "감동적 공감 형성"
+        },
+        {
+          "scene_id": "scene_6",
+          "work_id": "XlzLoQD3MC8",
+          "episode_id": null,
+          "start_ms": 50000,
+          "end_ms": 60000,
+          "situation_before": "차 내부 클로즈업, 남성 운전대 양손 잡음",
+          "location": "차 내부",
+          "characters": [
+            "남성 1명 (운전 중)"
+          ],
+          "character_state": [
+            {
+              "character": "남성",
+              "wants": "운전 행위와 브랜드 신뢰 연결 강조",
+              "knows": [
+                "자동차의 중요성과 자신과의 동반 관계"
+              ],
+              "does_not_know": [],
+              "hides": [],
+              "expects": "시청자가 안정감과 신뢰를 느낄 것",
+              "emotional_state": "결심, 안정, 신뢰"
+            }
+          ],
+          "relationship_state": [],
+          "conflict_before": "없음 - 안정적 완결점",
+          "scene_goal": "브랜드 신뢰와 일상의 연계를 마무리",
+          "scene_change": "감성적 메시지 마무리",
+          "scene_payoff": "감광과 결합된 정서적 피날레"
+        }
+      ],
+      "moments": [
+        {
+          "moment_type": [
+            "HOOK",
+            "EMOTIONAL_BUILD"
+          ],
+          "start_ms": 0,
+          "end_ms": 20000,
+          "before": {
+            "situation": "시청자는 조용한 해변과 인물 실루엣을 보며 감성적 접근을 기대",
+            "audience_knows": [
+              "풍경과 내레이션이 연결될 것"
+            ],
+            "characters_know": [
+              "남성의 내면 감성 상태"
+            ],
+            "expectation": "서서히 깊어지는 감성 메시지",
+            "emotion": "평화, 회상, 기대"
+          },
+          "setup": "광활한 해변과 노을, 남성 실루엣 → 내레이션 시작, 남성 미소샷 전환",
+          "escalation": [
+            "음성 메시지 점점 구체화, 감성 강조"
+          ],
+          "trigger": {
+            "type": "auditory-visual combination",
+            "action": "남성이 회상하며 미소 짓는 모습 클로즈업",
+            "dialogue_function": "감사의 마음과 과거 회상 전달",
+            "visual_event": "클로즈업 흑백 영상 전환",
+            "audio_event": "감성 내레이션과 음악 음향"
+          },
+          "reaction": {
+            "character_reaction": "남성 미소와 감정 고조",
+            "camera_reaction": "점점 가까이 다가가는 클로즈업",
+            "caption_reaction": "없음",
+            "music_reaction": "음악 리듬과 볼륨 증가",
+            "sfx_reaction": "없음",
+            "audience_reaction": "감동적 분위기 몰입"
+          },
+          "after": {
+            "new_situation": "시청자는 남성의 개인적 스토리에 감정적으로 연루됨",
+            "emotion": "감동과 기대 상승",
+            "conflict_change": "감성 메시지의 기반 강화",
+            "next_expectation": "내면적 메시지와 행동 결합 기대"
+          },
+          "primary_mechanism": "EMOTIONAL_BUILD",
+          "secondary_mechanisms": [
+            "AUDITORY-VISUAL_SYNC"
+          ],
+          "primary_cause": "음악과 내레이션에 따른 감성적 몰입",
+          "necessary_conditions": [
+            "영상 전환",
+            "클로즈업 미소",
+            "내레이션"
+          ],
+          "amplifiers": [
+            "음악 볼륨 상승",
+            "낮은 앵글의 와이드 풍경"
+          ],
+          "decorations": [
+            "흑백 촬영 효과"
+          ],
+          "why_it_works": "조용한 배경과 묵직한 내레이션이 결합되어 시청자의 감성적 집중과 공감을 유도함",
+          "counterfactual_tests": [
+            "내레이션 없으면 감성 집중도 저하됨",
+            "클로즈업 미소 없으면 인물 감정 전달 약화",
+            "광활한 풍경 제거 시 정서적 깊이 감소"
+          ],
+          "human_psychology": "사람은 시각과 청각이 일치하는 감성적 자극에 몰입되어 정서적 공감을 강하게 느낀다",
+          "evidence_refs": [
+            "EVIDENCE 1 TIMELINE UNITS 0-1",
+            "EVIDENCE 2 AUDIO OBSERVATION 0-1"
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "moment_type": [
+            "EMOTIONAL_BUILD",
+            "TENSION"
+          ],
+          "start_ms": 20000,
+          "end_ms": 40000,
+          "before": {
+            "situation": "시청자는 감사 메시지 내레이션과 운전자의 집중된 손 클로즈업을 봄",
+            "audience_knows": [
+              "감성적 메시지가 행동과 결합될 것"
+            ],
+            "characters_know": [
+              "운전대 움켜잡음, 내면 집중"
+            ],
+            "expectation": "이야기가 행동으로 구체화되어 신뢰를 강화할 것",
+            "emotion": "감사와 긴장 혼합"
+          },
+          "setup": "차 내부 클로즈업, 손동작과 시계/반지 세밀한 묘사",
+          "escalation": [
+            "운전대 움켜잡으며 책임감과 집중 강조",
+            "남성 눈 감으며 내면 고조"
+          ],
+          "trigger": {
+            "type": "visual-emotional shift",
+            "action": "남성이 눈을 감고 감성적으로 몰입",
+            "dialogue_function": "감사의 의미 확대",
+            "visual_event": "정면 클로즈업으로 감정 표현",
+            "audio_event": "감정이 고조되는 내레이션과 음악"
+          },
+          "reaction": {
+            "character_reaction": "내면의 평화와 책임감 표현",
+            "camera_reaction": "클로즈업 강화로 집중도 상승",
+            "caption_reaction": "없음",
+            "music_reaction": "최고조 감정 연출 위해 볼륨과 템포 조절",
+            "sfx_reaction": "없음",
+            "audience_reaction": "몰입 심화, 공감 확장"
+          },
+          "after": {
+            "new_situation": "감동 메시지가 실질적 연관 행동과 긴밀히 연결됨",
+            "emotion": "감사에서 책임감과 신뢰의 결합으로 변화",
+            "conflict_change": "내면 고조된 감성이 확대됨",
+            "next_expectation": "사랑과 관계가 시각적으로 보여질 것"
+          },
+          "primary_mechanism": "EMOTIONAL_ESCALATION",
+          "secondary_mechanisms": [
+            "FOCUS_SHIFT",
+            "VISUAL_SYMBOLISM"
+          ],
+          "primary_cause": "내레이션과 시각 이미지가 행동과 감정을 동기화함",
+          "necessary_conditions": [
+            "클로즈업 촬영",
+            "손과 얼굴 동작",
+            "감성 음악"
+          ],
+          "amplifiers": [
+            "시계와 반지 디테일로 시간과 헌신 상징화"
+          ],
+          "decorations": [
+            "흑백 영상 유지"
+          ],
+          "why_it_works": "행동(운전 집중)과 감성 내레이션이 결합하여 브랜드에 대한 신뢰감이 시청자에게 전이됨",
+          "counterfactual_tests": [
+            "운전대 움켜잡는 장면 제거 시 긴장과 몰입 약화",
+            "손 디테일 없으면 시간과 헌신 상징 감소",
+            "눈 감는 장면 없으면 감정 고조 힘듦"
+          ],
+          "human_psychology": "사람은 시각적 행동과 감정의 결합을 통해 메시지 신뢰성을 더 깊게 받아들임",
+          "evidence_refs": [
+            "EVIDENCE 1 TIMELINE UNITS 2-3",
+            "EVIDENCE 2 AUDIO OBSERVATION 2-3"
+          ],
+          "confidence": "HIGH"
+        },
+        {
+          "moment_type": [
+            "EMOTIONAL_PAYOFF",
+            "RELATIONSHIP_REVEAL"
+          ],
+          "start_ms": 40000,
+          "end_ms": 60000,
+          "before": {
+            "situation": "긴장감 고조 후 남성과 여성 커플이 해변가에서 자동차 옆에 서 있음",
+            "audience_knows": [
+              "사랑과 신뢰를 상징하는 관계가 메시지 핵심임"
+            ],
+            "characters_know": [
+              "함께 있음, 자동차가 관계의 매개체"
+            ],
+            "expectation": "마지막으로 브랜드와 관계를 감성적으로 연계할 것",
+            "emotion": "신뢰, 사랑, 평화"
+          },
+          "setup": "해질녘 풍경과 와이드샷으로 인물과 자동차 같이 보여줌",
+          "escalation": [
+            "남성과 여성의 자연스러운 동선과 표정, 브랜드 차량 포함"
+          ],
+          "trigger": {
+            "type": "visual-emotional climax",
+            "action": "남성의 운전대 클로즈업과 함께 안정적 운전 이미지",
+            "dialogue_function": "브랜드가 '함께 하는 존재'임을 상징",
+            "visual_event": "와이드샷에서 차와 커플을 한프레임에 포착",
+            "audio_event": "마지막 내레이션과 함께 음악의 감정 최고점"
+          },
+          "reaction": {
+            "character_reaction": "커플의 조화와 평화로운 분위기",
+            "camera_reaction": "차분하고 넓은 시야 제공",
+            "caption_reaction": "없음",
+            "music_reaction": "감성적 클라이맥스 유지",
+            "sfx_reaction": "없음",
+            "audience_reaction": "브랜드와 관계의 감성적 통합 인식"
+          },
+          "after": {
+            "new_situation": "브랜드를 감성의 동반자로 기억하게 됨",
+            "emotion": "신뢰와 사랑의 정서적 완성",
+            "conflict_change": "없음, 해결됨",
+            "next_expectation": "광고의 메시지와 브랜드 이미지가 명확히 인지됨"
+          },
+          "primary_mechanism": "EMOTIONAL_PAYOFF",
+          "secondary_mechanisms": [
+            "RELATIONSHIP_SIGNIFICATION",
+            "BRAND_SYMBOLISM"
+          ],
+          "primary_cause": "인물 관계와 브랜드 차량을 통한 감정적 메시지 완성",
+          "necessary_conditions": [
+            "남녀 커플 등장",
+            "차량과 자연 풍경 조화",
+            "감성적 음악과 내레이션"
+          ],
+          "amplifiers": [
+            "와이드샷으로 풍경과 브랜드 가치 확장"
+          ],
+          "decorations": [
+            "운전대 클로즈업으로 브랜드 통제 이미지 강조"
+          ],
+          "why_it_works": "시청자는 인물과 자동차의 관계를 통해 브랜드를 단순 제품이 아니라 신뢰와 사랑의 동반자로 재인식함",
+          "counterfactual_tests": [
+            "커플 등장 없으면 감성 메시지 약화",
+            "자동차 시각 제외 시 브랜드 연상 저하",
+            "배경 풍경 제거 시 몰입과 감정 감소"
+          ],
+          "human_psychology": "감성적 관계와 브랜드 이미지 결합은 시청자의 정서적 기억에 강하게 각인됨",
+          "evidence_refs": [
+            "EVIDENCE 1 TIMELINE UNITS 4-5",
+            "EVIDENCE 2 AUDIO OBSERVATION 4-5"
+          ],
+          "confidence": "HIGH"
+        }
+      ],
+      "audience_intelligence": [
+        {
+          "repeatedly_mentioned_moment": "감성적 내레이션과 차량 옆 커플 장면",
+          "quoted_expression": "당신은 내 하나뿐인 사랑",
+          "character_attachment": "남성 운전자를 중심으로 브랜드와 연결된 감성적 인물",
+          "reported_laugh_point": [],
+          "reported_emotion_point": [
+            "10-40초 구간 내레이션과 클로즈업 장면에서 강한 감동 신호"
+          ],
+          "unexpected_interpretation": [],
+          "confusion": [],
+          "boredom_signal": [],
+          "cultural_interpretation": [
+            "자동차를 단순한 이동 수단이 아닌 신뢰와 사랑의 파트너로 본다는 점"
+          ],
+          "callback_recognition": []
+        }
+      ],
+      "creator_intent": {
+        "status": "INFERRED_CREATIVE_INTENT",
+        "problem_to_solve": "브랜드 자동차를 단순 소비재가 아닌, 인생을 함께하는 신뢰와 사랑의 동반자로 자리매김하여 고객 감성에 다가가기.",
+        "desired_audience_change": "시청자가 브랜드에 대해 신뢰와 감사를 느끼고 브랜드의 가치를 깊이 내면화하게 함.",
+        "evidence": [
+          "영상 내내 흐르는 감사와 사랑의 내레이션",
+          "차량과 커플 장면의 감성적 연계",
+          "클로즈업과 풍경 등 시각적 묘사"
+        ]
+      },
+      "reusable_dna": [
+        {
+          "condition": "소비자의 삶 속 인생 동반자로 자리잡기를 원하는 브랜드가 있다.",
+          "audience_expectation": "단순 제품 소개를 넘어 삶의 이야기와 감성적 연결을 기대한다.",
+          "character_behavior": "인물들이 일상의 소중한 순간에서 제품을 자연스럽게 경험하고 감정적으로 표현한다.",
+          "trigger": "내레이션과 시각적 상징(풍경, 손, 인물의 표정 등)이 결합되어 깊은 감정과 신뢰를 전달한다.",
+          "response": "시청자는 감성적 몰입과 브랜드에 대한 신뢰를 느끼며 브랜드와 감성적 관계를 구축한다.",
+          "payoff": "브랜드가 단순한 소비재가 아니라 평생 함께 하는 동반자임을 인식하게 된다."
+        },
+        {
+          "condition": "정보 비대칭이 없고 제품이 직접적으로 ‘사랑’과 ‘신뢰’라는 감정 가치와 연결된다.",
+          "audience_expectation": "제품 사용자의 삶과 관계, 감성이 반영된 스토리를 기대한다.",
+          "character_behavior": "깊은 내면 독백 내레이션과 세밀한 신체 표현, 자연 풍경의 결합.",
+          "trigger": "시각 클로즈업과 음향 감성 고조, 인물 간 동선과 풍경 상징의 동시 노출.",
+          "response": "시청자는 브랜드와 인물 관계를 정서적으로 연결 짓는다.",
+          "payoff": "일상의 순간을 통해 브랜드에 대한 충성도와 호감이 강화된다."
+        }
+      ],
+      "failure_conditions": [
+        "감성 내레이션이 없거나 대사와 영상이 동기화되지 않으면 몰입과 신뢰 형성 실패",
+        "인물 감정 클로즈업이나 자연 풍경 없으면 감정 몰입 저하",
+        "자동차 시각적 상징이 약하면 브랜드 연상 효과 떨어짐",
+        "긴장감 없이 평면적인 영상 진행 시 감정 고양 미흡",
+        "배경음악이나 사운드 효과가 감성과 불일치하면 쇼트 몰입 방해"
+      ],
+      "retrieval_tags": [
+        "감성광고",
+        "브랜디드콘텐츠",
+        "자동차광고",
+        "감성내레이션",
+        "클로즈업",
+        "정보비대칭없음",
+        "감성고조",
+        "품질신뢰",
+        "관계상징",
+        "와이드샷",
+        "모노음향관찰",
+        "브랜드이미지연결"
+      ],
+      "research_gaps": [
+        "제작진 공식 인터뷰나 노트의 부재로 창작자의 의도 직접 확인 불가",
+        "세부 감정곡선과 음악의 감정적 역할 구분 미흡",
+        "시청자 임팩트에 미친 음악 장르나 사운드 효과 역할 불명확",
+        "대사 텍스트만으로 정확한 의미 변화 시점 판단 어려움"
+      ],
+      "quality_gate": {
+        "has_real_evidence": true,
+        "has_temporal_context": true,
+        "has_before_context": true,
+        "has_trigger_analysis": true,
+        "has_causal_explanation": true,
+        "has_counterfactual_reasoning": true,
+        "has_failure_conditions": true,
+        "has_reusable_dna": true,
+        "eligible_for_memory_promotion": true,
+        "promotion_reason": "멀티모달 근거와 시간축 기반 연구가 충분하며 방송 창작 원리와 실패 조건까지 분석 완료됨"
+      }
+    }
+  }
+}

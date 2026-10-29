@@ -1,0 +1,302 @@
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function extractOutputText(data: any) {
+  if (
+    typeof data?.output_text ===
+    "string"
+  ) {
+    return data.output_text;
+  }
+
+  const pieces: string[] = [];
+
+  for (const item of data?.output || []) {
+    for (
+      const content of
+        item?.content || []
+    ) {
+      if (
+        typeof content?.text ===
+        "string"
+      ) {
+        pieces.push(content.text);
+      }
+    }
+  }
+
+  return pieces.join("\n");
+}
+
+function parseJson(text: string) {
+  const cleaned = text
+    .replace(/^```json/i, "")
+    .replace(/^```/, "")
+    .replace(/```$/, "")
+    .trim();
+
+  return JSON.parse(cleaned);
+}
+
+export async function POST(
+  req: NextRequest
+) {
+  try {
+    const body = await req.json();
+
+    const sources =
+      Array.isArray(body.sources)
+        ? body.sources
+        : [];
+
+    if (!sources.length) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "분석된 원본이 없습니다.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const apiKey =
+      process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      throw new Error(
+        "OPENAI_API_KEY 없음"
+      );
+    }
+
+    /*
+     * 프로젝트에서 이미 실제 사용 중인
+     * 모델 설정을 우선한다.
+     */
+    const model =
+      process.env.OPENAI_CRM_MODEL ||
+      process.env.OPENAI_JOPD_MODEL;
+
+    if (!model) {
+      throw new Error(
+        "OPENAI_CRM_MODEL 또는 OPENAI_JOPD_MODEL 설정이 필요합니다."
+      );
+    }
+
+    const sourceData = sources.map(
+      (source: any) => ({
+        sourceId: source.sourceId,
+        sourceName:
+          source.sourceName,
+        duration: source.duration,
+        segments:
+          source.segments,
+      })
+    );
+
+    const system = `
+당신은 JOPD STORY ENGINE이다.
+
+목적:
+여러 개의 실제 촬영 원본을 하나의 방송으로
+극적으로 재구성한다.
+
+절대 규칙:
+
+1. 제공된 transcript에 없는 사실, 숫자,
+   인물, 사건, 장소, 발언을 만들지 않는다.
+
+2. 극적 구성은 사실을 창작하는 것이 아니다.
+   실제 원본에 존재하는 내용의 순서를
+   효과적으로 재배열하는 것이다.
+
+3. 촬영 순서를 따를 필요가 없다.
+
+4. 가장 강한 실제 발언이나 상황을 HOOK으로
+   사용할 수 있다.
+
+5. 이야기 구조는 가능하면:
+   HOOK
+   → 상황/질문
+   → 인물
+   → 문제/갈등
+   → 발견/핵심정보
+   → 감정 상승
+   → CLIMAX
+   → BREATH
+   → ENDING
+   흐름을 고려한다.
+   그러나 원본 내용에 맞지 않으면 억지로
+   만들지 않는다.
+
+6. 모든 편집 구간은 반드시 실제
+   sourceId/sourceStart/sourceEnd를 가져야 한다.
+
+7. 문장 중간을 함부로 자르지 않는다.
+
+8. 감정적 발언 뒤에는 필요한 경우
+   holdAfter를 0~5초로 제안한다.
+
+9. transcript만으로 영상 B-roll이 있다고
+   추정하지 않는다.
+
+10. 원본에 없는 화면이 필요하면 timeline에
+    넣지 말고 missingShots에 기록한다.
+
+11. 방송 전체가 반복되지 않도록 한다.
+
+12. 정보 전달만 압축하지 말고 시청자가
+    다음 내용을 궁금해하도록 이야기의
+    공개 순서를 설계한다.
+
+JSON만 출력한다.
+
+형식:
+
+{
+  "title": "",
+  "coreStory": "",
+  "dramaticReason": "",
+  "storyArc": [
+    {
+      "role": "HOOK|SETUP|QUESTION|PERSON|PROBLEM|DISCOVERY|INFORMATION|EMOTION|CLIMAX|BREATH|ENDING",
+      "reason": "",
+      "sourceId": "",
+      "sourceName": "",
+      "sourceStart": 0,
+      "sourceEnd": 0,
+      "transcript": "",
+      "holdAfter": 0
+    }
+  ],
+  "missingShots": [
+    {
+      "reason": "",
+      "suggestion": ""
+    }
+  ]
+}
+`;
+
+    const response = await fetch(
+      "https://api.openai.com/v1/responses",
+      {
+        method: "POST",
+        headers: {
+          Authorization:
+            `Bearer ${apiKey}`,
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          instructions: system,
+          input:
+            JSON.stringify(
+              sourceData
+            ),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error =
+        await response.text();
+
+      throw new Error(
+        `STORY ENGINE 실패: ${error}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    const text =
+      extractOutputText(data);
+
+    const story = parseJson(text);
+
+    /*
+     * SOURCE TRUTH 서버 검증
+     *
+     * AI가 transcript 범위 밖의
+     * 타임코드를 반환하면 타임라인에
+     * 들어가지 못한다.
+     */
+    const sourceMap =
+      new Map(
+        sources.map(
+          (source: any) => [
+            source.sourceId,
+            source,
+          ]
+        )
+      );
+
+    const validArc = (
+      Array.isArray(story.storyArc)
+        ? story.storyArc
+        : []
+    ).filter((item: any) => {
+      const source =
+        sourceMap.get(
+          item.sourceId
+        ) as any;
+
+      if (!source) return false;
+
+      const start = Number(
+        item.sourceStart
+      );
+
+      const end = Number(
+        item.sourceEnd
+      );
+
+      if (
+        !Number.isFinite(start) ||
+        !Number.isFinite(end) ||
+        end <= start
+      ) {
+        return false;
+      }
+
+      if (
+        start < 0 ||
+        end >
+          Number(source.duration) +
+            0.5
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return NextResponse.json({
+      ok: true,
+      story: {
+        ...story,
+        storyArc: validArc,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}

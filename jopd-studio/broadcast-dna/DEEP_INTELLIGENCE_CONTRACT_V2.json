@@ -1,0 +1,357 @@
+{
+  "contract": "JOPD_BROADCAST_DEEP_INTELLIGENCE_V2",
+  "version": "2.0",
+
+  "mission": "링크를 수집하는 Hunter가 아니라 실제 작품 내부를 장면·비트·순간 단위로 해부하여 AI 수석작가가 근거 기반으로 검색·비교·재조합·창작할 수 있는 방송 창작지능을 구축한다.",
+
+  "success_test": [
+    "순풍산부인과에서 실제 연구된 웃음 포인트 10개를 근거와 함께 검색할 수 있어야 한다.",
+    "개그콘서트에서 슬픔 또는 연민 뒤 웃음으로 전환되는 실제 연구 사례를 검색할 수 있어야 한다.",
+    "오해, 정보비대칭, 반복, 허세, 침묵, 행동, 리액션 등 웃음 메커니즘별 역검색이 가능해야 한다.",
+    "감동, 긴장, 반전, 정보공개, 캐릭터 관계 변화도 동일하게 역검색할 수 있어야 한다.",
+    "검색된 DNA와 K-HOS 인간 기억을 이용해 원작을 복제하지 않는 새로운 조PD 작품을 만들 수 있어야 한다."
+  ],
+
+  "truth_classes": [
+    "SOURCE_FACT",
+    "OBSERVED_EVENT",
+    "AUDIENCE_SIGNAL",
+    "OFFICIAL_CREATOR_INTENT",
+    "INFERRED_CREATIVE_INTENT",
+    "RESEARCHER_INTERPRETATION",
+    "REUSABLE_DNA",
+    "CREATED_BY_JOPD_WRITER"
+  ],
+
+  "content_hierarchy": [
+    "WORK",
+    "EPISODE",
+    "SCENE",
+    "BEAT",
+    "MOMENT"
+  ],
+
+  "work_record": {
+    "work_id": "",
+    "title": "",
+    "program_or_brand": "",
+    "country": "",
+    "language": "",
+    "media_type": "",
+    "genre": [],
+    "source_provenance": [],
+    "creator_intent": {
+      "status": "OFFICIAL_OR_INFERRED",
+      "problem_to_solve": "",
+      "desired_audience_change": "",
+      "evidence": []
+    }
+  },
+
+  "scene_record": {
+    "scene_id": "",
+    "work_id": "",
+    "episode_id": "",
+    "start_ms": 0,
+    "end_ms": 0,
+
+    "situation_before": "",
+    "location": "",
+    "characters": [],
+
+    "character_state": [
+      {
+        "character": "",
+        "wants": "",
+        "knows": [],
+        "does_not_know": [],
+        "hides": [],
+        "expects": "",
+        "emotional_state": ""
+      }
+    ],
+
+    "relationship_state": [],
+    "conflict_before": "",
+    "scene_goal": "",
+    "scene_change": "",
+    "scene_payoff": ""
+  },
+
+  "beat_record": {
+    "beat_id": "",
+    "scene_id": "",
+    "start_ms": 0,
+    "end_ms": 0,
+    "action": "",
+    "dialogue_function": "",
+    "information_change": "",
+    "expectation_created": "",
+    "tension_change": "",
+    "emotion_change": ""
+  },
+
+  "moment_record": {
+    "moment_id": "",
+    "scene_id": "",
+    "beat_id": "",
+    "start_ms": 0,
+    "end_ms": 0,
+
+    "moment_type": [
+      "LAUGH",
+      "EMOTION",
+      "TENSION",
+      "SURPRISE",
+      "REVERSAL",
+      "CURIOSITY",
+      "INFORMATION_REVEAL",
+      "CHARACTER_REVEAL",
+      "RELATIONSHIP_CHANGE"
+    ],
+
+    "before": {
+      "situation": "",
+      "audience_knows": [],
+      "character_knows": [],
+      "expectation": "",
+      "emotion": "",
+      "tension": ""
+    },
+
+    "setup": "",
+    "escalation": [],
+    "trigger": {
+      "type": "",
+      "action": "",
+      "dialogue_function": "",
+      "visual_event": "",
+      "audio_event": ""
+    },
+
+    "reaction": {
+      "character_reaction": "",
+      "camera_reaction": "",
+      "caption_reaction": "",
+      "music_reaction": "",
+      "sfx_reaction": "",
+      "audience_reaction": ""
+    },
+
+    "after": {
+      "new_situation": "",
+      "emotion": "",
+      "conflict_change": "",
+      "next_expectation": ""
+    },
+
+    "mechanisms": [],
+
+    "why_it_works": "",
+
+    "secondary_effects": [
+      "SECOND_LAUGH",
+      "CALLBACK",
+      "PAYOFF",
+      "EMOTIONAL_AFTERSHOCK",
+      "NONE"
+    ],
+
+    "evidence": []
+  },
+
+  "comedy_intelligence": {
+    "searchable_mechanisms": [
+      "INFORMATION_ASYMMETRY",
+      "MISUNDERSTANDING",
+      "EXPECTATION_BREAK",
+      "REVERSAL",
+      "REPETITION",
+      "ESCALATION",
+      "CALLBACK",
+      "CHARACTER_FLAW",
+      "STATUS_REVERSAL",
+      "OVERCONFIDENCE",
+      "EMBARRASSMENT",
+      "AWKWARDNESS",
+      "DEADPAN",
+      "REACTION",
+      "SILENCE",
+      "PHYSICAL_COMEDY",
+      "LANGUAGE_PLAY",
+      "TIMING",
+      "CONTRAST",
+      "ABSURDITY",
+      "RULE_OF_THREE",
+      "EMOTION_TO_LAUGH",
+      "LAUGH_TO_EMOTION"
+    ],
+
+    "required_question": "웃긴 대사만 찾지 말고 웃음 직전 어떤 기대와 상황이 만들어졌고 무엇이 그것을 깨뜨렸으며 이후 반응이 어떻게 추가 웃음을 만들었는지 설명한다."
+  },
+
+  "emotion_intelligence": {
+    "searchable_mechanisms": [
+      "SACRIFICE",
+      "UNSPOKEN_CARE",
+      "REUNION",
+      "REGRET",
+      "FORGIVENESS",
+      "PROMISE",
+      "LOSS",
+      "FAMILY",
+      "PARENT_CHILD",
+      "COUPLE",
+      "AGING",
+      "LIVELIHOOD",
+      "DREAM",
+      "MISUNDERSTANDING_AND_RECOVERY",
+      "LATE_REVEAL",
+      "HIDDEN_TRUTH",
+      "HUMOR_TO_EMOTION",
+      "EMOTION_TO_HUMOR"
+    ],
+
+    "required_question": "감동적인 소재라고 분류하지 말고 감정이 발생하기 전 어떤 관계와 정보가 축적되었고 어느 순간 의미가 바뀌었는지 설명한다."
+  },
+
+  "genre_researchers": {
+    "SITCOM_DRAMA": [
+      "character_want",
+      "relationship",
+      "knowledge_asymmetry",
+      "hidden_information",
+      "conflict",
+      "dialogue_function",
+      "behavior",
+      "reaction",
+      "scene_change",
+      "callback",
+      "payoff"
+    ],
+
+    "COMEDY_SKETCH": [
+      "premise",
+      "setup",
+      "expectation",
+      "escalation",
+      "trigger",
+      "punch",
+      "reaction",
+      "second_laugh",
+      "callback",
+      "payoff"
+    ],
+
+    "VARIETY": [
+      "cast_character",
+      "relationship",
+      "situation_design",
+      "spontaneous_event",
+      "reaction",
+      "caption",
+      "editing",
+      "callback",
+      "running_gag"
+    ],
+
+    "DOCUMENTARY_FACTUAL": [
+      "central_question",
+      "hook",
+      "information_order",
+      "delayed_information",
+      "interview_function",
+      "narration_function",
+      "visual_evidence",
+      "human_story_transition",
+      "emotional_payoff"
+    ],
+
+    "ADVERTISING": [
+      "first_seconds_hook",
+      "story_promise",
+      "ad_identity_reveal",
+      "emotion_curve",
+      "humor",
+      "reversal",
+      "product_role",
+      "brand_reveal",
+      "brand_story_connection",
+      "cta"
+    ],
+
+    "RADIO_VISUAL_RADIO": [
+      "host_character",
+      "voice_rhythm",
+      "silence",
+      "music",
+      "sfx",
+      "guest_relationship",
+      "listener_participation",
+      "camera_reaction",
+      "caption",
+      "segment_transition"
+    ]
+  },
+
+  "audience_intelligence": {
+    "principle": "댓글과 공개 반응은 전체 시청자를 대표하는 사실이 아니라 AUDIENCE_SIGNAL로 저장한다.",
+    "extract": [
+      "repeatedly_mentioned_moment",
+      "quoted_expression",
+      "character_attachment",
+      "reported_laugh_point",
+      "reported_emotion_point",
+      "unexpected_interpretation",
+      "confusion",
+      "boredom_signal",
+      "cultural_interpretation",
+      "callback_recognition"
+    ]
+  },
+
+  "retrieval_requirements": [
+    "work",
+    "genre",
+    "character",
+    "relationship",
+    "moment_type",
+    "mechanism",
+    "emotion_before",
+    "emotion_after",
+    "trigger_type",
+    "dialogue_function",
+    "action",
+    "audience_signal",
+    "callback",
+    "payoff",
+    "timecode"
+  ],
+
+  "memory_gate": {
+    "rule": "링크, 제목, 줄거리 요약만으로는 APPROVED_MEMORY가 될 수 없다.",
+    "minimum": [
+      "source_provenance",
+      "scene_or_moment_evidence",
+      "before_context",
+      "trigger_or_change",
+      "why_it_works",
+      "reusable_dna"
+    ]
+  },
+
+  "writer_output_classes": {
+    "RETRIEVED": "실제 Broadcast Intelligence Memory에서 검색한 연구결과",
+    "RESEARCHED_NOW": "현재 Hunter/Researcher가 새로 조사하여 얻은 결과",
+    "CREATED": "연구 DNA와 K-HOS를 이용해 새로 창작한 결과"
+  },
+
+  "copyright_guard": {
+    "store_full_script_for_reuse": false,
+    "store_long_verbatim_dialogue": false,
+    "store_scene_copy_for_reuse": false,
+    "store_timecoded_observation": true,
+    "store_abstracted_mechanism": true,
+    "store_reusable_dna": true
+  }
+}

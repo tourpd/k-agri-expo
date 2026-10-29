@@ -1,0 +1,125 @@
+{
+  "news_id": "NEWS-001",
+  "generated_at": "2026-09-24T07:25:01.275121+00:00",
+  "source": {
+    "evidence_id": "EVIDENCE-001",
+    "authority": "농림축산식품부",
+    "local_file": "sources/MAFRA_2026-09-10_PRICE_STABILITY.html"
+  },
+  "visual_rule": {
+    "default": "SHOW_OFFICIAL_SOURCE",
+    "emphasis": "RED_UNDERLINE_OR_BOX",
+    "zoom": "ZOOM_TO_SUPPORTING_TEXT",
+    "source_label": "농림축산식품부 · 2026.09.10",
+    "no_fake_evidence": true
+  },
+  "fact_evidence_map": [
+    {
+      "fact_id": "FACT-001",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-004"
+      ],
+      "highlight": "제1차 농산물가격안정심의위원회 ... 대상품목과 기준가격 산정방식 등 제도 시행을 위한 세부 운영방안을 심의",
+      "article_segments": []
+    },
+    {
+      "fact_id": "FACT-002",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-007"
+      ],
+      "highlight": "해당 연도 농산물 평균가격이 기준가격보다 낮아지는 경우, 정부가 그 차액의 전부 또는 일부를 지원",
+      "article_segments": [
+        "SEG-001",
+        "SEG-002",
+        "SEG-003"
+      ]
+    },
+    {
+      "fact_id": "FACT-003",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-009"
+      ],
+      "highlight": "2026년 도입 품목으로 ... 마늘, 양파를 우선 선정",
+      "article_segments": [
+        "SEG-001",
+        "SEG-002"
+      ]
+    },
+    {
+      "fact_id": "FACT-004",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-012"
+      ],
+      "highlight": "경영비를 전액 포함 ... 자가노동비 ... 평년 도매가격의 80% 수준",
+      "article_segments": [
+        "SEG-003"
+      ]
+    },
+    {
+      "fact_id": "FACT-005",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-017"
+      ],
+      "highlight": "동일 품목을 10a(1,000㎡) 이상 재배하고, 경영체 등록 또는 경작신고",
+      "article_segments": [
+        "SEG-001",
+        "SEG-004"
+      ]
+    },
+    {
+      "fact_id": "FACT-006",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-021"
+      ],
+      "highlight": "파종·정식기에 농업경영체 등록 및 변경 ... 실재배면적을 의무적으로 신고",
+      "article_segments": [
+        "SEG-001",
+        "SEG-005",
+        "SEG-009"
+      ]
+    },
+    {
+      "fact_id": "FACT-007",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-022"
+      ],
+      "highlight": "자조금을 미납한 농가는 지급액이 첫 해에는 20% 차감",
+      "article_segments": [
+        "SEG-006",
+        "SEG-009"
+      ]
+    },
+    {
+      "fact_id": "FACT-008",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-019"
+      ],
+      "highlight": "수입안정보험 ... 보험금을 수령한 경우에는 그 금액만큼 차감 지급",
+      "article_segments": [
+        "SEG-007",
+        "SEG-009"
+      ]
+    },
+    {
+      "fact_id": "FACT-009",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-015"
+      ],
+      "highlight": "생산비 통계 발표 ... 이후 위원회 심의를 거쳐 매년 기준가격을 고시",
+      "article_segments": []
+    },
+    {
+      "fact_id": "FACT-010",
+      "source_sentence_ids": [
+        "SOURCE-SENTENCE-024"
+      ],
+      "highlight": "대상품목 및 차액 지급비율 등은 향후 농식품부 고시를 통해 확정",
+      "article_segments": [
+        "SEG-008",
+        "SEG-009",
+        "SEG-010"
+      ],
+      "status": "PENDING_FINAL_NOTICE"
+    }
+  ]
+}

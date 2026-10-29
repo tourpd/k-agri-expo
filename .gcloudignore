@@ -1,0 +1,30 @@
+.gcloudignore
+.git
+.gitignore
+
+# Local dependencies / Next build output
+node_modules/
+.next/
+out/
+build/
+
+# Secrets
+.env
+.env.*
+*.pem
+
+# Local 30GB external-media symlink — media lives in GCS
+.jopd-media
+
+# Local runtime / temporary data
+tmp/
+temp/
+uploads/
+coverage/
+backup-videos/
+storage/backups/
+
+# Local development noise
+.DS_Store
+*.log
+*.tsbuildinfo

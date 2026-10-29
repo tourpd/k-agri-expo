@@ -1,0 +1,169 @@
+{
+  "events": [
+    {
+      "event": "바벨론 왕 느부갓네살이 유다 왕궁 소년들을 포로로 잡아와 교육시킴",
+      "human_archetype": "피억압자, 망명자",
+      "conflict_engine": "권력에 의한 문화 및 정체성 강제 동화 시도",
+      "modern_parallel": "이주민 강제 적응 프로그램, 문화 동화 압력",
+      "writer_use": "망명자 캐릭터 성장과 문화충돌 스토리라인",
+      "business_use": "포로의 교육과 성장에 대한 다큐멘터리 콘텐츠"
+    },
+    {
+      "event": "다니엘과 친구들이 왕의 음식을 거절하고 채식으로 건강을 유지함",
+      "human_archetype": "신념 지킴이, 저항자",
+      "conflict_engine": "개인 신념 대 제국 권력의 식생활 강제",
+      "modern_parallel": "개인 윤리적 식습관을 지키려는 현대 비건 운동",
+      "writer_use": "의식과 신념을 지키는 주인공 묘사",
+      "business_use": "윤리적 식생활 브랜드 캠페인 및 교육 프로그램"
+    },
+    {
+      "event": "다니엘이 느부갓네살 왕의 꿈을 해석하여 국가 권력 유지에 기여함",
+      "human_archetype": "현자, 예언자",
+      "conflict_engine": "지혜로 권력의 위기를 해소",
+      "modern_parallel": "기술과 AI가 난제를 해결하는 현대 리더십",
+      "writer_use": "현명한 조언자 캐릭터와 위기 극복 플롯",
+      "business_use": "AI 기반 미래 예측 서비스"
+    },
+    {
+      "event": "금 신상 숭배 명령 거부로 세 친구가 풀무불에 던져짐",
+      "human_archetype": "순교자, 신념의 전사",
+      "conflict_engine": "종교적 신념과 정치적 권력의 극단 대립",
+      "modern_parallel": "양심적 병역 거부 및 종교적 박해 사례",
+      "writer_use": "극한 상황에서 굴복하지 않는 인물 스토리",
+      "business_use": "종교 자유 및 인권 다큐멘터리"
+    },
+    {
+      "event": "불 가운데서 신비한 구원이 나타나 세 친구가 무사히 나옴",
+      "human_archetype": "초자연적 구원자, 기적의 증인",
+      "conflict_engine": "신의 힘과 인간 고난의 상징적 충돌",
+      "modern_parallel": "기적적 회복 사례 및 믿음 회복 현상",
+      "writer_use": "기적적 생존과 믿음 강화 모티브",
+      "business_use": "영성 및 치유 관련 콘텐츠"
+    },
+    {
+      "event": "느부갓네살 왕의 교만과 그에 따른 정신적 파멸",
+      "human_archetype": "교만한 권력자, 타락한 왕",
+      "conflict_engine": "내면의 교만과 외부 권력의 몰락",
+      "modern_parallel": "권력자의 권력 남용과 도덕적 추락 사례",
+      "writer_use": "권력자의 몰락과 회개 스토리",
+      "business_use": "리더십 윤리 교육 콘텐츠"
+    },
+    {
+      "event": "꿈을 통해 미래 왕권 교체와 신권의 영원성 예언",
+      "human_archetype": "운명 예언자, 통찰자",
+      "conflict_engine": "미래 예측과 현재 권력의 불안",
+      "modern_parallel": "빅데이터 기반 미래 예측과 권력 교체 가능성",
+      "writer_use": "운명을 바꾸려는 주인공 갈등 플롯",
+      "business_use": "미래 예측 서비스 및 콘텐츠"
+    }
+  ],
+  "characters": [
+    {
+      "character": "다니엘",
+      "human_type": "현자, 신념가",
+      "desire": "자기 신념 유지와 지혜를 통한 구원",
+      "conflict": "권력 강제와 개인 신념의 충돌",
+      "modern_version": "윤리적 AI 개발자, 기술 전문가",
+      "content_use": "변혁을 이끄는 지혜로운 주인공"
+    },
+    {
+      "character": "사드락, 메삭, 아벳느고",
+      "human_type": "순교자, 신앙 전사",
+      "desire": "신앙과 양심 지키기",
+      "conflict": "정치 권력과 종교 신념 대립",
+      "modern_version": "종교 자유 운동가, 양심적 병역 거부자",
+      "content_use": "극한 상황에서 불굴의 저항 캐릭터"
+    },
+    {
+      "character": "느부갓네살 왕",
+      "human_type": "권력자, 교만한 왕",
+      "desire": "절대 권력과 위엄 과시",
+      "conflict": "내면의 교만과 신성 앞에서 겸손의 부재",
+      "modern_version": "독재자, 권력 남용자",
+      "content_use": "권력자의 몰락과 회복 과정 캐릭터"
+    },
+    {
+      "character": "환관장 아스부나스",
+      "human_type": "권력의 중개자",
+      "desire": "명령 수행과 생존",
+      "conflict": "왕과 신념가 사이에서 중립 유지의 어려움",
+      "modern_version": "중간 관리자, 관료",
+      "content_use": "갈등 중재자 캐릭터"
+    },
+    {
+      "character": "왕궁 내 다른 갈대아 지혜자들",
+      "human_type": "반대자, 경쟁자",
+      "desire": "권력과 지위 유지",
+      "conflict": "외부인의 능력 위협에 대한 질투와 경쟁",
+      "modern_version": "기성 권력층, 내부 저항 세력",
+      "content_use": "주인공에 반하는 조직 내 적대자"
+    },
+    {
+      "character": "근위대장 아리옥",
+      "human_type": "실행자",
+      "desire": "명령 이행과 충성",
+      "conflict": "권력자의 명령과 정의 사이 갈등",
+      "modern_version": "군인, 보안요원",
+      "content_use": "윤리적 딜레마에 빠진 실행자"
+    },
+    {
+      "character": "벨사살 왕",
+      "human_type": "후계자, 무책임한 권력자",
+      "desire": "사치와 권력 과시",
+      "conflict": "미래 예측에 대한 무지와 무관심",
+      "modern_version": "무책임한 정치가, 사치가",
+      "content_use": "교훈적 실패자 캐릭터"
+    }
+  ],
+  "laws": [
+    {
+      "law_id": "LAW-001",
+      "law": "신념은 권력의 압박을 넘어서는 내적 힘이다",
+      "derived_from": "다니엘과 친구들이 왕의 음식과 신상숭배를 거부함",
+      "why_it_matters": "개인 또는 집단 신념이 권력의 통제에 저항하는 근거임",
+      "how_to_use": "스토리에서 갈등을 심화시키는 내적 동기와 저항 동력으로 활용"
+    },
+    {
+      "law_id": "LAW-002",
+      "law": "권력은 불안정을 꿈과 상징을 통해 관리하고 통제한다",
+      "derived_from": "느부갓네살 왕의 꿈과 해석 요구 행위",
+      "why_it_matters": "권력자의 불안 심리가 정치적 명령과 사회 통제에 반영됨",
+      "how_to_use": "권력자가 불안에 의해 행동하는 원형으로 캐릭터 설계"
+    },
+    {
+      "law_id": "LAW-003",
+      "law": "초자연적 구원과 기적은 절망적 상황에서 희망을 재현한다",
+      "derived_from": "풀무불에서 친구들의 구원 사건",
+      "why_it_matters": "절망과 갈등 해소의 극적 전환점 역할 수행",
+      "how_to_use": "스토리 내 절망에서 희망으로 넘어가는 극적 장치로 사용"
+    },
+    {
+      "law_id": "LAW-004",
+      "law": "문화와 정체성은 권력의 강제와 개인 신념의 충돌에서 형성된다",
+      "derived_from": "갇힌 자들의 교육과 언어 강제 이슈",
+      "why_it_matters": "인간의 정체성 갈등과 사회적 응집력의 밑바탕이 됨",
+      "how_to_use": "문화적 충돌 기반 갈등 창출과 캐릭터 성장 설정"
+    },
+    {
+      "law_id": "LAW-005",
+      "law": "권력자의 교만은 스스로 권력을 잃게 만드는 내적 부패를 낳는다",
+      "derived_from": "느부갓네살 왕의 교만과 정신적 몰락 이야기",
+      "why_it_matters": "권력 남용과 몰락의 보편적 인간성과 정치 법칙",
+      "how_to_use": "교만한 권력자의 몰락 클리셰 구조화에 적용"
+    },
+    {
+      "law_id": "LAW-006",
+      "law": "미래 예측과 해석은 권력 내부의 불안을 진정시키는 수단이다",
+      "derived_from": "다니엘이 왕의 꿈을 해석함",
+      "why_it_matters": "불확실성 통제 욕망과 리더십 강화 방법론",
+      "how_to_use": "미래 예측과 전략으로 극적 전개 유도"
+    },
+    {
+      "law_id": "LAW-007",
+      "law": "공의와 자비는 권위 유지와 개인 구원의 열쇠다",
+      "derived_from": "다니엘의 왕에게 공의와 자비를 권고하는 부분",
+      "why_it_matters": "정치 권력과 개인 윤리의 균형법칙",
+      "how_to_use": "권력자나 리더 캐릭터 변화와 성장의 소재로 활용"
+    }
+  ]
+}

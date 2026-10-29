@@ -1,0 +1,4 @@
+- 2026-06-30 21:38:38 | 성경 | AI GENESIS EVENT EXTRACTION | GEN-AI-00000 | 50/50 | AI 사건 추출 완료: 0개
+- 2026-06-30 21:40:26 | 성경 | AI GENESIS EVENT EXTRACTION | GEN-CH-01 | 0/1 | AI가 본문에서 사건을 찾는 중
+- 2026-06-30 21:40:27 | 성경 | AI GENESIS EVENT EXTRACTION | GEN-CH-01 | 0/1 | Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.2 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+- 2026-06-30 21:40:27 | 성경 | AI GENESIS EVENT EXTRACTION | GEN-AI-00000 | 1/1 | AI 사건 추출 완료: 0개
