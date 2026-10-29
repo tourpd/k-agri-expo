@@ -18,6 +18,12 @@ function encodeSession(data: any) {
 }
 
 export async function POST(req: Request) {
+  // ⚠️ 긴급 잠금: 비밀번호를 암호화 없이 비교하고 위조 가능한 쿠키를 만들던 옛 로그인.
+  // 이 API를 부르는 화면이 없어 꺼 둡니다. 기업 로그인은 /api/vendor/login (Supabase) 사용.
+  if (true as boolean) {
+    return Response.json({ success: false, error: "이 로그인 방식은 더 이상 쓰지 않습니다." }, { status: 410 });
+  }
+
   try {
     const body = await req.json();
 

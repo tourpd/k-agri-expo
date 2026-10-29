@@ -3,6 +3,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
+function safeNextPath(fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const next = new URLSearchParams(window.location.search).get("next") || "";
+  // 같은 사이트 안의 경로만 허용 (외부 주소로 튕기는 것 방지)
+  return next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+}
+
 export default function AdminLoginPage() {
   const router = useRouter();
 
@@ -59,7 +66,7 @@ export default function AdminLoginPage() {
       }
 
       // AUTH_BASECAMP_v1 기준: 관리자 성공 후 관리자 홈으로만 이동
-      router.push("/expo/admin");
+      router.push(safeNextPath("/expo/admin"));
       router.refresh();
     } catch (err) {
       setError(

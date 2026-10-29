@@ -1114,7 +1114,21 @@ export default async function ExpoIndexPage() {
     participantCount,
   });
 
-  const promotions = (promotionRows ?? []) as ExpoPromotion[];
+  // 끝난 행사는 홈에 띄우지 않음 (지난 날짜가 'D-DAY'로 계속 걸려 있던 문제)
+  const nowMs = Date.now();
+  const isPast = (value: unknown, graceHours = 0) => {
+    if (!value) return false;
+    const t = new Date(String(value)).getTime();
+    return !Number.isNaN(t) && t + graceHours * 3600 * 1000 < nowMs;
+  };
+  const promotions = ((promotionRows ?? []) as ExpoPromotion[]).filter((p) => {
+    const anyP = p as ExpoPromotion & { live_datetime?: string | null };
+    if (isPast(anyP.ends_at)) return false;
+    if (anyP.starts_at && new Date(String(anyP.starts_at)).getTime() > nowMs) return false;
+    // 라이브 시각이 지나고 6시간이 넘으면 끝난 행사로 봄
+    if (isPast(anyP.live_datetime, 6)) return false;
+    return true;
+  });
 
   const autoNewProducts =
     grouped.new_products?.length > 0 ? grouped.new_products : grouped.featured ?? [];
@@ -1179,7 +1193,7 @@ export default async function ExpoIndexPage() {
     item={promotions.find((item) => item.is_featured) || promotions[0]}
     mode="public"
   />
-) : liveShow ? (
+) : liveShow && !isPast((liveShow as any)?.live_datetime, 6) ? (
   <ExpoLiveSection item={liveShow as any} />
 ) : null}
 
