@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canAccessBooth, canAccessVendorRow, getVendorScope, scopeDenied } from "@/lib/security/vendor-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ type Body = {
 
 type InquiryRow = {
   inquiry_id?: string | null;
+  booth_id?: string | null;
   status?: string | null;
   contacted_at?: string | null;
   closed_at?: string | null;
@@ -87,6 +89,9 @@ export async function POST(req: Request) {
       return jsonError("invalid status. allowed: new, contacted, closed", 400);
     }
 
+    const scope = await getVendorScope();
+    if (!scope) return scopeDenied();
+
     const supabase = createSupabaseAdminClient();
 
     const { data: currentRow, error: currentError } = await supabase
@@ -94,6 +99,7 @@ export async function POST(req: Request) {
       .select(
         `
         inquiry_id,
+        booth_id,
         status,
         contacted_at,
         closed_at,
@@ -113,6 +119,10 @@ export async function POST(req: Request) {
 
     if (!currentRow?.inquiry_id) {
       return jsonError("inquiry not found.", 404);
+    }
+
+    if (!canAccessBooth(scope, currentRow.booth_id)) {
+      return jsonError("본인 부스의 문의만 수정할 수 있습니다.", 403);
     }
 
     const now = new Date().toISOString();

@@ -38,10 +38,10 @@ function toYoutubeEmbed(url?: string | null) {
 
 function getDDay(v?: string | null) {
   const value = safe(v);
-  if (!value) return "D-22";
+  if (!value) return "곧 공개";
 
   const t = new Date(value).getTime();
-  if (Number.isNaN(t)) return "D-22";
+  if (Number.isNaN(t)) return "곧 공개";
 
   const diff = t - Date.now();
   if (diff <= 0) return "D-DAY";

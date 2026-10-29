@@ -3,7 +3,18 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// ⚠️ 긴급 잠금 (2026-10-30)
+// 이 웹훅은 토스가 보낸 요청인지 확인하는 절차가 없어서, 누구나 주문을 '결제 완료'로
+// 바꿀 수 있었습니다. 실제 토스 가상계좌 연동(시크릿 검증)을 붙이기 전까지 꺼 둡니다.
+const WEBHOOK_ENABLED = false;
+
 export async function POST(req: Request) {
+  if (!WEBHOOK_ENABLED) {
+    return Response.json(
+      { success: false, error: "virtual-account webhook is disabled" },
+      { status: 410 }
+    );
+  }
   try {
     const body = await req.json();
     const supabase = createSupabaseAdminClient();

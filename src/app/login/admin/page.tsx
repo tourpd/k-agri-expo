@@ -3,10 +3,17 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
+function safeNextPath(fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const next = new URLSearchParams(window.location.search).get("next") || "";
+  // 같은 사이트 안의 경로만 허용 (외부 주소로 튕기는 것 방지)
+  return next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+}
+
 export default function AdminLoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("tourpd70@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -56,7 +63,7 @@ export default function AdminLoginPage() {
         throw new Error(json?.error || "로그인에 실패했습니다.");
       }
 
-      router.push("/vendor/manage");
+      router.push(safeNextPath("/vendor/manage"));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인 중 오류가 발생했습니다.");
@@ -81,7 +88,7 @@ export default function AdminLoginPage() {
                 style={S.input}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="tourpd70@gmail.com"
+                placeholder="관리자 이메일"
                 autoComplete="username"
                 inputMode="email"
               />

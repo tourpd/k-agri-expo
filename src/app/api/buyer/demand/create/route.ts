@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { analyzeInquiry } from "@/lib/leads/analyze-inquiry";
 import { sendAdminHotLeadAlert } from "@/lib/leads/send-admin-hot-lead-alert";
 
@@ -172,7 +173,17 @@ export async function POST(req: NextRequest) {
     const supabase = createSupabaseAdminClient();
     const body = (await req.json()) as DemandBody;
 
-    const buyerUserId = n(body.buyer_user_id);
+    // 요청에 적힌 아이디가 아니라 실제 로그인한 사람으로 확인 (남의 이름으로 요청 방지)
+    const authClient = await createSupabaseServerClient();
+    const { data: authData } = await authClient.auth.getUser();
+    const sessionUserId = authData.user?.id ?? "";
+    if (!sessionUserId) {
+      return NextResponse.json({ ok: false, error: "로그인이 필요합니다." }, { status: 401 });
+    }
+    if (n(body.buyer_user_id) && n(body.buyer_user_id) !== sessionUserId) {
+      return NextResponse.json({ ok: false, error: "본인 계정으로만 요청할 수 있습니다." }, { status: 403 });
+    }
+    const buyerUserId = sessionUserId;
     const categoryKey = n(body.category_key);
     const cropKey = n(body.crop_key);
     const sourcingType = n(body.sourcing_type);

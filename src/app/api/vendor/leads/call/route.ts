@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { calcLeadScore, calcPriorityRank } from "@/lib/leadScore";
+import { canAccessBooth, canAccessVendorRow, getVendorScope, scopeDenied } from "@/lib/security/vendor-scope";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,9 @@ export async function POST(req: Request) {
       );
     }
 
+    const scope = await getVendorScope();
+    if (!scope) return scopeDenied();
+
     const supabase = createSupabaseAdminClient();
 
     const { data: lead, error } = await supabase
@@ -37,6 +41,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { ok: false, error: error?.message || "lead not found" },
         { status: 404 }
+      );
+    }
+
+    if (!canAccessBooth(scope, lead.booth_id)) {
+      return NextResponse.json(
+        { ok: false, error: "본인 부스의 리드만 다룰 수 있습니다." },
+        { status: 403 }
       );
     }
 

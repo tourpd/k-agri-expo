@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canAccessBooth, canAccessVendorRow, getVendorScope, scopeDenied } from "@/lib/security/vendor-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,6 +62,16 @@ export async function GET(req: Request) {
       return jsonError("invalid status. allowed: all, new, contacted, closed", 400);
     }
 
+    // 본인 부스 문의만 (관리자는 전체)
+    const scope = await getVendorScope();
+    if (!scope) return scopeDenied();
+    if (boothId && !canAccessBooth(scope, boothId)) {
+      return jsonError("본인 부스의 문의만 볼 수 있습니다.", 403);
+    }
+    if (!scope.isAdmin && scope.boothIds.length === 0) {
+      return jsonSuccess({ items: [] });
+    }
+
     const supabase = createSupabaseAdminClient();
 
     let query = supabase
@@ -95,6 +106,9 @@ export async function GET(req: Request) {
 
     if (boothId) {
       query = query.eq("booth_id", boothId);
+    }
+    if (!scope.isAdmin && !boothId) {
+      query = query.in("booth_id", scope.boothIds);
     }
 
     if (status && status !== "all") {

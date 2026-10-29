@@ -1,10 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { cookies } from "next/headers";
+import { canAccessBooth, canAccessVendorRow, getVendorScope, scopeDenied } from "@/lib/security/vendor-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const VENDOR_COOKIE = "kagri_vendor_session";
 
 function clean(v: string | null) {
   return (v ?? "").trim();
@@ -16,19 +14,9 @@ function jsonError(message: string, status = 400) {
 
 export async function GET(req: Request) {
   try {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get(VENDOR_COOKIE)?.value;
-
-    if (!raw) {
-      return jsonError("로그인이 필요합니다.", 401);
-    }
-
-    const session = JSON.parse(Buffer.from(raw, "base64").toString("utf-8"));
-    const vendorId = clean(session?.vendor_id || "");
-
-    if (!vendorId) {
-      return jsonError("벤더 정보가 없습니다.", 401);
-    }
+    // 서명 없는 쿠키 대신 실제 로그인으로 확인 (관리자는 전체)
+    const scope = await getVendorScope();
+    if (!scope) return jsonError("로그인이 필요합니다.", 401);
 
     const url = new URL(req.url);
     const boothId = clean(url.searchParams.get("booth_id"));
@@ -68,9 +56,18 @@ export async function GET(req: Request) {
         accepted_at,
         accepted_by_vendor_id
       `)
-      .eq("vendor_id", vendorId)
       .order("created_at", { ascending: false })
       .limit(300);
+
+    if (!scope.isAdmin) {
+      if (boothId && !canAccessBooth(scope, boothId)) {
+        return jsonError("본인 부스의 리드만 볼 수 있습니다.", 403);
+      }
+      // 검색(q)에서 or()를 쓰므로 여기서는 in()으로만 거릅니다.
+      query = scope.vendorIds.length
+        ? query.in("vendor_id", scope.vendorIds)
+        : query.in("booth_id", scope.boothIds);
+    }
 
     if (boothId) {
       query = query.eq("booth_id", boothId);
@@ -102,18 +99,21 @@ export async function GET(req: Request) {
       return jsonError(error.message, 500);
     }
 
+    const isMine = (row: any) =>
+      scope.isAdmin || scope.vendorIds.includes(String(row.accepted_by_vendor_id || ""));
+
     const items = (data || []).map((row: any) => ({
       ...row,
       farmer_name:
-        row.contact_unlocked && String(row.accepted_by_vendor_id || "") === vendorId
+        row.contact_unlocked && isMine(row)
           ? row.farmer_name
           : row.masked_farmer_name,
       farmer_phone:
-        row.contact_unlocked && String(row.accepted_by_vendor_id || "") === vendorId
+        row.contact_unlocked && isMine(row)
           ? row.farmer_phone
           : row.masked_farmer_phone,
       farmer_email:
-        row.contact_unlocked && String(row.accepted_by_vendor_id || "") === vendorId
+        row.contact_unlocked && isMine(row)
           ? row.farmer_email
           : null,
     }));
