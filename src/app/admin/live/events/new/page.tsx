@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -8,6 +9,7 @@ export const revalidate = 0;
 
 async function createLiveEvent(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 

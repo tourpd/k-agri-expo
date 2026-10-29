@@ -1,6 +1,7 @@
 // src/app/api/admin/gmail-pull/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { INTERNAL_HEADER, getInternalToken } from "@/lib/security/signed-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -385,6 +386,7 @@ export async function GET(req: Request) {
       const ingestRes = await fetch(`${origin}/api/admin/crm-mail-ingest`, {
         method: "POST",
         headers: {
+          [INTERNAL_HEADER]: await getInternalToken(),
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

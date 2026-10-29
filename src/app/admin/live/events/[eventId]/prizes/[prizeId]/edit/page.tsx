@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -44,6 +45,7 @@ async function uploadPrizeImage(
 
 async function updatePrize(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 
@@ -118,6 +120,7 @@ async function updatePrize(formData: FormData) {
 
 async function deletePrize(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 

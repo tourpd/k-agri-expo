@@ -118,12 +118,13 @@ export async function POST(req: Request) {
     const recommended_quantity =
       cleanNumber(body.recommended_quantity, null) ?? quantity;
 
+    // 가격은 DB 상품 가격을 우선합니다 (화면에서 보낸 값은 상품을 못 찾았을 때만)
     const price_krw =
-      cleanNumber(body.price_krw) ?? cleanNumber(product?.price_krw) ?? 0;
+      cleanNumber(product?.price_krw) ?? cleanNumber(body.price_krw) ?? 0;
 
-    const sale_price_krw =
-      cleanNumber(body.sale_price_krw) ??
-      cleanNumber(product?.sale_price_krw);
+    const sale_price_krw = product
+      ? cleanNumber(product?.sale_price_krw)
+      : cleanNumber(body.sale_price_krw);
 
     const unit_price_krw = sale_price_krw ?? price_krw;
     const total_amount_krw = Math.max(unit_price_krw * quantity, 0);
@@ -136,10 +137,10 @@ export async function POST(req: Request) {
     );
 
     const vendor_id =
-      cleanNullableText(body.vendor_id) || cleanNullableText(product?.vendor_id);
+      cleanNullableText(product?.vendor_id) || cleanNullableText(body.vendor_id);
 
     const brand_id =
-      cleanNullableText(body.brand_id) || cleanNullableText(product?.brand_id);
+      cleanNullableText(product?.brand_id) || cleanNullableText(body.brand_id);
 
     const revenue = await applyRevenueToOrder({
       orderType: order_type,
@@ -160,8 +161,9 @@ export async function POST(req: Request) {
       amount_krw: total_amount_krw,
 
       payment_method: cleanText(body.payment_method, "bank_transfer"),
-      payment_status: cleanText(body.payment_status, "requested"),
-      order_status: cleanText(body.order_status, "pending"),
+      // 결제·주문 상태는 서버가 정합니다 (고객이 '결제완료'로 보낼 수 없게)
+      payment_status: "requested",
+      order_status: "pending",
       note: cleanNullableText(body.buyer_memo),
 
       product_id: product_id || null,

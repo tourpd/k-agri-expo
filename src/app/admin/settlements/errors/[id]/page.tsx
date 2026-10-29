@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -138,6 +139,7 @@ function getErrorReasons(row: any, sourceTable: SourceTable) {
 
 async function updateErrorOrder(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const id = cleanText(formData.get("id"));
   const sourceTable = cleanText(formData.get("source_table")) as SourceTable;
