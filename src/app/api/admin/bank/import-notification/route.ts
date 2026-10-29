@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { safeEqualText } from "@/lib/security/signed-session";
+import { INTERNAL_HEADER, getInternalToken } from "@/lib/security/signed-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -122,8 +123,9 @@ export async function POST(req: Request) {
 
     // 🔥 5. 자동 매칭 실행
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin/bank/match`, {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin}/api/admin/bank/match`, {
         method: "POST",
+        headers: { [INTERNAL_HEADER]: await getInternalToken() },
       });
     } catch {
       // 실패해도 무시 (매칭은 나중에도 가능)

@@ -1,6 +1,7 @@
 // src/app/api/admin/farmer-call-inbox/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { INTERNAL_HEADER, getInternalToken } from "@/lib/security/signed-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -118,6 +119,7 @@ export async function POST(req: Request) {
 
     const transcribeRes = await fetch(`${origin}/api/admin/farmer-transcribe`, {
       method: "POST",
+      headers: { [INTERNAL_HEADER]: await getInternalToken() },
       body: forwardForm,
     });
 

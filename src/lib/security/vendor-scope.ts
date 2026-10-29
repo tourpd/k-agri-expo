@@ -46,7 +46,12 @@ export async function getVendorScope(): Promise<VendorScope | null> {
 
   const admin = createSupabaseAdminClient();
 
-  const vendorRes = await admin.from("vendors").select("vendor_id").eq("user_id", userId);
+  // 승인된 입점기업만 (가입만 하면 생기는 vendors 행은 제외)
+  const vendorRes = await admin
+    .from("vendors")
+    .select("vendor_id")
+    .eq("user_id", userId)
+    .or("verify_status.eq.approved,status.eq.approved,status.eq.active");
   const vendorIds = uniq(
     (vendorRes.error ? [] : vendorRes.data ?? []).map((r: { vendor_id?: string | null }) => r.vendor_id)
   );

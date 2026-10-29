@@ -104,3 +104,22 @@ export function safeEqualText(a: string, b: string): boolean {
   if (!a || !b) return false;
   return timingSafeEqual(encoder.encode(a), encoder.encode(b));
 }
+
+/**
+ * 사이트 서버가 자기 API를 부를 때 붙이는 내부 통행증.
+ * 브라우저에는 절대 내려가지 않고, 비밀값에서만 만들어집니다.
+ */
+export const INTERNAL_HEADER = "x-kagri-internal";
+
+export async function getInternalToken(): Promise<string> {
+  return toBase64Url(await hmac("internal-call-v1", "internal"));
+}
+
+export async function isInternalRequestToken(value: string | null | undefined): Promise<boolean> {
+  if (!value) return false;
+  try {
+    return safeEqualText(value, await getInternalToken());
+  } catch {
+    return false;
+  }
+}

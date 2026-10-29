@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,6 +13,7 @@ type PageProps = {
 
 async function updateEvent(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 

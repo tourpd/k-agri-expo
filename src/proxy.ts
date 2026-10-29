@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
-import { safeEqualText } from "@/lib/security/signed-session";
+import { INTERNAL_HEADER, isInternalRequestToken, safeEqualText } from "@/lib/security/signed-session";
 
 /**
  * K-AGRI365 엑스포 출입 관리 (Next 16 proxy)
@@ -48,9 +48,17 @@ const ADMIN_APIS = [
   "/api/studio",
   "/api/pv5",
   "/api/kagri-core",
-  "/api/send-sms",
   "/api/farmer/auto-import",
   "/api/vendor/hanmi-products",
+  "/api/live/draw", // 경품 추첨 (관리자 화면 버튼에서만 씀)
+  "/api/event/draw",
+  "/api/expo/admin",
+  // 브랜드관·브랜드 제품: 기업과 브랜드의 소유 연결이 아직 없어서
+  // 입점기업 누구나 남의 브랜드(입금 계좌 포함)를 고칠 수 있었음 → 연결 완성 전까지 관리자만
+  "/api/vendor/brand-hall",
+  "/api/vendor/brand-products",
+  "/api/vendor/brand-events",
+  "/api/vendor/brand-assets",
 ];
 /** 관리자 API 중 로그인 전에 열려 있어야 하는 것 (자체 확인 있음) */
 const ADMIN_API_EXCEPTIONS = [
@@ -67,15 +75,10 @@ const VENDOR_APIS = [
   "/api/vendor/ai-growth-interview",
   "/api/vendor/ai-growth-report",
   "/api/vendor/auto-import",
-  "/api/vendor/brand-assets",
-  "/api/vendor/brand-events",
-  "/api/vendor/brand-hall",
-  "/api/vendor/brand-products",
   "/api/vendor/catalog-import",
   "/api/vendor/content",
   "/api/vendor/inquiries",
   "/api/vendor/leads",
-  "/api/vendor/order-status",
   "/api/vendor/product-deep-analysis",
   "/api/vendor/manage",
   "/api/expo/vendor",
@@ -89,9 +92,36 @@ function isBlockedDebugApi(path: string): boolean {
 }
 
 /** IP당 횟수 제한: [경로들, 허용 횟수, 시간(초)] */
-const RATE_LIMITS: Array<{ prefixes: string[]; limit: number; windowSec: number; name: string }> = [
+const RATE_LIMITS: Array<{
+  prefixes: string[];
+  limit: number;
+  windowSec: number;
+  name: string;
+  allMethods?: boolean; // true면 GET 조회도 셈
+}> = [
   { name: "admin-login", prefixes: ["/api/admin/login", "/api/vendor/login", "/api/login"], limit: 10, windowSec: 600 },
   { name: "sms", prefixes: ["/api/live/join", "/api/live/code", "/api/live/verify"], limit: 10, windowSec: 600 },
+  {
+    name: "lookup",
+    prefixes: ["/api/order-status", "/api/live/my-number", "/api/vendor/order-status"],
+    limit: 20,
+    windowSec: 600,
+    allMethods: true,
+  },
+  {
+    name: "ai-vendor",
+    prefixes: [
+      "/api/ai/youtube-analyzer",
+      "/api/ai/product-analyzer",
+      "/api/vendor/ai-growth-interview",
+      "/api/vendor/ai-growth-report",
+      "/api/vendor/catalog-import",
+      "/api/vendor/auto-import",
+      "/api/vendor/product-deep-analysis",
+    ],
+    limit: 30,
+    windowSec: 600,
+  },
   { name: "ai-public", prefixes: ["/api/vision", "/api/ai-consult", "/api/ocr", "/api/vendor/upload-business-license"], limit: 20, windowSec: 600 },
   {
     name: "forms",
@@ -155,8 +185,14 @@ async function isVendor(req: NextRequest): Promise<boolean> {
     if (!user?.id) return false;
 
     const admin = createClient(url, service, { auth: { persistSession: false } });
+    // 가입만 한 계정이 아니라 승인된 입점기업이거나 부스를 배정받은 기업만
     const checks = [
-      admin.from("vendors").select("user_id").eq("user_id", user.id).limit(1),
+      admin
+        .from("vendors")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .or("verify_status.eq.approved,status.eq.approved,status.eq.active")
+        .limit(1),
       admin.from("booths").select("booth_id").eq("vendor_user_id", user.id).limit(1),
       admin.from("booths").select("booth_id").eq("owner_user_id", user.id).limit(1),
     ];
@@ -188,8 +224,9 @@ export default async function proxy(req: NextRequest) {
   }
 
   // 5) 횟수 제한
-  if (path.startsWith("/api/") && req.method !== "GET") {
+  if (path.startsWith("/api/")) {
     for (const rule of RATE_LIMITS) {
+      if (req.method === "GET" && !rule.allMethods) continue;
       if (startsWithAny(path, rule.prefixes)) {
         if (overLimit(`${rule.name}:${clientIp(req)}`, rule.limit, rule.windowSec)) {
           return unauthorized("요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.", 429);
@@ -222,6 +259,8 @@ export default async function proxy(req: NextRequest) {
       const auth = req.headers.get("authorization") || "";
       if (secret && safeEqualText(auth, `Bearer ${secret}`)) return NextResponse.next();
     }
+    // 사이트 서버가 자기 API를 부르는 내부 호출 (자동 입금 매칭, 메일 정리 등)
+    if (await isInternalRequestToken(req.headers.get(INTERNAL_HEADER))) return NextResponse.next();
     if (await isAdmin(req)) return NextResponse.next();
     return unauthorized("관리자 로그인이 필요합니다.");
   }

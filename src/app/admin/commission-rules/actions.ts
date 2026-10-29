@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 function normalizeRate(v: unknown) {
   const n = Number(v || 0);
@@ -20,6 +21,7 @@ function clean(v: FormDataEntryValue | null) {
 }
 
 export async function createCommissionRule(formData: FormData) {
+  await requireAdminUser(); // 관리자만 실행
   const supabase = createSupabaseAdminClient();
 
   const scopeType = clean(formData.get("scope_type"));
