@@ -38,6 +38,8 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
   const siblings = problemsByCrop(problem.crop).filter((p) => p.slug !== problem.slug && p.crop !== "common").slice(0, 2);
   const embed = toEmbed(problem.videoUrl);
   const photo = problem.imageUrls?.[0] ?? null;
+  // 전화·문의는 첫 번째(가장 잘 맞는) 기업으로 갑니다. 기업 번호가 없으면 전화 버튼은 안 보입니다.
+  const lead = products.find((p) => p.phone) ?? products[0] ?? null;
 
   return (
     <div style={S.wrap}>
@@ -102,7 +104,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
               </Link>
             ))}
           </div>
-          <div style={S.note}>농약은 온라인 판매가 안 됩니다. 아래 '전화하기'로 가까운 판매점을 알려 드립니다.</div>
+          <div style={S.note}>농약은 온라인 판매가 안 됩니다. 아래 버튼으로 기업에 물으면 가까운 판매점을 알려 줍니다.</div>
         </section>
       ) : (
         <section style={S.card}>
@@ -126,7 +128,14 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
       {/* 고정 띠 자리 확보 */}
       <div style={{ height: 84 }} />
 
-      <StickyAsk problemSlug={problem.slug} problemTitle={problem.title} needsCrop={problem.crop === "common"} />
+      <StickyAsk
+        problemSlug={problem.slug}
+        problemTitle={problem.title}
+        needsCrop={problem.crop === "common"}
+        phone={lead?.phone ?? null}
+        companyName={lead?.brandName ?? null}
+        boothId={lead?.boothId ?? null}
+      />
     </div>
   );
 }

@@ -3,19 +3,25 @@
 import React, { useState } from "react";
 
 /**
- * 화면 아래 고정 띠: [📞 전화하기] [문의 남기기]
- * '문의 남기기'를 누를 때만 이름·전화 두 칸이 열립니다. 묻는 길은 이것 하나입니다.
+ * 화면 아래 고정 띠: [📞 기업에 전화] [문의 남기기]
+ * - 전화는 자재를 낸 기업 번호로 갑니다. 기업 번호가 없으면 전화 버튼은 숨기고 '문의 남기기'만 둡니다.
+ * - 문의도 그 기업 부스(boothId)로 들어갑니다. 운영자는 끼지 않습니다.
  */
 export default function StickyAsk({
   problemSlug,
   problemTitle,
   needsCrop,
-  phone = "010-8216-1253",
+  phone,
+  companyName,
+  boothId,
 }: {
   problemSlug: string;
   problemTitle: string;
   needsCrop?: boolean;
-  phone?: string;
+  /** 기업 전화번호. 없으면 전화 버튼 없음 */
+  phone?: string | null;
+  companyName?: string | null;
+  boothId?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -35,6 +41,7 @@ export default function StickyAsk({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           problem_slug: problemSlug,
+          booth_id: boothId ?? undefined,
           farmer_name: name,
           phone: tel,
           crop,
@@ -60,8 +67,12 @@ export default function StickyAsk({
     <>
       <style>{CSS}</style>
       {/* 아래 고정 띠 */}
-      <div className="sticky-ask-bar">
-        <a href={`tel:${phone}`} className="sticky-ask-call">📞 전화하기</a>
+      <div className={phone ? "sticky-ask-bar" : "sticky-ask-bar sticky-ask-bar--one"}>
+        {phone ? (
+          <a href={`tel:${phone}`} className="sticky-ask-call">
+            📞 {companyName ? `${companyName}에 전화` : "기업에 전화"}
+          </a>
+        ) : null}
         <button type="button" className="sticky-ask-open" onClick={() => setOpen(true)}>
           문의 남기기
         </button>
@@ -80,11 +91,13 @@ export default function StickyAsk({
               <div className="sticky-ask-done">
                 <div className="sticky-ask-done-title">접수됐습니다</div>
                 <div>{msg}</div>
-                <div>급하시면 <a href={`tel:${phone}`}>{phone}</a></div>
+                {phone ? <div>급하시면 <a href={`tel:${phone}`}>{phone}</a></div> : null}
               </div>
             ) : (
               <form onSubmit={submit} className="sticky-ask-form">
-                <div className="sticky-ask-sub">이름과 전화번호만 적으면 됩니다. 기업이 직접 연락드립니다.</div>
+                <div className="sticky-ask-sub">
+                  이름과 전화번호만 적으면 됩니다. {companyName ? `${companyName}에서` : "맞는 기업이"} 직접 연락드립니다.
+                </div>
                 <label className="sticky-ask-label">이름
                   <input className="sticky-ask-input" placeholder="홍길동" value={name} onChange={(e) => setName(e.target.value)} required />
                 </label>
@@ -115,7 +128,8 @@ export default function StickyAsk({
 
 const CSS = `
 .sticky-ask-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); border-top: 1px solid #e5e7eb; backdrop-filter: blur(6px); }
-.sticky-ask-call { display:flex; align-items:center; justify-content:center; padding: 14px; border-radius: 14px; background: #0f172a; color: #fff; font-weight: 900; font-size: 16px; text-decoration: none; }
+.sticky-ask-bar--one { grid-template-columns: 1fr; }
+.sticky-ask-call { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display:flex; align-items:center; justify-content:center; padding: 14px; border-radius: 14px; background: #0f172a; color: #fff; font-weight: 900; font-size: 16px; text-decoration: none; }
 .sticky-ask-open { padding: 14px; border-radius: 14px; border: 0; background: #15803d; color: #fff; font-weight: 900; font-size: 16px; cursor: pointer; }
 .sticky-ask-backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(15,23,42,.45); display: flex; align-items: flex-end; justify-content: center; }
 .sticky-ask-sheet { width: 100%; max-width: 560px; background: #fff; border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }

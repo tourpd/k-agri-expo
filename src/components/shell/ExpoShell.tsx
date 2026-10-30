@@ -111,7 +111,7 @@ export default function ExpoShell({ children }: { children: React.ReactNode }) {
           textAlign: "center",
         }}
       >
-        © {new Date().getFullYear()} K-Agri Expo · 한국농수산TV · 문의 010-8216-1253 ·{" "}
+        © {new Date().getFullYear()} K-Agri Expo · 한국농수산TV ·{" "}
         <Link href="/admin/login" style={{ color: "#999" }}>
           운영자
         </Link>

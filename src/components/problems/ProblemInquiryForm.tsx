@@ -70,7 +70,6 @@ export default function ProblemInquiryForm({
       <div style={S.done}>
         <div style={S.doneTitle}>접수됐습니다</div>
         <div style={S.doneText}>{notice}</div>
-        <div style={S.doneText}>급하시면 010-8216-1253 으로 전화 주셔도 됩니다.</div>
       </div>
     );
   }

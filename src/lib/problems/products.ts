@@ -23,6 +23,8 @@ export type AnswerProduct = {
   /** 상세 화면 주소 */
   href: string;
   sponsored?: boolean;
+  /** 기업 전화번호 (부스 phone → 입점 신청서 전화). 없으면 null */
+  phone: string | null;
 };
 
 function text(v: unknown): string {
@@ -36,6 +38,57 @@ function hit(haystack: string, keywords: string[]): number {
     if (k && h.includes(k.toLowerCase())) score += 1;
   }
   return score;
+}
+
+type Db = ReturnType<typeof createSupabaseAdminClient>;
+
+function cleanPhone(v: unknown): string | null {
+  const t = text(v).replace(/[^\d+]/g, "");
+  return t.length >= 9 ? t : null;
+}
+
+/** 부스 id → 부스 전화 */
+async function boothPhones(supabase: Db, boothIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!boothIds.length) return map;
+  try {
+    const { data } = await supabase.from("booths").select("booth_id, id, phone").in("booth_id", boothIds);
+    for (const b of (data ?? []) as Array<Record<string, unknown>>) {
+      const ph = cleanPhone(b.phone);
+      if (ph) map.set(text(b.booth_id ?? b.id), ph);
+    }
+  } catch (error) {
+    console.error("[problems/products] booth phone error:", error);
+  }
+  return map;
+}
+
+/** 입점기업 id → 전화 (그 기업 부스 전화 → 입점 신청서 전화) */
+async function vendorPhones(supabase: Db, vendorIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!vendorIds.length) return map;
+  try {
+    const { data } = await supabase.from("booths").select("vendor_id, phone").in("vendor_id", vendorIds);
+    for (const b of (data ?? []) as Array<Record<string, unknown>>) {
+      const ph = cleanPhone(b.phone);
+      if (ph && !map.has(text(b.vendor_id))) map.set(text(b.vendor_id), ph);
+    }
+  } catch (error) {
+    console.error("[problems/products] vendor booth phone error:", error);
+  }
+  const missing = vendorIds.filter((v) => !map.has(v));
+  if (missing.length) {
+    try {
+      const { data } = await supabase.from("vendor_applications").select("provisioned_vendor_id, phone, contact_phone").in("provisioned_vendor_id", missing);
+      for (const a of (data ?? []) as Array<Record<string, unknown>>) {
+        const ph = cleanPhone(a.phone) ?? cleanPhone(a.contact_phone);
+        if (ph && !map.has(text(a.provisioned_vendor_id))) map.set(text(a.provisioned_vendor_id), ph);
+      }
+    } catch (error) {
+      console.error("[problems/products] vendor application phone error:", error);
+    }
+  }
+  return map;
 }
 
 export async function findAnswerProducts(problem: Problem, limit = 2): Promise<AnswerProduct[]> {
@@ -64,16 +117,17 @@ export async function findProductsByKeywords(keywords: string[], limit = 5, must
 
     const rows = (brandProducts ?? []) as Array<Record<string, unknown>>;
     const brandIds = Array.from(new Set(rows.map((r) => text(r.brand_id)).filter(Boolean)));
-    const brandMap = new Map<string, { name: string | null; slug: string | null }>();
+    const brandMap = new Map<string, { name: string | null; slug: string | null; vendorId: string | null }>();
     if (brandIds.length) {
       const { data: brands } = await supabase
         .from("expo_brands")
-        .select("id, brand_name, slug")
+        .select("id, brand_name, slug, vendor_id")
         .in("id", brandIds);
       for (const b of (brands ?? []) as Array<Record<string, unknown>>) {
-        brandMap.set(text(b.id), { name: text(b.brand_name) || null, slug: text(b.slug) || null });
+        brandMap.set(text(b.id), { name: text(b.brand_name) || null, slug: text(b.slug) || null, vendorId: text(b.vendor_id) || null });
       }
     }
+    const vendorPhone = await vendorPhones(supabase, Array.from(brandMap.values()).map((b) => b.vendorId).filter(Boolean) as string[]);
 
     for (const r of rows) {
       const hay = [r.product_name, r.short_description, r.detail_description, r.target_crops, r.category].map(text).join(" ");
@@ -92,6 +146,7 @@ export async function findProductsByKeywords(keywords: string[], limit = 5, must
         shortDescription: text(r.short_description) || null,
         source: "brand",
         href: `/expo/brand-products/${text(r.id)}`,
+        phone: (brand?.vendorId && vendorPhone.get(brand.vendorId)) || null,
         score,
       });
     }
@@ -107,7 +162,10 @@ export async function findProductsByKeywords(keywords: string[], limit = 5, must
       .eq("is_active", true)
       .limit(400);
 
-    for (const r of (boothProducts ?? []) as Array<Record<string, unknown>>) {
+    const boothRows = (boothProducts ?? []) as Array<Record<string, unknown>>;
+    const boothPhone = await boothPhones(supabase, Array.from(new Set(boothRows.map((r) => text(r.booth_id)).filter(Boolean))));
+
+    for (const r of boothRows) {
       const name = text(r.name ?? r.title ?? r.product_name);
       if (!name || /입점권|부스/.test(name)) continue;
       const hay = [name, r.short_description, r.description, r.target_crops, r.category, r.tags].map(text).join(" ");
@@ -126,6 +184,7 @@ export async function findProductsByKeywords(keywords: string[], limit = 5, must
         shortDescription: text(r.short_description) || null,
         source: "booth",
         href: `/expo/product/${id}`,
+        phone: boothPhone.get(text(r.booth_id)) ?? null,
         score,
       });
     }

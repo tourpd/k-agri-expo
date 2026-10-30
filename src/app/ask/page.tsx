@@ -10,7 +10,7 @@ export const metadata = { title: "직접 묻기 | K-Agri Expo" };
 export default function AskPage() {
   return (
     <div style={S.wrap}>
-      <AskBox big />
+      <div id="ask-box"><AskBox big /></div>
       <div style={S.or}>또는</div>
       <div style={S.two}>
         <a href="/ai-consult" style={S.card}>
@@ -18,10 +18,10 @@ export default function AskPage() {
           <div style={S.cardTitle}>사진으로 진단</div>
           <div style={S.cardSub}>잎·열매 사진을 올리면 바로 원인을 가려 드립니다</div>
         </a>
-        <a href="tel:010-8216-1253" style={S.card}>
-          <div style={S.cardIcon}>📞</div>
-          <div style={S.cardTitle}>전화로 묻기</div>
-          <div style={S.cardSub}>010-8216-1253 · 통화 내용은 정리해서 기업에 연결합니다</div>
+        <a href="#ask-box" style={S.card}>
+          <div style={S.cardIcon}>✍️</div>
+          <div style={S.cardTitle}>글로 묻기</div>
+          <div style={S.cardSub}>증상을 한 줄 적으면 맞는 기업이 직접 연락드립니다</div>
         </a>
       </div>
       <div style={S.label}>증상으로 고르기</div>
