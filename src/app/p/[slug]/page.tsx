@@ -36,8 +36,10 @@ function fmtTime(sec: number) {
  *  4) 이럴 때 쓰는 자재 (많아야 2개, 버튼 하나)
  *  5) 아래 고정 띠: 전화하기 / 문의 남기기  ← 묻는 길은 이것 하나
  */
-export default async function ProblemPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProblemPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ src?: string; dx?: string; prob?: string }> }) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const fromPhoto = sp.src === "photodoctor";
   const problem = getProblem(slug);
   if (!problem) notFound();
 
@@ -65,6 +67,18 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
 
   return (
     <div style={S.wrap}>
+      {/* 포토닥터에서 넘어왔을 때 */}
+      {fromPhoto ? (
+        <div style={S.dxBanner}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/doctor-q-face.png" alt="닥터Q" width={44} height={44} style={S.dxFace} />
+          <div style={{ minWidth: 0 }}>
+            <div style={S.dxTop}>📷 포토닥터 진단{sp.dx ? `: ${sp.dx}` : ""}{sp.prob ? ` (${sp.prob}%)` : ""}</div>
+            <div style={S.dxSub}>닥터Q 처방입니다. 아래 '지금 할 일'부터 하시고, 자재는 '약박사'로 내 밭 평수에 맞춰 양을 보세요. 사진 진단은 방향 잡기용이라 다른 가능성도 함께 보세요.</div>
+          </div>
+        </div>
+      ) : null}
+
       {/* 1. 제목 + 사진 + 한 줄 */}
       {crop && crop.key !== "common" ? (
         <Link href={`/crop/${crop.key}`} style={S.cropLink}>{crop.icon} {crop.label}</Link>
@@ -271,6 +285,10 @@ const S: Record<string, CSSProperties> = {
   pestItem: { fontSize: 12, fontWeight: 700, color: "#64748b", marginLeft: 4 },
   orgMore: { display: "block", marginTop: 10, fontSize: 14, fontWeight: 900, color: "#15803d", textDecoration: "none" },
   siblings: { marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" },
+  dxBanner: { display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", marginBottom: 12, borderRadius: 16, background: "#f0fdf4", border: "2px solid #15803d" },
+  dxFace: { borderRadius: 999, flexShrink: 0, objectFit: "cover" },
+  dxTop: { fontSize: 15, fontWeight: 950, color: "#14532d" },
+  dxSub: { marginTop: 2, fontSize: 13, color: "#166534", lineHeight: 1.55, wordBreak: "keep-all" },
   forCompany: { marginTop: 18, fontSize: 12, color: "#94a3b8", textAlign: "center" },
   forCompanyLink: { color: "#15803d", fontWeight: 800, textDecoration: "none" },
   sibling: { padding: "9px 12px", borderRadius: 999, background: "#f1f5f9", color: "#0f172a", fontWeight: 800, fontSize: 13, textDecoration: "none" },

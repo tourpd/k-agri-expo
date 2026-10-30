@@ -124,9 +124,9 @@
 "칼슘 흡수 이동 촉진"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"cucumber-tomato-low-temp"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -267,9 +267,9 @@
 "토양 염류 집적 우려 적음"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"greenhouse-salt-ec"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -311,6 +311,7 @@
 "칼슘 공급(엽면)"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
 "citrus-cracking"
 ],
@@ -659,9 +660,9 @@
 "색깔이 잘 남"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"garlic-rooting"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -702,6 +703,7 @@
 "사과 꼭지 열과 발생율 감소(전시포)"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
 "citrus-cracking"
 ],
@@ -788,6 +790,7 @@
 "균형성장"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
 "citrus-cracking"
 ],
@@ -1988,9 +1991,9 @@
 "생리장애 해결"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"cucumber-tomato-low-temp"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -2030,6 +2033,7 @@
 "칼슘부족 해소"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
 "citrus-cracking"
 ],
@@ -2464,6 +2468,7 @@
 "과채류 웃자람 방지·개화 착과"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
 "citrus-cracking"
 ],
@@ -2642,9 +2647,9 @@
 "내병성·저장성"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"gochu-anthracnose"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -2697,9 +2702,9 @@
 "환경 스트레스"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"apple-postharvest"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -2801,9 +2806,9 @@
 "노린재 피해 감소"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "apple-coloring",
-"tomato-cracking",
-"citrus-cracking"
+"tomato-cracking"
 ],
 "doses": [
 {
@@ -3361,9 +3366,9 @@
 "일조 부족·과다 착과로 당이 안 오를 때"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "apple-coloring",
-"tomato-cracking",
-"citrus-cracking"
+"tomato-cracking"
 ],
 "doses": [
 {
@@ -3482,9 +3487,9 @@
 "세포벽 강화"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"greenhouse-salt-ec"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -3545,9 +3550,9 @@
 "염류 장애 해소"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"greenhouse-salt-ec"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -3607,9 +3612,9 @@
 "염류 장애 해소"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"greenhouse-salt-ec"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -3668,9 +3673,9 @@
 "염류농도 높은 토양개량"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "apple-coloring",
-"tomato-cracking",
-"citrus-cracking"
+"tomato-cracking"
 ],
 "doses": [
 {
@@ -3756,9 +3761,9 @@
 "딸기 무름"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"strawberry-malformed"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -3829,9 +3834,9 @@
 "딸기 무름병"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"gochu-anthracnose"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -3873,9 +3878,9 @@
 "당의 이동·축적"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "apple-coloring",
-"tomato-cracking",
-"citrus-cracking"
+"tomato-cracking"
 ],
 "doses": [
 {
@@ -3931,6 +3936,7 @@
 "내병성"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
 "citrus-cracking"
 ],
@@ -4325,9 +4331,9 @@
 "노화 나무 뿌리 세포분열"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"garlic-rooting"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -5309,6 +5315,7 @@
 "만개~결실기 질소·칼슘, 결실기~수확 가리"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
 "citrus-cracking"
 ],
@@ -5436,9 +5443,9 @@
 "환경 스트레스 예방"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"apple-postharvest"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -5603,9 +5610,9 @@
 "지력 증진·토양 물리성"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "tomato-cracking",
-"citrus-cracking",
-"greenhouse-salt-ec"
+"citrus-cracking"
 ],
 "doses": [
 {
@@ -5708,9 +5715,9 @@
 "내병성·저장성·착색·당도"
 ],
 "problems": [
+"tomato-blossom-end-rot",
 "apple-coloring",
-"tomato-cracking",
-"citrus-cracking"
+"tomato-cracking"
 ],
 "doses": [
 {
