@@ -79,7 +79,7 @@ export default function ExpoLiveSection({ item }: Props) {
 
   const sponsorName = safe(
     item?.sponsor_name || item?.meta_1 || item?.sponsor,
-    "영진로타리"
+    "참여 기업"
   );
   const partnerName = safe(item?.partner_name, "K-Agri Expo");
 

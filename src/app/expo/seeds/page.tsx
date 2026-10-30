@@ -99,7 +99,7 @@ export default function SeedsPage() {
             {vendors.map((item) => (
               <a
                 key={item}
-                href="/booth"
+                href="/expo/booths"
                 className="block rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800 transition hover:bg-lime-50"
               >
                 {item}

@@ -77,7 +77,7 @@ export default async function ExpoBrandsPage({ searchParams }: PageProps) {
               작물영양관으로 이동
             </Link>
             <Link
-              href="/expo/consult"
+              href="/ai-consult"
               className="rounded-2xl bg-yellow-300 px-5 py-4 text-center text-lg font-extrabold text-stone-900"
             >
               농사 상담하기

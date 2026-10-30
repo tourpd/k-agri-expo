@@ -27,7 +27,7 @@ export default function BoothMap({ slots }: { slots: any[] }) {
         {slots.map((s) => (
           <Link
             key={s.slot_id}
-            href={`/expo/booth/${s.booth_id}`}
+            href={`/expo/booths/${s.booth_id}`}
             style={{
               position: "absolute",
               left: s.x * 100,
