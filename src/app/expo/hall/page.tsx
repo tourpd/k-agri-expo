@@ -1,416 +1,132 @@
-// src/app/expo/hall/[hallId]/page.tsx
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import HallSponsorStrip from "@/components/expo/HallSponsorStrip";
-import ExpoHallMapClient from "@/components/expo/ExpoHallMapClient";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { EXPO_HALL_LIST } from "@/lib/expo/halls";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-type HallMeta = {
-  title: string;
-  sponsorKey: string;
-  routeId: string;
-  dbAliases: string[];
+export const metadata = {
+  title: "전시관 | K-Agri Expo",
 };
 
-type BoothRow = {
-  booth_id?: string | null;
-  id?: string | null;
-  name?: string | null;
-  title?: string | null;
-  intro?: string | null;
-  description?: string | null;
-  region?: string | null;
-  category_primary?: string | null;
-  hall_id?: string | null;
-  hall_code?: string | null;
-  sponsor_sort_order?: number | null;
-  is_inputs_sponsor?: boolean | null;
-  is_machine_sponsor?: boolean | null;
-  is_seed_sponsor?: boolean | null;
-  is_smartfarm_sponsor?: boolean | null;
-  status?: string | null;
-  is_public?: boolean | null;
-  is_active?: boolean | null;
-  is_published?: boolean | null;
-  email?: string | null;
-};
+/** 전시관별 입점 부스 수 (불러오지 못해도 화면은 그대로) */
+async function loadBoothCounts(): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  try {
+    const supabase = createSupabaseAdminClient();
+    const allIds = EXPO_HALL_LIST.flatMap((h) => h.dbHallIds);
+    const { data, error } = await supabase
+      .from("hall_booth_slots")
+      .select("hall_id, booth_id")
+      .in("hall_id", allIds)
+      .not("booth_id", "is", null);
 
-type SlotRow = {
-  hall_id?: string | null;
-  slot_id?: string | null;
-  booth_id?: string | null;
-  x?: number | null;
-  y?: number | null;
-  w?: number | null;
-  h?: number | null;
-};
+    if (error || !Array.isArray(data)) return counts;
 
-type MergedBoothRow = BoothRow & {
-  booth_id: string;
-  slot_code: string | null;
-  source_hall_id: string | null;
-};
-
-function getHallMeta(hallId: string): HallMeta | null {
-  switch (hallId) {
-    case "agri-inputs":
-    case "agri_inputs":
-      return {
-        title: "농자재관",
-        sponsorKey: "is_inputs_sponsor",
-        routeId: "agri-inputs",
-        dbAliases: ["agri-inputs", "agri_inputs"],
-      };
-
-    case "machines":
-    case "machinery":
-      return {
-        title: "농기계관",
-        sponsorKey: "is_machine_sponsor",
-        routeId: "machines",
-        dbAliases: ["machines", "machinery"],
-      };
-
-    case "seeds":
-    case "seeds_seedlings":
-      return {
-        title: "종자관",
-        sponsorKey: "is_seed_sponsor",
-        routeId: "seeds",
-        dbAliases: ["seeds", "seeds_seedlings"],
-      };
-
-    case "smartfarm":
-    case "smart_farm":
-      return {
-        title: "스마트팜관",
-        sponsorKey: "is_smartfarm_sponsor",
-        routeId: "smartfarm",
-        dbAliases: ["smartfarm", "smart_farm"],
-      };
-
-    case "eco-friendly":
-    case "eco_friendly":
-      return {
-        title: "친환경관",
-        sponsorKey: "",
-        routeId: "eco-friendly",
-        dbAliases: ["eco-friendly", "eco_friendly"],
-      };
-
-    case "future-insect":
-    case "future_insect":
-      return {
-        title: "미래 곤충관",
-        sponsorKey: "",
-        routeId: "future-insect",
-        dbAliases: ["future-insect", "future_insect"],
-      };
-
-    default:
-      return null;
+    for (const hall of EXPO_HALL_LIST) {
+      const ids = new Set(hall.dbHallIds);
+      const booths = new Set(
+        (data as Array<{ hall_id: string | null; booth_id: string | null }>)
+          .filter((row) => row.hall_id && ids.has(row.hall_id) && row.booth_id)
+          .map((row) => String(row.booth_id))
+      );
+      counts[hall.key] = booths.size;
+    }
+  } catch (error) {
+    console.error("[expo/hall] booth count error:", error);
   }
+  return counts;
 }
 
-function safe(v: unknown, fallback = "") {
-  const s = typeof v === "string" ? v : "";
-  return s.trim() ? s.trim() : fallback;
-}
-
-function isUuid(v: string) {
-  return /^[0-9a-f-]{36}$/i.test(v);
-}
-
-function normalizeHallId(v?: string | null) {
-  const raw = safe(v, "");
-  if (!raw) return "";
-  if (raw === "agri_inputs") return "agri-inputs";
-  if (raw === "smart_farm") return "smartfarm";
-  if (raw === "eco_friendly") return "eco-friendly";
-  if (raw === "future_insect") return "future-insect";
-  return raw;
-}
-
-function normalizeSlotCode(v?: string | null) {
-  const slot = safe(v, "");
-  if (!slot) return "-";
-
-  const raw = slot.toUpperCase().replace(/\s+/g, "");
-  const m = raw.match(/^([A-Z])[-_]?0*([0-9]+)$/);
-  if (!m) return raw;
-
-  return `${m[1]}-${m[2].padStart(2, "0")}`;
-}
-
-function resolveBoothId(row: Partial<BoothRow> | null | undefined) {
-  return safe(row?.booth_id ?? row?.id, "");
-}
-
-function resolveBoothName(row: Partial<BoothRow> | null | undefined) {
-  return safe(row?.name ?? row?.title, "부스명 없음");
-}
-
-function buildInList(values: string[]) {
-  return values.map((v) => `"${v}"`).join(",");
-}
-
-/**
- * 개발용 완화 필터
- * - status만 너무 이상하지 않으면 통과
- * - is_public / is_active / is_published 는 개발 중에는 막지 않음
- */
-function isVisibleBooth(booth: BoothRow) {
-  const status = safe(booth.status, "").toLowerCase();
+export default async function ExpoHallIndexPage() {
+  const counts = await loadBoothCounts();
 
   return (
-    !status ||
-    status === "approved" ||
-    status === "live" ||
-    status === "published" ||
-    status === "draft" ||
-    status === "pending"
-  );
-}
+    <div style={S.wrap}>
+      <div style={S.eyebrow}>HALL</div>
+      <h1 style={S.title}>전시관</h1>
+      <p style={S.desc}>
+        필요한 농사 문제에 맞는 전시관으로 들어가 기업 부스와 제품을 보고, 바로 상담을
+        남길 수 있습니다.
+      </p>
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ hallId: string }>;
-}) {
-  const { hallId } = await params;
+      <div style={S.grid}>
+        {EXPO_HALL_LIST.map((hall) => {
+          const count = counts[hall.key];
+          return (
+            <Link key={hall.key} href={hall.href} style={S.card}>
+              <div style={S.cardHead}>
+                <span style={S.icon}>{hall.icon}</span>
+                {typeof count === "number" && count > 0 ? (
+                  <span style={S.badge}>부스 {count}곳</span>
+                ) : null}
+              </div>
+              <div style={S.cardTitle}>{hall.title}</div>
+              <div style={S.cardDesc}>{hall.desc}</div>
+              <div style={S.cta}>{hall.cta} →</div>
+            </Link>
+          );
+        })}
+      </div>
 
-  const hallMeta = getHallMeta(hallId);
-  if (!hallMeta) {
-    notFound();
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const aliasIn = buildInList(hallMeta.dbAliases);
-
-  const { data: slotsData, error: slotsError } = await supabase
-    .from("hall_booth_slots")
-    .select("*")
-    .in("hall_id", hallMeta.dbAliases)
-    .order("y", { ascending: true })
-    .order("x", { ascending: true });
-
-  if (slotsError) {
-    console.error("[expo/hall/[hallId]] slots error:", slotsError);
-    notFound();
-  }
-
-  const slots: SlotRow[] = ((slotsData ?? []).filter(Boolean) as SlotRow[]).map((slot) => ({
-    ...slot,
-    hall_id: normalizeHallId(slot.hall_id),
-  }));
-
-  const slotBoothIds = Array.from(
-    new Set(
-      slots
-        .map((s) => safe(s.booth_id, ""))
-        .filter((id) => id.length > 0)
-    )
-  );
-
-  let boothRows: BoothRow[] = [];
-
-  if (slotBoothIds.length > 0) {
-    const { data: boothByIdData, error: boothByIdError } = await supabase
-      .from("booths")
-      .select("*")
-      .in("booth_id", slotBoothIds);
-
-    if (boothByIdError) {
-      console.error("[expo/hall/[hallId]] booths by booth_id error:", boothByIdError);
-    } else {
-      boothRows = (boothByIdData ?? []) as BoothRow[];
-    }
-  }
-
-  if (boothRows.length === 0) {
-    const { data: boothsData, error: boothsError } = await supabase
-      .from("booths")
-      .select("*")
-      .or(`hall_id.in.(${aliasIn}),hall_code.in.(${aliasIn})`);
-
-    if (boothsError) {
-      console.error("[expo/hall/[hallId]] booths fallback error:", boothsError);
-    } else {
-      boothRows = (boothsData ?? []) as BoothRow[];
-    }
-  }
-
-  const boothMap = new Map<string, BoothRow>();
-  for (const booth of boothRows) {
-    const boothId = resolveBoothId(booth);
-    if (boothId) boothMap.set(boothId, booth);
-  }
-
-  const booths = slots.reduce<MergedBoothRow[]>((acc, slot) => {
-    const slotBoothId = safe(slot.booth_id, "");
-    if (!slotBoothId) return acc;
-
-    const booth = boothMap.get(slotBoothId);
-    if (!booth) return acc;
-    if (!isVisibleBooth(booth)) return acc;
-
-    acc.push({
-      ...booth,
-      booth_id: slotBoothId,
-      slot_code: slot.slot_id ?? null,
-      source_hall_id: slot.hall_id ?? null,
-    });
-
-    return acc;
-  }, []);
-
-  const sponsorBooths = booths
-    .filter((b) =>
-      hallMeta.sponsorKey ? Boolean((b as Record<string, unknown>)[hallMeta.sponsorKey]) : false
-    )
-    .sort((a, b) => {
-      const aOrder = Number(a.sponsor_sort_order ?? 999);
-      const bOrder = Number(b.sponsor_sort_order ?? 999);
-      return aOrder - bOrder;
-    })
-    .slice(0, 5)
-    .map((b) => ({
-      booth_id: resolveBoothId(b),
-      name: resolveBoothName(b),
-      intro: b.intro ?? null,
-      region: b.region ?? null,
-      category_primary: b.category_primary ?? null,
-    }));
-
-  const mappedSlots = slots.map((s) => {
-    const slotBoothId = safe(s.booth_id, "");
-    const booth = slotBoothId ? boothMap.get(slotBoothId) : null;
-    const resolvedBoothId = slotBoothId && isUuid(slotBoothId) ? slotBoothId : "";
-
-    return {
-      ...s,
-      hall_id: normalizeHallId(s.hall_id),
-      booth_id: slotBoothId || null,
-      slot_id: s.slot_id ?? null,
-      slot_code: normalizeSlotCode(s.slot_id),
-      booth_name: resolveBoothName(booth),
-      category: booth?.category_primary ?? null,
-      booth_intro: booth?.intro ?? booth?.description ?? null,
-      detail_href: resolvedBoothId
-        ? `/expo/booths/${encodeURIComponent(resolvedBoothId)}`
-        : null,
-    };
-  });
-
-  return (
-    <main style={S.page}>
-      <header style={S.header}>
-        <div>
-          <div style={S.kicker}>K-Agri Expo</div>
-          <h1 style={S.title}>{hallMeta.title}</h1>
-          <div style={S.sub}>
-            전시장 프리미엄 스폰서와 주요 부스를 먼저 둘러보신 뒤, 아래 전시장
-            지도를 통해 전체 부스를 확인하실 수 있습니다.
-          </div>
-        </div>
-
-        <div style={S.actions}>
-          <Link href="/expo/deals" style={S.btnHot}>
-            🔥 EXPO 특가
-          </Link>
-
-          <Link href="/expo" style={S.btnGhost}>
-            엑스포 홈
-          </Link>
-        </div>
-      </header>
-
-      <HallSponsorStrip
-        title={`${hallMeta.title} TOP 5 프리미엄 스폰서`}
-        items={sponsorBooths as any}
-      />
-
-      <section style={S.mapWrap}>
-        <ExpoHallMapClient slots={mappedSlots as any} />
-      </section>
-    </main>
+      <div style={S.more}>
+        <Link href="/expo/booths" style={S.moreLink}>
+          전체 부스 보기
+        </Link>
+        <Link href="/expo/deals" style={S.moreLink}>
+          농민 특가 보기
+        </Link>
+      </div>
+    </div>
   );
 }
 
 const S: Record<string, CSSProperties> = {
-  page: {
-    padding: 20,
-    minHeight: "100vh",
-    background: "#fff",
-  },
-
-  header: {
-    maxWidth: 1200,
-    margin: "0 auto",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
+  wrap: { padding: "8px 0 40px" },
+  eyebrow: { fontSize: 12, fontWeight: 900, color: "#16a34a", letterSpacing: 0.6 },
+  title: { marginTop: 8, fontSize: 32, fontWeight: 950, color: "#0f172a", letterSpacing: -0.5 },
+  desc: { marginTop: 10, fontSize: 15, lineHeight: 1.7, color: "#64748b", wordBreak: "keep-all" },
+  grid: {
+    marginTop: 20,
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
     gap: 12,
-    flexWrap: "wrap",
   },
-
-  kicker: {
-    fontSize: 12,
-    fontWeight: 900,
-    color: "#ef4444",
-  },
-
-  title: {
-    margin: "6px 0 0",
-    fontSize: 28,
-    fontWeight: 950,
-    letterSpacing: -0.2,
-  },
-
-  sub: {
-    marginTop: 8,
-    fontSize: 13,
-    color: "#666",
-    fontWeight: 800,
-    lineHeight: 1.7,
-    maxWidth: 760,
-  },
-
-  actions: {
+  card: {
     display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-
-  btnHot: {
-    padding: "10px 14px",
-    borderRadius: 999,
-    fontWeight: 950,
-    textDecoration: "none",
-    background: "#111",
-    color: "#fff",
-    border: "1px solid #111",
-  },
-
-  btnGhost: {
-    padding: "10px 14px",
-    borderRadius: 999,
-    fontWeight: 950,
-    textDecoration: "none",
-    background: "#f9fafb",
-    color: "#111",
-    border: "1px solid #eee",
-  },
-
-  mapWrap: {
-    maxWidth: 1200,
-    margin: "18px auto 0",
-    border: "1px solid #eee",
-    borderRadius: 16,
-    overflow: "hidden",
+    flexDirection: "column",
+    gap: 8,
+    padding: "16px 14px",
+    borderRadius: 18,
+    border: "1px solid #e5e7eb",
     background: "#fff",
+    textDecoration: "none",
+    color: "#0f172a",
+    minHeight: 170,
+  },
+  cardHead: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  icon: { fontSize: 26, lineHeight: 1 },
+  badge: {
+    fontSize: 12,
+    fontWeight: 800,
+    color: "#166534",
+    background: "#dcfce7",
+    borderRadius: 999,
+    padding: "3px 8px",
+    whiteSpace: "nowrap",
+  },
+  cardTitle: { marginTop: 4, fontSize: 17, fontWeight: 950, wordBreak: "keep-all" },
+  cardDesc: { fontSize: 13, lineHeight: 1.55, color: "#64748b", wordBreak: "keep-all", flex: 1 },
+  cta: { fontSize: 13, fontWeight: 900, color: "#15803d" },
+  more: { marginTop: 24, display: "flex", gap: 10, flexWrap: "wrap" },
+  moreLink: {
+    padding: "12px 16px",
+    borderRadius: 14,
+    background: "#0f172a",
+    color: "#fff",
+    fontWeight: 800,
+    fontSize: 14,
+    textDecoration: "none",
   },
 };

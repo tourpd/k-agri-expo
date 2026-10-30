@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { PUBLIC_BOOTH_OR_FILTER, isBoothPublic } from "@/lib/expo/halls";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -125,6 +126,8 @@ const BOOTH_SELECT = [
   "intro",
   "description",
   "status",
+  "is_public",
+  "is_published",
   "created_at",
   "is_featured",
   "is_verified",
@@ -154,7 +157,8 @@ export async function getPublicBooths(params: {
   let query = supabasePublic
     .from("booths")
     .select(BOOTH_SELECT)
-    .eq("status", "active")
+    // 공개 기준: 전시관·부스 상세와 같게 (예전엔 status=active만 → 공개해도 목록에 안 보임)
+    .or(PUBLIC_BOOTH_OR_FILTER)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -173,7 +177,7 @@ export async function getPublicBooths(params: {
     throw error;
   }
 
-  return (data ?? []) as unknown as BoothPublic[];
+  return ((data ?? []) as any[]).filter((b) => isBoothPublic(b)) as unknown as BoothPublic[];
 }
 
 export async function getPublicBoothDetail(boothId: string) {

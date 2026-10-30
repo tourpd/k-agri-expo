@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import HallSponsorStrip from "@/components/expo/HallSponsorStrip";
+import { isBoothPublic } from "@/lib/expo/halls";
 import ExpoHallMapClient from "@/components/expo/ExpoHallMapClient";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import InsectFutureHall from "@/components/expo/InsectFutureHall";
@@ -259,15 +260,8 @@ function heroText(hallId: string) {
 }
 
 function isVisibleBooth(booth: BoothRow) {
-  const status = safe(booth.status, "").toLowerCase();
-  return (
-    !status ||
-    status === "approved" ||
-    status === "live" ||
-    status === "published" ||
-    status === "draft" ||
-    status === "pending"
-  );
+  // 공개 기준은 src/lib/expo/halls.ts 한 곳에서
+  return isBoothPublic(booth as any);
 }
 
 function formatPriceText(value?: number | null) {
@@ -378,8 +372,8 @@ export default async function ExpoHallPage({
     console.error("[hall-page] slot query error =", slotError);
     return (
       <main style={pageWrap}>
-        <h1 style={titleStyle}>전시장 슬롯을 불러오지 못했습니다.</h1>
-        <div style={descStyle}>{slotError.message}</div>
+        <h1 style={titleStyle}>전시관을 잠시 불러오지 못했습니다.</h1>
+        <div style={descStyle}>잠시 후 다시 시도해 주세요.</div>
       </main>
     );
   }
@@ -581,7 +575,7 @@ export default async function ExpoHallPage({
         <section style={emptyWrap}>
           <div style={emptyTitle}>아직 공개된 부스가 없습니다.</div>
           <div style={emptyDesc}>
-            슬롯은 연결되어 있지만 현재 필터 조건 또는 부스 데이터 상태 때문에 화면에 표시되지 않고 있습니다.
+            참여 기업이 부스를 준비하고 있습니다. 다른 전시관도 둘러보세요.
           </div>
         </section>
       )}
