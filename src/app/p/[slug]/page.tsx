@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { COUPANG_NOTICE } from "@/lib/shop/buy-links";
+import { COUPANG_NOTICE, certifiedBuyLink } from "@/lib/shop/buy-links";
+import { certifiedForProblem } from "@/lib/materials/trusted";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { getCrop, getProblem, problemsByCrop } from "@/lib/problems/catalog";
@@ -59,6 +60,9 @@ export default async function ProblemPage({ params, searchParams }: { params: Pr
   const lead = products.find((p) => p.phone) ?? products[0] ?? null;
   // 국가 공시 친환경 자재 (이름에 핵심어가 든 것 + 같은 종류 전체 수)
   const organic = problem.noProducts ? { matched: [], kinds: [], total: 0 } : materialsForProblem(problem, 3);
+  // 검증 기업 × 나라 공시 제품 (쿠팡 연결)
+  const certified = certifiedForProblem(problem, 3);
+  const certBuys = await Promise.all(certified.picks.map((m) => certifiedBuyLink(m.short, m.name).catch(() => null)));
   // 등록 농약 (농진청) — 병해충 문제에만. 키 없으면 안내 링크만
   const pq = pesticideQueriesFor(problem);
   const pesticides = pq.length && psisEnabled() ? await searchPesticides({ crop: pq[0].crop, pest: pq[0].pest, limit: 30 }) : null;
@@ -199,6 +203,30 @@ export default async function ProblemPage({ params, searchParams }: { params: Pr
             등록 농약 전체 보기 · 내 밭 평수로 환산 ›
           </Link>
           <div style={S.note}>자료: 농촌진흥청 농약안전정보시스템. 추천이 아니라 등록 목록이며, 라벨 기준을 따르세요. 구매는 가까운 농약판매상.</div>
+        </section>
+      ) : null}
+
+      {/* 검증 기업 × 나라 공시 제품 */}
+      {certified.picks.length ? (
+        <section style={S.card}>
+          <div style={S.cardTitle}>나라 공시 · 검증 기업 제품</div>
+          <p style={S.principle}>국립농산물품질관리원 공시(나라 기준 합격)를 받은 제품 중, 대기업 계열·주요 농자재 기업·참여 기업 것만 골랐습니다.</p>
+          <div style={S.orgList}>
+            {certified.picks.map((m, i) => (
+              <div key={m.no + m.name} style={{ ...S.orgItem, flexWrap: "wrap" }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={S.orgName}>{m.name}</div>
+                  <div style={S.orgCo}>{m.short} · <b style={{ color: "#15803d" }}>{m.tier}</b> · {m.kind}</div>
+                  <div style={{ fontSize: 11, color: "#64748b" }}>공시번호 {m.no}</div>
+                </div>
+                {certBuys[i] ? (
+                  <a href={certBuys[i]!.href} target="_blank" rel="noopener noreferrer sponsored" style={{ ...S.orgCall, background: "#fff7ed", color: "#c2410c", border: "1px solid #fdba74" }}>🛒 쿠팡</a>
+                ) : null}
+                {m.phone ? <a href={`tel:${m.phone}`} style={S.orgCall}>📞</a> : null}
+              </div>
+            ))}
+          </div>
+          <div style={S.note}>{COUPANG_NOTICE} 사용량·희석배수는 제품 라벨을 따르세요.</div>
         </section>
       ) : null}
 
