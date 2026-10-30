@@ -15,6 +15,9 @@ public/uploads
 *.log
 .next
 backup-videos
+# data 폴더는 제외하되 src/data(앱 자료)는 포함
 data
+!src/data
+!src/data/**
 node_modules
 .git
