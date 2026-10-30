@@ -94,9 +94,8 @@ export async function quickBuyLink(opts: {
   const ours = ourShopUrl(opts.name);
   if (ours) return { label: "쇼핑몰에서 사기", href: ours, kind: "ours", sub: "한국농수산TV" };
   if (opts.coupang) {
-    const plain = coupangProductUrl(opts.coupang);
-    const aff = await deeplink(plain);
-    return { label: "쿠팡에서 사기", href: aff ?? plain, kind: "coupang", sub: opts.coupang.priceKrw ? `${opts.coupang.priceKrw.toLocaleString("ko-KR")}원` : undefined };
+    const aff = await deeplink(coupangProductUrl(opts.coupang));
+    if (aff) return { label: "쿠팡에서 사기", href: aff, kind: "coupang", sub: opts.coupang.priceKrw ? `${opts.coupang.priceKrw.toLocaleString("ko-KR")}원` : undefined };
   }
   const kw = [opts.companyName && opts.companyName !== "참여 기업" ? opts.companyName : "", opts.name.replace(/-/g, "")].filter(Boolean).join(" ");
   const plain = coupangSearchUrl(kw);
@@ -111,9 +110,9 @@ export const COUPANG_NOTICE = "이 포스팅은 쿠팡 파트너스 활동의 �
 export async function certifiedBuyLink(short: string, name: string): Promise<BuyLink> {
   const pin = (coupangPinsRaw as unknown as Record<string, { productId: number; itemId?: number; vendorItemId?: number; label?: string; priceKrw?: number }>)[`C|${name}`];
   if (pin) {
-    const plain = coupangProductUrl(pin);
-    const aff = await deeplink(plain);
-    return { label: "쿠팡에서 사기", href: aff ?? plain, kind: "coupang", sub: [pin.label, pin.priceKrw ? `${pin.priceKrw.toLocaleString("ko-KR")}원` : ""].filter(Boolean).join(" · ") || undefined };
+    const aff = await deeplink(coupangProductUrl(pin));
+    // 쿠팡이 이 상품의 제휴 링크를 거절하면 → 제휴 검색 링크로 (일반 주소는 수수료 없음)
+    if (aff) return { label: "쿠팡에서 사기", href: aff, kind: "coupang", sub: [pin.label, pin.priceKrw ? `${pin.priceKrw.toLocaleString("ko-KR")}원` : ""].filter(Boolean).join(" · ") || undefined };
   }
   const kw = `${short} ${name.replace(/[()]/g, " ").replace(/\s+/g, " ").trim()}`;
   const plain = coupangSearchUrl(kw);

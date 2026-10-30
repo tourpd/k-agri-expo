@@ -71,13 +71,14 @@ export async function searchCoupang(keyword: string, limit = 3): Promise<Coupang
 }
 
 const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink";
-const linkCache = new Map<string, { at: number; url: string }>();
+const linkCache = new Map<string, { at: number; url: string | null }>();
 
 /** 쿠팡 상품 주소 → 파트너스 제휴 링크 (딥링크 API). 실패하면 null */
 export async function deeplink(coupangUrl: string): Promise<string | null> {
   if (!coupangEnabled()) return null;
   const hit = linkCache.get(coupangUrl);
   if (hit && Date.now() - hit.at < TTL) return hit.url;
+  const remember = (url: string | null) => { linkCache.set(coupangUrl, { at: Date.now(), url }); return url; };
   try {
     const res = await fetch(`${HOST}${DEEPLINK_PATH}`, {
       method: "POST",
@@ -87,12 +88,12 @@ export async function deeplink(coupangUrl: string): Promise<string | null> {
     });
     if (!res.ok) {
       console.error("[coupang] deeplink failed", res.status, await res.text().catch(() => ""));
-      return null;
+      // 제휴 불가 상품(4xx)은 6시간 동안 다시 묻지 않음
+      return res.status >= 400 && res.status < 500 && res.status !== 429 ? remember(null) : null;
     }
     const json = (await res.json()) as { data?: Array<{ originalUrl: string; shortenUrl: string; landingUrl: string }> };
     const url = json?.data?.[0]?.shortenUrl || json?.data?.[0]?.landingUrl || null;
-    if (url) linkCache.set(coupangUrl, { at: Date.now(), url });
-    return url;
+    return remember(url);
   } catch (error) {
     console.error("[coupang] deeplink error", error);
     return null;
