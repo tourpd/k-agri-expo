@@ -234,7 +234,7 @@ export default async function ProblemPage({ params, searchParams }: { params: Pr
       {organic.total > 0 ? (
         <section style={S.card}>
           <div style={S.cardTitle}>공시된 친환경 자재 {organic.total.toLocaleString()}개</div>
-          {organic.matched.length ? (
+          {organic.matched.length && !certified.picks.length ? (
             <div style={S.orgList}>
               {organic.matched.map((m) => (
                 <div key={m.no + m.name} style={S.orgItem}>
