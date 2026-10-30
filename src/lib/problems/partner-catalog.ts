@@ -85,7 +85,14 @@ export const PARTNER_COMPANIES: Record<PartnerCompanyKey, { name: string; phone:
 const SRC = (page: number) => ({ label: PARTNER_COMPANIES.dof.catalogLabel, page });
 
 /** 와성원예(웨스트브릿지 한국 총판) — 매거진 본문에서 추출(106개, 사용량 있는 것 99개). 자료: src/data/partners/wasung.json */
-const WASUNG_PRODUCTS = (wasungRaw as unknown as Array<PartnerProduct & { confidence?: string }>).map(({ confidence: _c, ...p }) => p as PartnerProduct);
+/** 대표님 확인으로 내린 제품 (실제로 없거나 안 파는 것) — 농민 화면·추천에서 뺍니다 */
+const HIDDEN_PARTNER_IDS = new Set<string>([
+  "wasung-p16", // 아칼마 — 대표님: "아칼마는 없다" (2026-10-31)
+]);
+
+const WASUNG_PRODUCTS = (wasungRaw as unknown as Array<PartnerProduct & { confidence?: string }>)
+  .filter((p) => !HIDDEN_PARTNER_IDS.has(p.id))
+  .map(({ confidence: _c, ...p }) => p as PartnerProduct);
 
 const DOF_PRODUCTS: PartnerProduct[] = [
   {
