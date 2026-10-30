@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { COUPANG_NOTICE } from "@/lib/shop/buy-links";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { getCrop, getProblem, problemsByCrop } from "@/lib/problems/catalog";
-import { findAnswerProducts } from "@/lib/problems/products";
+import { buyLinkForAnswer, findAnswerProducts } from "@/lib/problems/products";
 import StickyAsk from "@/components/problems/StickyAsk";
 import { materialsForProblem } from "@/lib/materials/organic";
 import { pesticideQueriesFor } from "@/lib/pesticides/map";
@@ -45,6 +46,8 @@ export default async function ProblemPage({ params, searchParams }: { params: Pr
 
   const crop = getCrop(problem.crop);
   const products = await findAnswerProducts(problem, 2);
+  const buys = await Promise.all(products.map((p) => buyLinkForAnswer(p)));
+  const anyCoupang = buys.some((b) => b?.kind === "coupang");
   const siblings = problemsByCrop(problem.crop).filter((p) => p.slug !== problem.slug && p.crop !== "common").slice(0, 2);
   const vid = ytId(problem.videoUrl);
   const start = problem.videoStart ?? 0;
@@ -130,7 +133,8 @@ export default async function ProblemPage({ params, searchParams }: { params: Pr
           <div style={S.cardTitle}>이럴 때 쓰는 자재</div>
           <p style={S.principle}>{problem.principle}</p>
           <div style={S.products}>
-            {products.map((p) => {
+            {products.map((p, i) => {
+              const buy = buys[i];
               const calcHref = p.source === "partner" ? `${p.href}&from=${problem.slug}` : null;
               return (
                 <div key={p.id} style={S.product}>
@@ -152,11 +156,17 @@ export default async function ProblemPage({ params, searchParams }: { params: Pr
                   <Link href={calcHref ?? p.href} style={S.productCalc}>
                     {calcHref ? "약박사에게 물어보기 — 몇 병? ›" : "보기 ›"}
                   </Link>
+                  {buy ? (
+                    <a href={buy.href} target="_blank" rel="noopener noreferrer sponsored" style={buy.kind === "ours" ? S.buyOurs : S.buyCoupang}>
+                      🛒 {buy.label}{buy.sub ? ` · ${buy.sub}` : ""} ›
+                    </a>
+                  ) : null}
                   {p.sourceLabel ? <div style={S.productSrc}>출처: {p.sourceLabel}</div> : null}
                 </div>
               );
             })}
           </div>
+          {anyCoupang ? <div style={S.note}>{COUPANG_NOTICE}</div> : null}
           <div style={S.note}>농약은 온라인 판매가 안 됩니다. 아래 버튼으로 기업에 물으면 가까운 판매점을 알려 줍니다.</div>
         </section>
       ) : (
@@ -271,6 +281,8 @@ const S: Record<string, CSSProperties> = {
   productImg: { width: 64, height: 64, borderRadius: 12, objectFit: "cover", background: "#fff", flexShrink: 0 },
   productImgEmpty: { width: 64, height: 64, borderRadius: 12, background: "#e2e8f0", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 },
   productDesc: { fontSize: 13, fontWeight: 600, color: "#475569", lineHeight: 1.5, wordBreak: "keep-all" },
+  buyCoupang: { display: "block", marginTop: 8, padding: "11px 12px", borderRadius: 12, background: "#fff7ed", border: "1px solid #fdba74", color: "#c2410c", fontWeight: 900, fontSize: 15, textAlign: "center", textDecoration: "none" },
+  buyOurs: { display: "block", marginTop: 8, padding: "11px 12px", borderRadius: 12, background: "#14532d", color: "#fff", fontWeight: 900, fontSize: 15, textAlign: "center", textDecoration: "none" },
   productCalc: { display: "block", marginTop: 10, padding: "12px", borderRadius: 12, background: "#15803d", color: "#fff", fontWeight: 900, fontSize: 15, textDecoration: "none", textAlign: "center" },
   productSrc: { marginTop: 6, fontSize: 11, color: "#94a3b8" },
   productBrand: { fontSize: 12, fontWeight: 800, color: "#16a34a" },

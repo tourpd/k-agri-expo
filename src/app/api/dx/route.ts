@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { problemForDiagnosis } from "@/lib/problems/diagnosis";
 import { getProblem } from "@/lib/problems/catalog";
-import { findAnswerProducts } from "@/lib/problems/products";
+import { buyLinkForAnswer, findAnswerProducts } from "@/lib/problems/products";
+import { COUPANG_NOTICE } from "@/lib/shop/buy-links";
 
 export const runtime = "nodejs";
 
@@ -28,18 +29,21 @@ export async function GET(req: Request) {
   if (!hit) return NextResponse.json({ ok: false, error: "맞는 처방을 찾지 못했습니다." }, { status: 404, headers: cors(req) });
   const p = getProblem(hit.slug)!;
   const products = await findAnswerProducts(p, 3);
+  const buys = await Promise.all(products.map((x) => buyLinkForAnswer(x)));
   const origin = url.origin;
   return NextResponse.json(
     {
       ok: true,
       problem: { slug: p.slug, title: p.title, summary: p.summary, actions: p.actions, principle: p.principle, url: `${origin}/p/${p.slug}?src=photodoctor` },
-      products: products.map((x) => ({
+      coupang_notice: buys.some((b) => b?.kind === "coupang") ? COUPANG_NOTICE : null,
+      products: products.map((x, i) => ({
         name: x.name,
         company: x.brandName,
         feature: x.shortDescription,
         yakbaksa_url: x.href.startsWith("/yakbaksa") ? `${origin}${x.href}&from=${p.slug}` : `${origin}${x.href}`,
         phone: x.phone,
         source: x.sourceLabel ?? null,
+        buy: buys[i] ? { label: buys[i]!.label, url: buys[i]!.href, kind: buys[i]!.kind, sub: buys[i]!.sub ?? null } : null,
       })),
     },
     { headers: { ...cors(req), "Cache-Control": "public, max-age=300" } },
