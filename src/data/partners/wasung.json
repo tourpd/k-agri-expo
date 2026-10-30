@@ -1,0 +1,5792 @@
+[
+{
+"id": "wasung-c-c-gold",
+"company": "wasung",
+"name": "씨엔씨-골드",
+"group": "착색제",
+"packages": [
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "착색 유도제를 함유한 당도 착색 증진 제품 (친환경 착색 영양제)",
+"ingredients": "천연 식물 추출물, 북대서양 해조 추출물, 마늘 추출물",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"고유 착색 발현",
+"당도 향상",
+"저장성 유지",
+"후기 비대 지원",
+"조류기피 효과",
+"노린재에 대한 저항성"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "살포",
+"ratioMax": 1000,
+"note": "1차 착색 시작기"
+},
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "살포",
+"ratioMax": 1000,
+"note": "2차: 1차 후 7~14일"
+}
+],
+"timing": "색이 들기 시작할 때 1차, 7~14일 후 2차 (2회)",
+"cautions": [
+"사용 전에 충분히 흔들어 사용"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 15
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-c-c-set",
+"company": "wasung",
+"name": "씨엔씨 세트",
+"group": "착색제",
+"packages": [
+{
+"label": "500㎖ x2 (세트)"
+}
+],
+"feature": "당도 착색 증진에 효과적 제품 (에틸렌 생성 억제 제제 함유)",
+"ingredients": "특수 식물 추출물, 해조 추출물, 마늘 추출물, 에틸렌 생성 억제 제제",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"당도·착색 증진",
+"과일이 무르지 않고 저장력 증대",
+"유해 해충 접근 차단(마늘 추출물)"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "살포",
+"ratioMax": 1000,
+"note": "1차"
+},
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "살포",
+"ratioMax": 1000,
+"note": "2차: 1차 후 7~14일"
+}
+],
+"timing": "색이 들기 시작할 때 1차, 7~14일 후 2차",
+"cautions": [
+"사용 전에 충분히 흔들어 사용"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 15
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p16",
+"company": "wasung",
+"name": "아칼마",
+"group": "칼슘제/아미노산",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "국내최고 수준의 유리 아미노산 함량에 칼슘, 붕소, 마그네슘이 함유된 액상 제품",
+"ingredients": "유리 아미노산, 칼슘, 붕소, 마그네슘",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"낙과예방",
+"탄저병예방",
+"고온 건조시 칼슘 결핍예방",
+"활력증진",
+"저온·고온 스트레스 보호",
+"칼슘 흡수 이동 촉진"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "L",
+"areaPyeong": 200,
+"method": "관주"
+}
+],
+"timing": "5~7일 간격 2회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 16
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p16-2",
+"company": "wasung",
+"name": "노-청이",
+"group": "이끼·청태 제거제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "청태, 이끼 제거제 (동·아연 무기화합물 + EDTA 킬레이트, 비료 역할 가능)",
+"ingredients": "동, 아연 등 무기 화합물, EDTA 등 킬레이트 유기 화합물",
+"crops": [
+"나무",
+"토양",
+"양액 배지"
+],
+"cropKeys": [],
+"uses": [
+"청태·이끼 제거",
+"조류막 발생 억제",
+"항균 작용"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 200,
+"method": "살포",
+"note": "나무 목질부"
+},
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "살포",
+"note": "양액 배지 위"
+},
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "관주",
+"note": "토양 이끼"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 16
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p17",
+"company": "wasung",
+"name": "탄자바",
+"group": "광택 코팅제/작물보호",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "소나무 추출물 주원료 친환경 작물보호 코팅제 — 부착성, 증산 조절, 내병성 강화, 광택 향상, 탄저 예방",
+"ingredients": "소나무 추출물 (식품 첨가제용 원료)",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"열과·일소과·시들음·냉해 예방(수분 조절)",
+"병원균 침투 물리적 차단",
+"수확 후 저장성 증가",
+"광택 향상",
+"탄저 예방"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "생육 기간중",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 17
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p17-2",
+"company": "wasung",
+"name": "포틴-칼",
+"group": "칼슘제",
+"packages": [
+{
+"label": "10kg",
+"g": 10000.0
+},
+{
+"label": "1kg",
+"g": 1000.0
+}
+],
+"feature": "고농도 수용성 분말 칼슘제 37% — 관주 시비 전용",
+"ingredients": "수용성 칼슘 37%",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"칼슘 결핍증상 예방과 치료(배꼽썩음, 끝썩음, 무름, 저장성 부족)",
+"뿌리 갈변 예방·발달 촉진",
+"내병성 향상(근권 병해)",
+"토양 염류 집적 우려 적음"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "관주",
+"areaPyeongMax": 200
+}
+],
+"timing": "10일 간격",
+"cautions": [
+"농약·비료·영양제와 혼용 용이"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 17
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p17-3",
+"company": "wasung",
+"name": "파워-칼",
+"group": "칼슘제",
+"packages": [
+{
+"label": "1kg",
+"g": 1000.0
+}
+],
+"feature": "엽면 시비 전용 분말 칼슘제",
+"ingredients": null,
+"crops": [],
+"cropKeys": [],
+"uses": [
+"칼슘 공급(엽면)"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "kg",
+"areaPyeong": 0,
+"method": "엽면",
+"waterL": 500,
+"note": "1kg을 25~50말(500~1,000L)에 희석"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 17
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-p18",
+"company": "wasung",
+"name": "루트-업",
+"group": "뿌리 활력제",
+"packages": [
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "뿌리 세포 분열 및 성장 촉진 증진제",
+"ingredients": "뿌리세포 발달 참여 물질",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"뿌리 활착·발근",
+"초기생육 촉진",
+"연작 장애·뿌리 쇠약시 활력",
+"염류 장애시 뿌리 활력",
+"환경 스트레스 적응력"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "생육단계별 1회 또는 7일 간격 2~3회"
+},
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "L",
+"areaPyeong": 200,
+"method": "관주",
+"note": "또는 1,000배, 5~7일 간격 2회"
+}
+],
+"timing": "생육단계마다 1회 / 문제시 7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 18
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p18-2",
+"company": "wasung",
+"name": "뉴-발그니",
+"group": "뿌리 활력제(엽면)",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "엽면시비 하는 뿌리 발근제 — 잎에서 뿌리로 활성 성분 이동",
+"ingredients": null,
+"crops": [],
+"cropKeys": [],
+"uses": [
+"과습·침수·연작장애로 약해진 뿌리 회복",
+"잔뿌리 발달",
+"육묘기 뿌리 발달·정식 활착",
+"염류 장애시 뿌리 활력"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "20㎖/1말(20L)"
+}
+],
+"timing": "7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 18
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-multi-65",
+"company": "wasung",
+"name": "멀티65",
+"group": "활력제/아미노산",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "식물의 활력과 환경스트레스에 대한 내성 증진 (배아 추출 생리활성 물질 + 콜라겐 고농축 아미노산)",
+"ingredients": "배아 추출 천연식물 생리활성 물질, 콜라겐, 18종 이상 필수 아미노산",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"약해 피해 감소",
+"신초 발생·개화량 증가",
+"광합성 향상",
+"고온·저온·염분·바람·약해 스트레스 저항",
+"노화 뿌리 수세 회복"
+],
+"problems": [
+"cucumber-tomato-low-temp",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "L",
+"areaPyeong": 300,
+"method": "관주",
+"note": "5~7일 간격 2회"
+}
+],
+"timing": "생육단계마다 1회 / 문제시 7일 간격 2~3회 엽면",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 19
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p19",
+"company": "wasung",
+"name": "히다이쯔",
+"group": "비대제",
+"packages": [
+{
+"label": "500g",
+"g": 500.0
+}
+],
+"feature": "식물성 비대활성효소로 세포활성 및 비대효과 (화학 합성 호르몬 미사용)",
+"ingredients": "식물성 비대활성효소",
+"crops": [
+"사과",
+"배",
+"포도",
+"복숭아",
+"자두",
+"감",
+"딸기",
+"고추",
+"오이",
+"토마토",
+"호박",
+"가지",
+"수박",
+"메론"
+],
+"cropKeys": [
+"apple",
+"strawberry",
+"gochu",
+"cucumber",
+"tomato",
+"melon"
+],
+"uses": [
+"비대",
+"당도",
+"착색",
+"기후 스트레스시 저항성"
+],
+"problems": [
+"apple-coloring",
+"apple-postharvest",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "500g/500L; 과수 수정후 15일 이내 1차, 15일 간격 1~2회 추가"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "과채류 착과후 10일 이내부터 7일 간격 2~3회"
+},
+{
+"kind": "perArea",
+"amount": 500,
+"unit": "g",
+"areaPyeong": 200,
+"method": "엽면"
+}
+],
+"timing": "과수: 수정후 15일 이내 1차 → 15일 간격 1~2회 / 과채류: 착과후 10일 이내부터 7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 19
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-20",
+"company": "wasung",
+"name": "단또쯔20",
+"group": "미량요소/활력제",
+"packages": [
+{
+"label": "4ℓ",
+"ml": 4000.0
+}
+],
+"feature": "미량요소 결핍 해소와 활력회복제제 (6가지 킬레이트 미량요소 + 촉진 물질)",
+"ingredients": "가리, 철, 망간, 마그네슘, 비타민, 아미노산, 부식산, 붕소, 아연, 구리",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"미량요소 결핍 해소",
+"작물 활력 회복",
+"개화·착과 촉진"
+],
+"problems": [
+"apple-postharvest",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 20
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-p20",
+"company": "wasung",
+"name": "나가이끼",
+"group": "수용성 입상비료(기비~추비)",
+"packages": [
+{
+"label": "10kg",
+"g": 10000.0
+}
+],
+"feature": "100% 수용성 입상비료 — 밑비료부터 추비까지, 관주시비 가능",
+"ingredients": "수용성비료, 킬레이트 미량요소, 펄빅산, 발효물, 효소, 폴리글루타믹산, 폴리아스파라틱산, 발근촉진제, 바실러스 미생물 2종",
+"crops": [
+"복숭아",
+"포도(하우스)",
+"마늘",
+"벼",
+"사과(전시포)"
+],
+"cropKeys": [
+"garlic",
+"rice",
+"apple"
+],
+"uses": [
+"염류 집적·연작장애 토양에서 비효·뿌리 활착",
+"토양 pH 5.5~6 개량",
+"유기물 분해·유익균 활성화",
+"저투입 고효율"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "text",
+"text": "사용량 표 없음. 전시포: 나가이끼 1주당 220g(복숭아), 벼 400평에 추비 나가이끼 10kg"
+}
+],
+"timing": "기비~추비",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 20
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-micromast",
+"company": "wasung",
+"name": "마이크로 마스트",
+"group": "완효성 미량요소(기비)",
+"packages": [],
+"feature": "규소와 칼슘, 마그네슘과 6가지 미량요소가 함유된 완효성 토양 기비용 입상 제품",
+"ingredients": "규소13, 칼슘5, 마그네슘, 가리5, 철5, 망간1, 아연3, 구리2, 붕소1, 몰리브덴0.002 (%)",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"뿌리활착·잔뿌리 성장",
+"질소 흡수 억제로 도장 방지",
+"잎이 두꺼워져 병충해 예방",
+"염류·연작장애 해소",
+"색깔이 잘 남"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"garlic-rooting"
+],
+"doses": [
+{
+"kind": "text",
+"text": "사용량은 기업에 문의하세요."
+}
+],
+"timing": "기비",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 51
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-micronutri",
+"company": "wasung",
+"name": "마이크로 뉴트리",
+"group": "완효성 미량요소(기비)",
+"packages": [
+{
+"label": "12.5kg",
+"g": 12500.0
+}
+],
+"feature": "칼슘, 황, 마그네슘과 6가지 킬레이트 미량요소 — 효과가 3개월 가는 완효성 미량요소 비료",
+"ingredients": "칼슘, 마그네슘, 황, 킬레이트 철·아연·구리·붕소·망간·몰리브덴",
+"crops": [
+"원예",
+"과수"
+],
+"cropKeys": [],
+"uses": [
+"연작 미량요소 결핍 방지",
+"토양개선",
+"사과 꼭지 열과 발생율 감소(전시포)"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1.5,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "과채류 1.5~3kg 기비·전층시비"
+},
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "과수류 2~3kg, 11~3월·7~9월"
+},
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "엽채류"
+},
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "구근류·수도작 2~3kg"
+},
+{
+"kind": "perArea",
+"amount": 25,
+"unit": "kg",
+"areaPyeong": 600,
+"method": "토양",
+"note": "재배관리 메뉴얼(과수 수확 후·밑거름)"
+}
+],
+"timing": "기비(전층), 과수 11~3월·7~9월, 수확 후 감사비료",
+"cautions": [
+"퇴비·부숙제와 혼합 사용, 시비 후 충분히 관수"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 52
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-micromast-plus",
+"company": "wasung",
+"name": "마이크로마스트플러스12.5",
+"group": "완효성 미량요소(기비)",
+"packages": [
+{
+"label": "12.5kg",
+"g": 12500.0
+}
+],
+"feature": "칼슘·마그네슘·황·미량요소 함유 입상 기비",
+"ingredients": "칼슘10, 마그네슘6, 황5, 철4, 망간2, 아연2, 구리0.5, 붕소2, 몰리브덴0.1 (%)",
+"crops": [
+"과채류",
+"과수류",
+"화훼류",
+"엽채류",
+"잔디류",
+"구근류",
+"수도작"
+],
+"cropKeys": [
+"leafy"
+],
+"uses": [
+"미량요소 과부족으로 인한 생리장애 예방",
+"균형성장"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1.5,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "과채류 1.5~3kg"
+},
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "과수류 2~3kg"
+},
+{
+"kind": "perArea",
+"amount": 2.5,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "화훼류 2.5~3kg"
+},
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "엽채류"
+},
+{
+"kind": "perArea",
+"amount": 1.5,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "잔디 1.5~2.5kg"
+},
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "토양",
+"note": "구근류·수도작 2~3kg"
+}
+],
+"timing": "기비·전층시비; 과수 11~3월, 7~9월; 잔디 3~4월, 6~7월",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 53
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-loper",
+"company": "wasung",
+"name": "로퍼",
+"group": "목면시비용 활력제",
+"packages": [],
+"feature": "천연 식물추출물에 아미노산을 발효시킨 비료 — 목면시비로 냉해예방·꽃 충실",
+"ingredients": "천연 식물추출물, 발효 아미노산",
+"crops": [
+"모든작물(과수)"
+],
+"cropKeys": [],
+"uses": [
+"냉해·동해예방",
+"과총엽 발달·꽃 충실",
+"엽록소 증가",
+"과실 크기·무게 증가",
+"생리적 낙과방지"
+],
+"problems": [
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"note": "40㎖/20L 목면시비"
+}
+],
+"timing": "눈이 움직이기 직전부터 2회 (2월 중순~3월 중순 2~3차례)",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 54
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-triggrr",
+"company": "wasung",
+"name": "트리거-비",
+"group": "식물성장 촉진제(개화·착과·비대)",
+"packages": [],
+"feature": "전문 농업인들이 사용하는 개화, 착과, 비대, 활력제 — 천연옥신과 사이토키닌 함유 미량요소 복합비료",
+"ingredients": "천연 식물추출물, 해조류, 발효산물 (천연 옥신·사이토키닌)",
+"crops": [
+"사과(부사·홍로·아오리)",
+"포도",
+"복숭아",
+"체리",
+"자두",
+"참외",
+"콩",
+"옥수수",
+"양파",
+"토마토",
+"고추"
+],
+"cropKeys": [
+"apple",
+"melon",
+"onion",
+"tomato",
+"gochu"
+],
+"uses": [
+"냉해예방 및 피해감소",
+"개화 및 착과 촉진",
+"과일의 비대·균일 성장",
+"식물 활력 회복",
+"조기 수확(10~15일)",
+"낙과 방지",
+"저장성"
+],
+"problems": [
+"cucumber-tomato-low-temp",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "사과 1차 중심화 20~30% 개화"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "사과 2차: 1차 후 2~4일"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "참외 수정 3~4일 전 1차, 10~15일 후 2차"
+}
+],
+"timing": "개화 전후(중심화 20~30%~만개), 2회 이상; 냉해 발생 직후 1주 간격 추가",
+"cautions": [
+"사용시기를 놓치면 효과 미흡 — 늦추지 말고 앞당겨 사용",
+"1회 사용은 권장하지 않음",
+"조생종(홍로·아오리)은 포미나 혼용을 1차에만"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 64
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-focus",
+"company": "wasung",
+"name": "포커스",
+"group": "식물성장 촉진제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "식물성 아미노산을 기초로 한 최첨단 바이오 촉진제 — 종비대(길이신장), 냉해예방",
+"ingredients": "식물 추출물, 효소, 식물성 아미노산",
+"crops": [
+"사과",
+"배",
+"복숭아",
+"포도",
+"감",
+"대추",
+"고추",
+"파프리카",
+"오이",
+"수박",
+"메론",
+"딸기"
+],
+"cropKeys": [
+"apple",
+"gochu",
+"paprika",
+"cucumber",
+"melon",
+"strawberry"
+],
+"uses": [
+"종비대(길이신장)",
+"냉해예방 및 피해감소",
+"식물 활력 향상",
+"개화 및 화아분화 촉진",
+"과의 균형성장 및 열매 커짐"
+],
+"problems": [
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "20㎖/1말; 500㎖/25말"
+}
+],
+"timing": "1차 개화전, 2차 개화 20~30%시",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 82
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-bic-cell",
+"company": "wasung",
+"name": "빅셀",
+"group": "비대제",
+"packages": [],
+"feature": "최고급 동물성 아미노산 및 식물 성장 추출물 비대제 — 유과기 세포분열 촉진",
+"ingredients": "천연 식물 추출물, 특수 아미노산",
+"crops": [
+"모든 작물"
+],
+"cropKeys": [],
+"uses": [
+"유과기 세포분열 촉진으로 비대",
+"수세 개선",
+"단백질 합성 촉진·활력"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"note": "40㎖/20L"
+}
+],
+"timing": "과수 낙화직후~유과기, 과채류 정식후부터 10일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 84
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-briko-g",
+"company": "wasung",
+"name": "브리코-지",
+"group": "개화·착과·비대제",
+"packages": [
+{
+"label": "500㎖"
+},
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "아스코필럼 노도섬 해조류 발효 + 동물성 아미노산 + 펄빅산 고농축 제품",
+"ingredients": "Ascophyllum nodosum 발효물, 동물성 아미노산, 펄빅산, 핵산, 미량요소",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"비대촉진·균일성장",
+"조기수확·생산량 증가",
+"잎·뿌리 성장 활성화",
+"가뭄·저온·일조부족·냉해 피해 최소화"
+],
+"problems": [
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면"
+}
+],
+"timing": "7~10일 간격 2~3회",
+"cautions": [
+"사용 후 추비나 관수를 충분히"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 85
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-sunburst-atp",
+"company": "wasung",
+"name": "썬버스트ATP",
+"group": "개화·수정 촉진제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "식물추출물과 효소로 만들어진 자가수분 향상제",
+"ingredients": "식물 추출물, 효소",
+"crops": [
+"전작물"
+],
+"cropKeys": [],
+"uses": [
+"화아분화 촉진·화대 길이",
+"개화율·수정율 향상",
+"노화 방지"
+],
+"problems": [
+"strawberry-malformed"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "살포"
+}
+],
+"timing": "개화 전후 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 85
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-rise-t",
+"company": "wasung",
+"name": "라이스티",
+"group": "곡물 수정률·증수제",
+"packages": [
+{
+"label": "200㎖"
+}
+],
+"feature": "수정률 향상, 수확량 증가, 상품성 향상 — 곡물류 전문제제",
+"ingredients": "식물추출물, 효소",
+"crops": [
+"벼",
+"보리",
+"밀",
+"콩",
+"팥",
+"기타 작물"
+],
+"cropKeys": [
+"rice"
+],
+"uses": [
+"화아분화 촉진·꽃가루 증가",
+"개화률·수정률 향상",
+"가뭄·태풍·저온 생육부진 극복"
+],
+"problems": [
+"cucumber-tomato-low-temp",
+"strawberry-malformed"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "200㎖/10말"
+}
+],
+"timing": "벼·보리·밀 출수 25~30일전·7일전; 콩·팥 개화 10일전·개화기; 기타 개화전~초기 7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 86
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-tray",
+"company": "wasung",
+"name": "트레이",
+"group": "수정착과·비대·냉해 예방제",
+"packages": [
+{
+"label": "250㎖"
+}
+],
+"feature": "수정착과, 비대, 냉해 예방제제 (천연식물 추출 비타민 등 특수물질)",
+"ingredients": "천연식물 추출 비타민 등 특수물질",
+"crops": [
+"포도",
+"대추",
+"딸기",
+"복숭아",
+"자두",
+"모든 과수·과채류"
+],
+"cropKeys": [
+"strawberry"
+],
+"uses": [
+"수정·착과 촉진",
+"비대·과형 균일·기형과 감소",
+"냉해 예방 및 감소"
+],
+"problems": [
+"cucumber-tomato-low-temp",
+"strawberry-malformed"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "20㎖/20L"
+}
+],
+"timing": "꽃피기 전~낙화 직후 1~2회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 86
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-soilriggrr-gold",
+"company": "wasung",
+"name": "뉴소일리거-골드",
+"group": "뿌리작물 성장조절제(관주)",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "특히 뿌리 작물에 적합한 천연 식물 호르몬 함유 (소일트리거)",
+"ingredients": "천연 식물 호르몬",
+"crops": [
+"감자",
+"양파",
+"고구마",
+"토마토",
+"고추",
+"마늘",
+"메론",
+"샐러리",
+"참외",
+"인삼"
+],
+"cropKeys": [
+"onion",
+"tomato",
+"gochu",
+"garlic",
+"melon"
+],
+"uses": [
+"뿌리의 비대·균일 성장",
+"착과 촉진",
+"잎 발생 촉진",
+"식물 활력 회복",
+"뿌리 활착 촉진",
+"입고병 감염 메론 회복(전시포)"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 500,
+"unit": "ml",
+"areaPyeong": 1200,
+"method": "관주"
+}
+],
+"timing": "정식시 + 알 형성기/잎 3~6매",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 87
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-soltriggrr",
+"company": "wasung",
+"name": "솔-트리거",
+"group": "뿌리 활력·성장조절제(관주)",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+}
+],
+"feature": "천연 식물 추출물 식물 성장 조절제 — 뿌리 활착과 활력증진",
+"ingredients": "천연 식물 추출물",
+"crops": [
+"양파",
+"감자",
+"딸기",
+"인삼",
+"마늘",
+"포도",
+"수박",
+"참외",
+"토마토",
+"오이",
+"메론",
+"생강",
+"고구마",
+"복분자"
+],
+"cropKeys": [
+"onion",
+"strawberry",
+"garlic",
+"melon",
+"tomato",
+"cucumber"
+],
+"uses": [
+"수세 유지·대과 생산",
+"꽃 크기·개화기간·수정 능력",
+"연작 장애 최소화",
+"뿌리 작물 크고 균일",
+"순이 고르게 터짐",
+"당도 향상"
+],
+"problems": [
+"apple-coloring",
+"garlic-rooting",
+"melon-seedling-prep"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "L",
+"areaPyeong": 300,
+"method": "관주",
+"areaPyeongMax": 400
+}
+],
+"timing": "눈이 움직이기 직전 / 정식시",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 96
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-new-powerful",
+"company": "wasung",
+"name": "뉴-파워풀",
+"group": "관주용 생리활성제",
+"packages": [
+{
+"label": "4ℓ",
+"ml": 4000.0
+}
+],
+"feature": "특수 동물성 아미노산 + 휴믹산 해조추출물 관주전용 비료",
+"ingredients": "동물성 아미노산, 휴믹산, 해조추출물",
+"crops": [
+"과채류",
+"엽채류",
+"모든 작물"
+],
+"cropKeys": [
+"leafy"
+],
+"uses": [
+"뿌리 활착·성장촉진·수세회복",
+"비대",
+"유용 미생물 활성화",
+"염류집적 해소·생리장애 예방"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 4,
+"unit": "L",
+"areaPyeong": 400,
+"method": "관주",
+"areaPyeongMax": 600
+}
+],
+"timing": "정식기·낙화기·비대기, 1주 간격",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 97
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-ami-per",
+"company": "wasung",
+"name": "아미-퍼",
+"group": "아미노산 활력제(관주)",
+"packages": [
+{
+"label": "10ℓ",
+"ml": 10000.0
+}
+],
+"feature": "발효 특수식물 추출물과 아미노산 + 펄빅산 + 휴믹산 — 질소·인산·가리·붕소·몰리브덴 포함",
+"ingredients": "아미노산(라이신·알기닌·트립토판), 휴믹산, 펄빅산, N·P·K, 붕소, 몰리브덴",
+"crops": [
+"오이",
+"토마토",
+"고추",
+"딸기",
+"배추",
+"양배추",
+"파",
+"상추",
+"기타"
+],
+"cropKeys": [
+"cucumber",
+"tomato",
+"gochu",
+"strawberry",
+"cabbage",
+"leafy"
+],
+"uses": [
+"뿌리발육증진",
+"생산량 증대",
+"고온·저온·가뭄·장마 스트레스 회복",
+"토양미생물 활성화",
+"황화낙엽예방·수명연장"
+],
+"problems": [
+"cucumber-tomato-low-temp",
+"strawberry-malformed",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "L",
+"areaPyeong": 600,
+"method": "관주",
+"areaPyeongMax": 1200
+}
+],
+"timing": "생육초기·최성기·후반",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 98
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-seaweed-29",
+"company": "wasung",
+"name": "씨위드-29",
+"group": "해조 추출물/냉해 예방",
+"packages": [],
+"feature": "천연 해조류에 천연 식물 추출물을 특수 발효 — 모든 작물 어느 시기에나 (약방의 감초)",
+"ingredients": "Ascophyllum nodosum 해조 추출물, 천연 식물 추출물",
+"crops": [
+"과채류",
+"엽채류",
+"과수류",
+"가지",
+"오이",
+"고추"
+],
+"cropKeys": [
+"leafy",
+"cucumber",
+"gochu"
+],
+"uses": [
+"냉해·동해 내성 증대",
+"개화·착과 촉진·수정 향상",
+"ISR 유도 내병성",
+"정식 스트레스 해소·뿌리활착",
+"비대",
+"선충예방",
+"착색촉진·저장성"
+],
+"problems": [
+"apple-coloring",
+"garlic-rooting",
+"melon-seedling-prep"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "살포"
+}
+],
+"timing": "과채 정식후, 엽채 생육기, 과수 꽃피기전~착색전",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 103
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-sea-cream",
+"company": "wasung",
+"name": "씨크림",
+"group": "해조 추출물 복합제",
+"packages": [
+{
+"label": "200㎖"
+},
+{
+"label": "500㎖"
+}
+],
+"feature": "질소, 인, 가리와 해조 추출물 혼합제제",
+"ingredients": "N, P, K, 해조 추출물",
+"crops": [
+"모든작물"
+],
+"cropKeys": [],
+"uses": [
+"새싹 발생·개화·착과 촉진",
+"비대·균일 성장",
+"낙과율 감소",
+"당도 증가",
+"조기 수확",
+"냉해·동해 내성",
+"병 감염 저하"
+],
+"problems": [
+"apple-coloring",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "관주"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 105
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-sea-mix",
+"company": "wasung",
+"name": "씨-믹스",
+"group": "해조 추출물 복합제",
+"packages": [
+{
+"label": "500㎖"
+},
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "동물성 아미노산, 미량요소와 해조 추출물 혼합제제",
+"ingredients": "해조 추출물, 동물성 아미노산, 미네랄, 당류, 비타민, 효소, 핵산",
+"crops": [
+"모든작물"
+],
+"cropKeys": [],
+"uses": [
+"개화유도·과실비대",
+"냉해·고온장애·약해·스트레스 해소",
+"착색·신선도·저장성"
+],
+"problems": [
+"apple-coloring",
+"cucumber-tomato-low-temp",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+},
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "관주",
+"ratioMax": 1000
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 105
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-coldriggrr",
+"company": "wasung",
+"name": "콜드리거",
+"group": "냉해·저온 장애 예방제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "식물 배아 추출 특수천연 물질과 해조추출물 발효 — 냉해 및 저온장애 예방 미량요소 복합비료",
+"ingredients": "식물 배아 추출물, 해조추출물",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"냉해·서리·고온 피해 예방",
+"개화·착과 촉진",
+"과의 균형 성장",
+"활력 촉진"
+],
+"problems": [
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "맹아기~비대기 10일 간격 2~5회",
+"cautions": [
+"바람이 없고 기온이 15℃이상일 때 사용",
+"너무 이른 아침이나 늦은 저녁에는 사용하지 말것"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 105
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-fmz",
+"company": "wasung",
+"name": "에프엠젯",
+"group": "엽면시비용 미량요소제",
+"packages": [],
+"feature": "6가지 킬레이트 미량요소 + 식물합성·호흡·엽록소 촉진물질 — 미량요소 결핍 해소와 활력 회복",
+"ingredients": "킬레이트 철·붕소·망간·아연·구리·몰리브덴, 가리, 마그네슘, 비타민, 아미노산, 부식산",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"미량요소 결핍 해소",
+"활력 회복",
+"개화·착과 촉진"
+],
+"problems": [
+"apple-postharvest",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "관주"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 109
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-weed-b",
+"company": "wasung",
+"name": "위드-비",
+"group": "종합 식물 활력제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "발효 해조류 추출물 + 식물추출물 + 특수 미량요소 — 생리장애 해결사",
+"ingredients": "발효 해조 추출물, 식물추출물, 특수 미량요소",
+"crops": [
+"모든 작물"
+],
+"cropKeys": [],
+"uses": [
+"세포분열·수정 촉진",
+"당분 엽면 흡수·체내이동",
+"초세 안정·불량과 최소화",
+"화아분화 촉진",
+"생장점 이상 회복·코르크화 예방"
+],
+"problems": [
+"strawberry-malformed"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "전생육기 7~10일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 110
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-bloom",
+"company": "wasung",
+"name": "브롬",
+"group": "환경 스트레스 활력제(수화제)",
+"packages": [
+{
+"label": "500g",
+"g": 500.0
+}
+],
+"feature": "비타민 주원료 수화제 — 기후·환경 스트레스 해결 식물활력제",
+"ingredients": "비타민",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"냉해·서리해·동해 스트레스 해결",
+"대사 촉진·저항력",
+"농약 독성 감소·흡수 용이",
+"약해 피해 작물 원기회복"
+],
+"problems": [
+"cucumber-tomato-low-temp",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"ratioMax": 1333,
+"note": "15~20g/20L"
+}
+],
+"timing": "2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 110
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-magic-series",
+"company": "wasung",
+"name": "매직 시리즈",
+"group": "엽면시비용 종합 영양제",
+"packages": [
+{
+"label": "500g (비종별)"
+}
+],
+"feature": "질소·인·가리·마그네슘 + 6가지 킬레이트 미량요소 100% 수용성 — 성장용/결실용/균형시비용/마그네슘보충용/착색당도증진용",
+"ingredients": "N, P, K, Mg, 킬레이트 미량요소 6종",
+"crops": [
+"전작물"
+],
+"cropKeys": [],
+"uses": [
+"생육단계별 종합 영양 공급"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "20~40g/20L"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 111
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-sunburst-liqui-mag",
+"company": "wasung",
+"name": "리퀴마그",
+"group": "마그네슘제",
+"packages": [
+{
+"label": "250㎖"
+},
+{
+"label": "500㎖"
+}
+],
+"feature": "고품질 해조 마그네슘 — 황을 함유하지 않은 유기원료 + 해조류, 빠른 흡수 (포도 갈반병에 특효 문구)",
+"ingredients": "유기원료 마그네슘, 해조류",
+"crops": [
+"포도"
+],
+"cropKeys": [],
+"uses": [
+"마그네슘 결핍 해소",
+"갈반병 방제 포인트(1,000배 혼용)",
+"조기낙엽방지(메뉴얼)"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "5~7일 간격 2회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 114
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-syain-mag",
+"company": "wasung",
+"name": "샤인마그",
+"group": "마그네슘제(관주)",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+}
+],
+"feature": "특수 정제 해조류 + 휴믹산·풀빅산 발효 추출 + 특수 마그네슘 — 샤인머스켓 요구도 높음",
+"ingredients": "해조류, 휴믹산, 풀빅산, 마그네슘",
+"crops": [
+"샤인머스켓",
+"채소류",
+"과채류",
+"모든 작물"
+],
+"cropKeys": [],
+"uses": [
+"엽록소 형성·인 흡수 촉진",
+"마그네슘 결핍 해소",
+"질소과잉 생리작용 보조"
+],
+"problems": [],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "L",
+"areaPyeong": 600,
+"method": "관주"
+}
+],
+"timing": "2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 114
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-cal-mag",
+"company": "wasung",
+"name": "칼마그",
+"group": "칼슘·마그네슘제",
+"packages": [
+{
+"label": "500㎖"
+},
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "칼슘과 마그네슘을 한번에 — 질산태질소가 흡수 보조",
+"ingredients": "칼슘, 마그네슘, 질산태질소",
+"crops": [
+"사과",
+"배",
+"포도",
+"자두",
+"복숭아",
+"딸기",
+"고추",
+"토마토",
+"오이",
+"참외",
+"양파",
+"마늘",
+"감자",
+"호박",
+"배추",
+"상추"
+],
+"cropKeys": [
+"apple",
+"strawberry",
+"gochu",
+"tomato",
+"cucumber",
+"melon",
+"onion",
+"garlic",
+"cabbage",
+"leafy"
+],
+"uses": [
+"후기·저온기 잎 노화 방지·엽록소 형성",
+"생리장애 해결"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "7~10일 간격 3~4회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 115
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-superlong-cal-mag",
+"company": "wasung",
+"name": "슈퍼롱-칼마그1.5",
+"group": "칼슘·마그네슘제(수용성 분말)",
+"packages": [
+{
+"label": "1.5kg",
+"g": 1500.0
+}
+],
+"feature": "칼슘과 마그네슘의 상호작용으로 칼슘의 흡수와 이동성을 높인 비료",
+"ingredients": "수용성 칼슘, 수용성 마그네슘",
+"crops": [
+"전작물"
+],
+"cropKeys": [],
+"uses": [
+"칼슘부족 해소"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1.5,
+"unit": "kg",
+"areaPyeong": 0,
+"method": "엽면",
+"waterL": 1000,
+"note": "1.5kg/50~100말(1,000~2,000L)"
+}
+],
+"timing": "칼슘부족시·수확전",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 115
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-special-mag",
+"company": "wasung",
+"name": "스페셜마그",
+"group": "마그네슘제(수용성)",
+"packages": [
+{
+"label": "1kg",
+"g": 1000.0
+}
+],
+"feature": "고농도 마그네슘 + 질산태 질소 — 엽록소 형성 / 당도 증진",
+"ingredients": "마그네슘, 질산태 질소",
+"crops": [
+"사과",
+"포도",
+"배",
+"딸기",
+"오이",
+"토마토",
+"고추",
+"감자",
+"양파",
+"마늘",
+"쌀",
+"보리"
+],
+"cropKeys": [
+"apple",
+"strawberry",
+"cucumber",
+"tomato",
+"gochu",
+"onion",
+"garlic"
+],
+"uses": [
+"엽록소 함량 증가·당도·식감",
+"잎 갈변·노화 예방"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"note": "1kg/25말"
+}
+],
+"timing": "작물별 2주 간격 3~5회",
+"cautions": [
+"농약·영양제와 혼용 가능(완전 수용성)"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 115
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-no-down",
+"company": "wasung",
+"name": "노다운",
+"group": "규산제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "수도작용 도복방지, 미질향상, 내병성 강화 — 100% 순수 액체 규산(나노)",
+"ingredients": "순수 액체 규산",
+"crops": [
+"벼",
+"모든 작물"
+],
+"cropKeys": [
+"rice"
+],
+"uses": [
+"도복방지",
+"미질 향상·등숙률",
+"웃자람 방지",
+"줄기·잎 단단, 병해충 저항성"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "20㎖/20L"
+}
+],
+"timing": "출수 20~30일전·출수 후 20일, 7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 118
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-blooming",
+"company": "wasung",
+"name": "블루밍",
+"group": "도장 억제제",
+"packages": [
+{
+"label": "500g",
+"g": 500.0
+}
+],
+"feature": "식물 추출 농축액 주원료 — 과번무·도장 억제, 결구 촉진",
+"ingredients": "식물 추출 농축액",
+"crops": [
+"배추",
+"무",
+"얼갈이",
+"상추",
+"청경채",
+"고추",
+"토마토",
+"딸기",
+"오이",
+"마늘",
+"양파",
+"감자",
+"인삼",
+"잔디"
+],
+"cropKeys": [
+"cabbage",
+"leafy",
+"gochu",
+"tomato",
+"strawberry",
+"cucumber",
+"garlic",
+"onion"
+],
+"uses": [
+"도장·과번무 억제",
+"무 맺힘·배추 결구 촉진",
+"엽색 진하고 신선도·무름 감소",
+"육묘 과도한 영양생장 예방"
+],
+"problems": [
+"cabbage-soft-rot"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"ratioMax": 2000,
+"note": "10~20g/20L"
+}
+],
+"timing": "과도 생육·질소과잉 우려시 4~7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 119
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-eco-live",
+"company": "wasung",
+"name": "에코라이브",
+"group": "도장 억제/스트레스 회복제",
+"packages": [
+{
+"label": "500g",
+"g": 500.0
+}
+],
+"feature": "온모릴로나이트 순수 천연 지질품 19종 미량요소 — 생리 활성화, 농약 잔류 감소",
+"ingredients": "몬모릴로나이트 천연 광물, 19종 미량요소",
+"crops": [
+"모든 작물"
+],
+"cropKeys": [],
+"uses": [
+"도장·과번무(질소과다) 개화불량·화진·기형과",
+"약해·냉해·고온 장애 회복",
+"가스·농도장애·뿌리썩음",
+"당도·경도 증가"
+],
+"problems": [
+"apple-coloring",
+"cucumber-tomato-low-temp",
+"strawberry-malformed"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "관주",
+"note": "정식·이식시"
+},
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"note": "도장시 3일 간격 연속"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "스트레스시"
+},
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "kg",
+"areaPyeong": 300,
+"method": "관주",
+"note": "가스·농도장애"
+},
+{
+"kind": "perArea",
+"amount": 0.5,
+"unit": "kg",
+"areaPyeong": 300,
+"method": "관주",
+"note": "당도·경도 0.5~1kg"
+}
+],
+"timing": "",
+"cautions": [
+"전착제는 사용하지 않는 것이 좋다",
+"살충제는 가급적 수화제 사용(유제는 약효 저하)",
+"증상 심할 때 토양 관주+엽면 동시"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 119
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-fony",
+"company": "wasung",
+"name": "포니",
+"group": "도장 억제제(액상)",
+"packages": [
+{
+"label": "250㎖"
+}
+],
+"feature": "식물 추출 농축액 주원료 — 과번무·도장 억제 (블루밍 액상형)",
+"ingredients": "식물 추출 농축액",
+"crops": [
+"배추",
+"무",
+"얼갈이",
+"상추",
+"청경채",
+"고추",
+"토마토",
+"딸기",
+"오이",
+"마늘",
+"양파",
+"감자",
+"인삼",
+"잔디"
+],
+"cropKeys": [
+"cabbage",
+"leafy",
+"gochu",
+"tomato",
+"strawberry",
+"cucumber",
+"garlic",
+"onion"
+],
+"uses": [
+"도장·과번무 억제",
+"결구 촉진",
+"신선도 향상",
+"육묘 영양생장 예방"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"ratioMax": 2000,
+"note": "10~20㎖/20L"
+}
+],
+"timing": "4~7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 120
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-tnc",
+"company": "wasung",
+"name": "티.앤.씨(TNC)",
+"group": "구근비대·뿌리활성제",
+"packages": [
+{
+"label": "1ℓ",
+"ml": 1000.0
+},
+{
+"label": "4ℓ",
+"ml": 4000.0
+}
+],
+"feature": "식물 추출 생리활성 물질 — 구근비대, 잔뿌리 활성화, 저장성",
+"ingredients": "식물 추출 생리활성 물질",
+"crops": [
+"마늘",
+"양파",
+"감자",
+"고구마",
+"무",
+"당근",
+"생강",
+"인삼",
+"도라지",
+"마",
+"더덕"
+],
+"cropKeys": [
+"garlic",
+"onion"
+],
+"uses": [
+"구근비대",
+"잔뿌리 활성화",
+"저장성 증대",
+"도장지 과번무시 과비대(배 메뉴얼)"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "근비대기 전"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "약용작물 꽃 질 때"
+}
+],
+"timing": "근비대기 전 / 꽃 질 때",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 121
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-west-incals",
+"company": "wasung",
+"name": "웨스트인칼스",
+"group": "인산·칼슘 특수비료",
+"packages": [
+{
+"label": "4ℓ",
+"ml": 4000.0
+}
+],
+"feature": "인산과 칼슘 기본 + 식물 추출 특수 성분 + 미량요소 — 세포분열·화아분화",
+"ingredients": "인산, 칼슘, 식물 추출 생리활성물질, 미량요소",
+"crops": [
+"오이",
+"참외",
+"수박",
+"고추",
+"과채류"
+],
+"cropKeys": [
+"cucumber",
+"melon",
+"gochu"
+],
+"uses": [
+"세포분열 촉진·화아분화 유도",
+"뿌리 발육·조직 강화",
+"과일 크기·색깔·맛",
+"과채류 웃자람 방지·개화 착과"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 4,
+"unit": "L",
+"areaPyeong": 600,
+"method": "관주",
+"areaPyeongMax": 1800,
+"note": "생육초기"
+},
+{
+"kind": "perArea",
+"amount": 4,
+"unit": "L",
+"areaPyeong": 500,
+"method": "관주",
+"areaPyeongMax": 600,
+"note": "생육 중·후기"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 121
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-barans",
+"company": "wasung",
+"name": "바란스-K / 바란스-S",
+"group": "도장 억제제(수용성)",
+"packages": [
+{
+"label": "200g",
+"g": 200.0
+},
+{
+"label": "500g",
+"g": 500.0
+}
+],
+"feature": "도장억제, 화아분화 활성화, 화진현상 예방, 착색·당도 증진, 내병성",
+"ingredients": "미량요소 함유",
+"crops": [
+"사과",
+"배",
+"복숭아",
+"포도",
+"대추",
+"복분자",
+"블루베리",
+"배추",
+"수박",
+"메론",
+"토마토",
+"오이",
+"딸기",
+"무",
+"양배추",
+"상추",
+"시금치",
+"양파",
+"생강",
+"인삼",
+"약초",
+"벼",
+"옥수수",
+"콩",
+"깨",
+"땅콩"
+],
+"cropKeys": [
+"apple",
+"cabbage",
+"melon",
+"tomato",
+"cucumber",
+"strawberry",
+"leafy",
+"onion",
+"rice"
+],
+"uses": [
+"도장억제",
+"화아분화·개화 증진",
+"화진현상 예방",
+"착색·당도 증진",
+"내병성·저장성",
+"도복 방지"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "과수 초기~개화전 20g/20L"
+},
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "화아분화기·착색기 20~40g/20L"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "채소 육묘·초기"
+},
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "채소 중기 이후·결구기"
+},
+{
+"kind": "dilution",
+"ratio": 2000,
+"method": "엽면",
+"note": "인삼·약초 10g/20L"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "벼·옥수수·콩 등"
+}
+],
+"timing": "개화전·화아분화기·착색기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 122
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-sunblock-cal",
+"company": "wasung",
+"name": "썬블럭-칼",
+"group": "일소 방지제/칼슘",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "과실 일소 피해 예방용 — 나노 탄산칼슘 + 수용성 유기칼슘 액상 수화제, 자외선 차단 + 칼슘 공급",
+"ingredients": "나노 탄산칼슘, 수용성 유기칼슘",
+"crops": [
+"사과",
+"포도",
+"귤",
+"배",
+"복숭아"
+],
+"cropKeys": [
+"apple",
+"citrus"
+],
+"uses": [
+"일소·엽소 피해 예방(500배시 5~8℃ 저감)",
+"열과 피해 감소",
+"밀 증상·바람들이·감귤 부피 감소",
+"내병성·저장성"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"gochu-anthracnose"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "6월 중하순~ 7일 간격 2회, 이후 2주 간격",
+"cautions": [
+"페난트-25 혼용시 흔적 감소",
+"고착제와 혼용시 흔적이 오래 남을 수 있음"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 123
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-sun-cream",
+"company": "wasung",
+"name": "썬크림",
+"group": "일소 방지제",
+"packages": [
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "태양광으로부터 작물을 보호하기 위한 기능성 탄산칼슘 도포제",
+"ingredients": "탄산칼슘",
+"crops": [
+"사과",
+"배",
+"귤",
+"포도",
+"복숭아"
+],
+"cropKeys": [
+"apple",
+"citrus"
+],
+"uses": [
+"일소과 방지",
+"저장성 향상",
+"병해 면역력",
+"환경 스트레스"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "20㎖/20L"
+}
+],
+"timing": "일소피해 예방시",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 124
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-c-c",
+"company": "wasung",
+"name": "씨엔씨",
+"group": "착색제",
+"packages": [],
+"feature": "친환경 착색 전문제 — 착색, 당도 및 조기 숙성제 (미국 OMRI)",
+"ingredients": "특수 식물 추출물, 해조추출물, 마늘 추출물, 에틸렌 생성 억제 제제",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"착색 촉진",
+"당도 증가",
+"저장성 증대",
+"조기 수확",
+"침투력 향상",
+"조류 기피",
+"병해충 저항성 증대"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "1차"
+},
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "2차: 7~10일 후"
+}
+],
+"timing": "착색 시작기 1차, 7~10일 후 2차",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 130
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-red-c-c",
+"company": "wasung",
+"name": "레드 씨엔씨",
+"group": "착색제+칼슘",
+"packages": [
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "최고급 착색 + 칼슘 혼합제제 — 고두증상 억제 위해 특수 칼슘·미량요소 추가",
+"ingredients": "씨엔씨 + 특수 칼슘, 미량요소",
+"crops": [
+"사과",
+"대추",
+"감",
+"복숭아",
+"자두",
+"배",
+"고추",
+"참외",
+"수박"
+],
+"cropKeys": [
+"apple",
+"gochu",
+"melon"
+],
+"uses": [
+"착색촉진 및 당도향상",
+"고두증상 피해 감소 및 저장력 향상",
+"까치 등 조류 피해감소",
+"노린재 피해 감소"
+],
+"problems": [
+"apple-coloring",
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "살포",
+"ratioMax": 1000,
+"note": "착색초기"
+}
+],
+"timing": "착색초기",
+"cautions": [
+"대석조생, 환타지아 등 털이 없는 복숭아는 착색 초기에만 사용"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 131
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-color-spray",
+"company": "wasung",
+"name": "칼라 스프레이",
+"group": "착색제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "친환경 고품질 착색 전문제제 (천연 에틸렌 생성 억제 제제 함유)",
+"ingredients": "특수 식물 추출물, 해조추출물, 마늘추출물",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"착색증진",
+"당도증가",
+"저장력 증가",
+"침투력 향상",
+"해충·병해충 저항성 증대"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "1차"
+},
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "2차"
+}
+],
+"timing": "착색 시작 1차, 7~10일 후 2차",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 132
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-grape-c",
+"company": "wasung",
+"name": "그레이-씨",
+"group": "착색제(포도)",
+"packages": [
+{
+"label": "250㎖"
+}
+],
+"feature": "당도는 높이고 산도는 낮추는 — 포도의 착색, 당도증가·조기 수확 제제",
+"ingredients": "특수 식물 추출물, 해조추출물, 마늘 추출물",
+"crops": [
+"포도",
+"사과",
+"배",
+"고추",
+"토마토"
+],
+"cropKeys": [
+"apple",
+"gochu",
+"tomato"
+],
+"uses": [
+"착색증진",
+"당도증가(약 1.5Brix 증가 사례)",
+"조기수확",
+"과의 균일성장",
+"비대촉진",
+"병충해 예방"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "1차"
+},
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "2차"
+}
+],
+"timing": "착색초기 1차, 7~10일 후 2차",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 132
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-g-up",
+"company": "wasung",
+"name": "지-업",
+"group": "당도 증가제",
+"packages": [
+{
+"label": "250㎖"
+},
+{
+"label": "500㎖"
+}
+],
+"feature": "특수식물 추출물이 첨가된 최첨단 당도 증가제 — 살포후 2~3일만에 당도·경도 향상(문구)",
+"ingredients": "특수식물 추출물",
+"crops": [
+"포도",
+"샤인머스켓",
+"참외",
+"수박",
+"딸기"
+],
+"cropKeys": [
+"melon",
+"strawberry"
+],
+"uses": [
+"당도·경도 향상",
+"신선도·저장성",
+"병 저항력"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"ratioMax": 3000,
+"note": "500㎖/25~75말"
+}
+],
+"timing": "착색기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 133
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-brix-up",
+"company": "wasung",
+"name": "샤인브릭스-업",
+"group": "착색·당도 유도제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "미국 Westbridge 천연식물 추출물 친환경 색깔 유도제 (IFOAM 등록) — 당도·풍미·망고향 향상",
+"ingredients": "해조 추출물, 마늘 추출물, 천연식물 추출물",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"당도향상",
+"풍미·아삭한 식감·망고향 향상",
+"착색증진(엽록소 분해 촉진)",
+"저장성 향상",
+"노린재 피해 감소"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "text",
+"text": "사용량은 기업에 문의하세요."
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 133
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-grape-f",
+"company": "wasung",
+"name": "그레이-에프",
+"group": "착색제(포도)",
+"packages": [
+{
+"label": "500㎖"
+},
+{
+"label": "250㎖"
+}
+],
+"feature": "포도전용 착색제 — 착색, 당도향상, 조기수확",
+"ingredients": null,
+"crops": [
+"포도"
+],
+"cropKeys": [],
+"uses": [
+"착색촉진 및 당도향상",
+"비대촉진·균일한 성장",
+"노린재 피해감소"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "살포",
+"ratioMax": 1000
+}
+],
+"timing": "착색 10~20% 진행시",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 134
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-fmz-plus",
+"company": "wasung",
+"name": "에프엠젯 플러스",
+"group": "미량요소/활력제",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+}
+],
+"feature": "6가지 킬레이트 미량요소 + 촉진물질 — 미량요소 결핍 해소와 활력회복 (참외 당도 17→19brix 사례)",
+"ingredients": "가리, 철, 망간, 마그네슘, 비타민, 아미노산, 부식산, 붕소, 아연, 구리",
+"crops": [
+"참외",
+"샤인머스켓"
+],
+"cropKeys": [
+"melon"
+],
+"uses": [
+"미량요소 결핍해소",
+"활력 회복",
+"개화·착과 촉진",
+"당도·경도(실험)"
+],
+"problems": [
+"apple-coloring",
+"apple-postharvest",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "관주"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 134
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-hukarin",
+"company": "wasung",
+"name": "휴카린",
+"group": "당도증가제(관주)",
+"packages": [
+{
+"label": "10ℓ",
+"ml": 10000.0
+}
+],
+"feature": "샤인머스켓 당도증가제 — 안토시아닌 색소 유도 활성 물질",
+"ingredients": "안토시아닌 유도 활성 물질",
+"crops": [
+"포도",
+"참외",
+"수박",
+"딸기",
+"무화과",
+"기타 과수류"
+],
+"cropKeys": [
+"melon",
+"strawberry"
+],
+"uses": [
+"신맛 감소",
+"당도 증가",
+"품질·색상·숙성",
+"저장성"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "L",
+"areaPyeong": 600,
+"method": "관주",
+"areaPyeongMax": 1000
+},
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "착색초기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 135
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-organic-k",
+"company": "wasung",
+"name": "오가닉-케이",
+"group": "당도·착색 관주 전용 비료",
+"packages": [
+{
+"label": "10ℓ",
+"ml": 10000.0
+}
+],
+"feature": "아스코필럼노도섬 해조추출물 + 식물 생리활성물질 + 고순도 유기가리 — 안토시안 생성 촉진",
+"ingredients": "해조추출물, 식물 생리활성물질, 고순도 유기가리",
+"crops": [
+"참외",
+"딸기",
+"수박",
+"메론",
+"사과",
+"포도",
+"배"
+],
+"cropKeys": [
+"melon",
+"strawberry",
+"apple"
+],
+"uses": [
+"착색 촉진",
+"당도 향상",
+"한해·냉해 저항력"
+],
+"problems": [
+"apple-coloring",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "L",
+"areaPyeong": 600,
+"method": "관주",
+"areaPyeongMax": 1000
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 135
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-special-power",
+"company": "wasung",
+"name": "스페셜 파워",
+"group": "추비(세력·비대·착색)",
+"packages": [
+{
+"label": "15kg",
+"g": 15000.0
+}
+],
+"feature": "천연착색·비대물질 20% 함유 100% 수용성 — 세력 관리·비대 증진·당도·착색 촉진",
+"ingredients": "100% 수용성, 천연착색·비대물질 20%, 특수 식물 추출물",
+"crops": [
+"포도",
+"사과",
+"배",
+"양파",
+"마늘",
+"딸기",
+"토마토",
+"고추",
+"오이",
+"수박",
+"호박",
+"참외",
+"메론"
+],
+"cropKeys": [
+"apple",
+"onion",
+"garlic",
+"strawberry",
+"tomato",
+"gochu",
+"cucumber",
+"melon"
+],
+"uses": [
+"세력 약한 과수의 비대·착색",
+"하우스 과채류 발근·비대·착색(관주)",
+"구근류 추비 구 비대"
+],
+"problems": [
+"apple-coloring",
+"garlic-rooting",
+"melon-seedling-prep"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 15,
+"unit": "kg",
+"areaPyeong": 700,
+"method": "토양",
+"note": "포도 2~3회"
+},
+{
+"kind": "perArea",
+"amount": 15,
+"unit": "kg",
+"areaPyeong": 1000,
+"method": "토양",
+"note": "사과·배 2~3회"
+},
+{
+"kind": "perArea",
+"amount": 15,
+"unit": "kg",
+"areaPyeong": 800,
+"method": "토양",
+"note": "양파·마늘 2회"
+},
+{
+"kind": "perArea",
+"amount": 15,
+"unit": "kg",
+"areaPyeong": 0,
+"method": "관주",
+"note": "하우스 과채류 3~7일 간격, 면적 미기재"
+}
+],
+"timing": "비대기~착색기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 136
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-cronos-power",
+"company": "wasung",
+"name": "크로노스-파워",
+"group": "당도·비대 증진제(관주)",
+"packages": [
+{
+"label": "10kg",
+"g": 10000.0
+}
+],
+"feature": "프리미엄 당도 증진·비대 증진제 — 후기비대기~수확기, 인산·칼슘·킬레이트 미량요소 5%, 폴리사카라이드",
+"ingredients": "인산, 칼슘, 킬레이트 미량요소 5%, 폴리사카라이드, 특정 아미노산",
+"crops": [
+"포도",
+"사과",
+"배",
+"복숭아",
+"수박",
+"토마토",
+"딸기",
+"참외",
+"모든 작물"
+],
+"cropKeys": [
+"apple",
+"melon",
+"tomato",
+"strawberry"
+],
+"uses": [
+"후기 비대·당도 증진",
+"일조 부족·과다 착과로 당이 안 오를 때"
+],
+"problems": [
+"apple-coloring",
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "kg",
+"areaPyeong": 400,
+"method": "관주",
+"areaPyeongMax": 600,
+"note": "7~10일 간격 2~3회; 토양살포도 가능"
+}
+],
+"timing": "후기 비대기~수확기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 136
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-red-papper",
+"company": "wasung",
+"name": "붉은고추",
+"group": "착색제(고추)",
+"packages": [],
+"feature": "고추 및 과수, 과채류 착색제 — 마늘 추출물로 해충 접근 차단",
+"ingredients": "특수 식물 추출물, 해조 추출물, 마늘 추출물",
+"crops": [
+"고추",
+"사과",
+"포도",
+"수박",
+"토마토"
+],
+"cropKeys": [
+"gochu",
+"apple",
+"melon",
+"tomato"
+],
+"uses": [
+"착색증진",
+"착과촉진",
+"비대촉진",
+"병충해 예방",
+"조기수확"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "1차"
+},
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "2차"
+}
+],
+"timing": "착색초기 1차, 7~10일 후 2차, 초기부터 주기적으로",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 137
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-cal-plus",
+"company": "wasung",
+"name": "칼플러스",
+"group": "칼슘제",
+"packages": [],
+"feature": "부식산, 해조추출물, 유기칼슘, 붕소 함유 고품질 칼슘제 — 흡수 속도가 다름 (씨엔씨·트리거-비와 혼용 권장)",
+"ingredients": "부식산, 해조추출물, 유기칼슘, 붕소",
+"crops": [
+"사과",
+"배추",
+"포도",
+"수박",
+"참외",
+"양파",
+"토마토",
+"고추",
+"피망",
+"오이"
+],
+"cropKeys": [
+"apple",
+"cabbage",
+"melon",
+"onion",
+"tomato",
+"gochu",
+"cucumber"
+],
+"uses": [
+"사과 고두 예방",
+"배추 속썩음 방지",
+"포도 화진·열과 방지",
+"수박·참외 배꼽썩음",
+"양파 흑부",
+"토마토·고추·피망 배꼽썩음·끝썩음",
+"오이 갈색심부·어깨빠짐",
+"염류 장애 해소",
+"세포벽 강화"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "지속적(메뉴얼: 유과기부터 10~15일 간격)",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 144
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-orga-cal-bc-cal",
+"company": "wasung",
+"name": "올가칼 / 비씨칼",
+"group": "칼슘제(유기)",
+"packages": [
+{
+"label": "1ℓ",
+"ml": 1000.0
+},
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "흡수와 효과가 빠른 유기 칼슘제 — 천연 유기원료 발효, 유기칼슘+붕소+해조 추출물+부식산",
+"ingredients": "유기칼슘, 붕소, 해조 추출물, 부식산",
+"crops": [
+"사과",
+"포도",
+"수박",
+"참외",
+"토마토",
+"고추",
+"피망",
+"오이",
+"배추"
+],
+"cropKeys": [
+"apple",
+"melon",
+"tomato",
+"gochu",
+"cucumber",
+"cabbage"
+],
+"uses": [
+"고두·화진·열과·배꼽썩음·갈색심부·속썩음 등 칼슘부족 생리장애 예방",
+"토양 미생물 증가",
+"염류 장애 해소"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 145
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-orgapluscal",
+"company": "wasung",
+"name": "올가플러스칼",
+"group": "칼슘제(유기)",
+"packages": [
+{
+"label": "500㎖"
+},
+{
+"label": "4ℓ",
+"ml": 4000.0
+}
+],
+"feature": "부식산, 해조 추출물, 천연 생장 조절제, 유기 칼슘과 붕소 — 효과가 빠름 (OMRI)",
+"ingredients": "부식산, 해조 추출물, 천연 생장 조절제, 유기 칼슘, 붕소",
+"crops": [
+"사과",
+"포도",
+"수박",
+"참외",
+"배추",
+"토마토",
+"고추",
+"피망",
+"오이"
+],
+"cropKeys": [
+"apple",
+"melon",
+"cabbage",
+"tomato",
+"gochu",
+"cucumber"
+],
+"uses": [
+"고두·화진·열과·배꼽썩음·속썩음 예방",
+"세포벽 강화",
+"염류 장애 해소"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "살포"
+}
+],
+"timing": "개화·착과기부터 2~3주 간격",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 146
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-biolink-cal",
+"company": "wasung",
+"name": "바이오링크-칼",
+"group": "칼슘제(관주, 유기)",
+"packages": [
+{
+"label": "10ℓ",
+"ml": 10000.0
+}
+],
+"feature": "Westbridge 고급 친환경 칼슘제 (IFOAM) — 천연 유기원료 발효, 유기칼슘+붕소",
+"ingredients": "유기칼슘, 붕소, 해조 추출물, 부식산",
+"crops": [
+"샤인머스켓",
+"참외",
+"사과",
+"포도",
+"수박",
+"토마토",
+"고추",
+"피망",
+"오이",
+"배추",
+"무화과"
+],
+"cropKeys": [
+"melon",
+"apple",
+"tomato",
+"gochu",
+"cucumber",
+"cabbage"
+],
+"uses": [
+"칼슘 결핍 해소",
+"참외 배꼽썩음·물찬과",
+"샤인머스켓 순 뭉침 감소·비대·당도",
+"염류농도 높은 토양개량"
+],
+"problems": [
+"apple-coloring",
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "L",
+"areaPyeong": 600,
+"method": "관주",
+"areaPyeongMax": 1000
+},
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "L",
+"areaPyeong": 1200,
+"method": "관주",
+"note": "염류 토양개량 1·2차 14일 간격"
+}
+],
+"timing": "과수 개화부터 1~2주 간격, 과채 개화 후 2주 간격",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 147
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-double-cap",
+"company": "wasung",
+"name": "더블캡",
+"group": "칼슘·붕소제",
+"packages": [
+{
+"label": "500㎖"
+},
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "고농도의 칼슘과 붕소로 생리 장애 예방 — 에너지원으로 활력 회복",
+"ingredients": "고농도 칼슘, 붕소",
+"crops": [
+"사과",
+"배",
+"포도",
+"자두",
+"복숭아",
+"딸기",
+"고추",
+"토마토",
+"오이",
+"참외",
+"양파",
+"마늘",
+"감자",
+"호박",
+"배추",
+"상추"
+],
+"cropKeys": [
+"apple",
+"strawberry",
+"gochu",
+"tomato",
+"cucumber",
+"melon",
+"onion",
+"garlic",
+"cabbage",
+"leafy"
+],
+"uses": [
+"사과 동녹·밀증상·꼭지열과",
+"배 바람들이·열과",
+"고추 끝무름",
+"오이 생장점 이상·기형과",
+"토마토 배꼽무름",
+"배추 속무름",
+"무 갈변",
+"딸기 무름"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"strawberry-malformed"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 800,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "10일 간격"
+},
+{
+"kind": "perArea",
+"amount": 500,
+"unit": "ml",
+"areaPyeong": 100,
+"method": "관주",
+"areaPyeongMax": 200
+}
+],
+"timing": "생육기 10일 간격",
+"cautions": [
+"농약과 함께 사용 가능"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 148
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-sunburst-cal",
+"company": "wasung",
+"name": "썬버스트 칼",
+"group": "칼슘제(관주)",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+},
+{
+"label": "4ℓ",
+"ml": 4000.0
+}
+],
+"feature": "관주용 고품질 칼슘제제 — 주기적 관주로 탄저·갈반·고두·열과·무름 감소 사례",
+"ingredients": null,
+"crops": [
+"사과",
+"포도",
+"고추",
+"토마토",
+"배추",
+"딸기"
+],
+"cropKeys": [
+"apple",
+"gochu",
+"tomato",
+"cabbage",
+"strawberry"
+],
+"uses": [
+"사과 탄저·갈반 예방(장마전 3회), 고두병 감소",
+"포도 열과 감소",
+"고추 끝무름·탄저 예방",
+"토마토 과피 갈라짐 감소",
+"배추 무름병",
+"딸기 무름병"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"gochu-anthracnose"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "L",
+"areaPyeong": 600,
+"method": "관주"
+}
+],
+"timing": "장마전 7일 간격 3회 등",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 148
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-special-kalbung",
+"company": "wasung",
+"name": "스페셜칼붕",
+"group": "칼슘·붕소(도장억제)",
+"packages": [
+{
+"label": "1kg",
+"g": 1000.0
+}
+],
+"feature": "도장억제·착색·당도증진·구근비대 전용 100% 수용성 — 질소과잉 관리",
+"ingredients": "수용성 칼슘, 붕소",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"칼슘결핍 해결·억제",
+"비대·착색·숙기",
+"경도·저장성",
+"당의 이동·축적"
+],
+"problems": [
+"apple-coloring",
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "결구기·착색기 7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 149
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-special-kalma",
+"company": "wasung",
+"name": "스페셜칼마",
+"group": "칼슘·마그네슘제(수용성)",
+"packages": [
+{
+"label": "1kg",
+"g": 1000.0
+}
+],
+"feature": "칼슘과 마그네슘의 상호작용으로 칼슘 흡수 이동성을 높인 비료 — 불순물 없어 노즐 막힘 없음",
+"ingredients": "수용성 칼슘, 수용성 마그네슘",
+"crops": [
+"엽채류",
+"고추",
+"배추",
+"감귤류",
+"포도류",
+"사과류",
+"핵과류",
+"전작물"
+],
+"cropKeys": [
+"leafy",
+"gochu",
+"cabbage",
+"citrus",
+"apple"
+],
+"uses": [
+"칼슘·마그네슘 결핍 동시 해소",
+"열과 예방",
+"저장성·신선도",
+"내병성"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000
+}
+],
+"timing": "칼슘부족시·수확 전 7일 간격 2~3회",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 149
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-root-plus",
+"company": "wasung",
+"name": "루트 플러스",
+"group": "뿌리 발근제(과수, 관주)",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+}
+],
+"feature": "세계 최초 과수전용 뿌리 발근제 — 잔뿌리 발생·염류 장애 해소",
+"ingredients": "특수 천연 추출물",
+"crops": [
+"사과",
+"포도",
+"모든작물"
+],
+"cropKeys": [
+"apple"
+],
+"uses": [
+"과수 뿌리발근",
+"잔뿌리·활력",
+"염류 장애 해소",
+"과일 비대"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "L",
+"areaPyeong": 400,
+"method": "관주"
+}
+],
+"timing": "뿌리 활착기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 156
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-healthy-root",
+"company": "wasung",
+"name": "뿌리마나",
+"group": "뿌리 활착제(관주)",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+}
+],
+"feature": "뿌리 활착 및 초기 생육 촉진제제 — 50여종 식물·해조 추출 성분, 유기농 사용 가능",
+"ingredients": "식물·해조류 추출 50여종 특수제제",
+"crops": [
+"채소류",
+"모든작물"
+],
+"cropKeys": [],
+"uses": [
+"뿌리 활착·초기 생육",
+"스트레스·병 자기방어",
+"연작장애·침수 피해 수세 회복"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "L",
+"areaPyeong": 400,
+"method": "관주"
+}
+],
+"timing": "육묘기·정식 전후; 쇠약시 1주 간격",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 157
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-balgeun-plus",
+"company": "wasung",
+"name": "발근 플러스",
+"group": "뿌리 장애 예방·활력제(관주)",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+}
+],
+"feature": "천연 자기방어 유도물질 + 높은 구리 함량 — 뿌리썩음·청고 예방, 유기농 사용 가능",
+"ingredients": "식물성 자기방어 유도물질, 구리",
+"crops": [
+"모든작물"
+],
+"cropKeys": [],
+"uses": [
+"뿌리썩음·청고 등 뿌리 장애 예방",
+"뿌리 활착·활력",
+"연작 장애 수세 회복"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "L",
+"areaPyeong": 400,
+"method": "관주"
+}
+],
+"timing": "뿌리 활착기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 157
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-root-booster",
+"company": "wasung",
+"name": "루트-부스타",
+"group": "뿌리 활력 촉진 관주제",
+"packages": [
+{
+"label": "2ℓ",
+"ml": 2000.0
+}
+],
+"feature": "관주용 천연 식물 추출 성장 조절제 — 특히 뿌리 작물, 트리거-비와 병용",
+"ingredients": "천연 식물 추출 성장 조절제",
+"crops": [
+"모든작물",
+"토마토·오이 모종(사진)"
+],
+"cropKeys": [
+"tomato",
+"cucumber"
+],
+"uses": [
+"뿌리비대·균일 성장",
+"착과 촉진",
+"잎 발생 촉진",
+"활력 회복·활착"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "L",
+"areaPyeong": 400,
+"method": "관주",
+"areaPyeongMax": 600
+}
+],
+"timing": "뿌리 활착기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 158
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-big-root",
+"company": "wasung",
+"name": "빅루트",
+"group": "뿌리 활착·초기 활력제",
+"packages": [
+{
+"label": "500㎖"
+},
+{
+"label": "1ℓ",
+"ml": 1000.0
+}
+],
+"feature": "천연 식물 추출물 미량요소 복합비료 — 이식 스트레스 해소, 염류·연작 피해 감소",
+"ingredients": "천연 식물 추출물, 미량요소",
+"crops": [
+"채소류",
+"과채류",
+"모든 작물"
+],
+"cropKeys": [],
+"uses": [
+"재배 초기 뿌리 활착",
+"이식 스트레스 해소",
+"잔뿌리 성장",
+"씨앗 활력"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 400,
+"method": "살포",
+"ratioMax": 600,
+"note": "500㎖/10~15말"
+}
+],
+"timing": "정식·이식·봄 발근기 10~15일 간격",
+"cautions": [
+"세력 약할 때 관주용 비료와 함께"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 159
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-power-root",
+"company": "wasung",
+"name": "파워-루트",
+"group": "육묘용 뿌리 활착제",
+"packages": [
+{
+"label": "200㎖"
+}
+],
+"feature": "천연 식물성장 호르몬 + 토양 유해 병원균(충) 억제 물질 — 육묘기·정식 전후",
+"ingredients": "천연 식물성장 호르몬",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"뿌리 활착·초기 활력",
+"토양 유해 병원균(충) 억제"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep"
+],
+"doses": [
+{
+"kind": "text",
+"text": "사용량은 기업에 문의하세요."
+}
+],
+"timing": "육묘기, 정식 전·후",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 160
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-treenep",
+"company": "wasung",
+"name": "트리넵",
+"group": "뿌리 발근·토양개량제(관주)",
+"packages": [
+{
+"label": "10ℓ",
+"ml": 10000.0
+}
+],
+"feature": "뿌리발근효과 + 토양개량효과 — 강력한 뿌리 자극과 성장 촉진",
+"ingredients": null,
+"crops": [
+"모든작물"
+],
+"cropKeys": [],
+"uses": [
+"뿌리 발근·성장",
+"토양 입단화·미생물 증가",
+"이식 스트레스"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "L",
+"areaPyeong": 1000,
+"method": "관주",
+"areaPyeongMax": 2000
+}
+],
+"timing": "뿌리 활착기",
+"cautions": [
+"관주전용 — 엽면시비용으로 사용 금지"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 161
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-rootcal",
+"company": "wasung",
+"name": "루트칼",
+"group": "뿌리 발근+칼슘(관주)",
+"packages": [
+{
+"label": "10ℓ",
+"ml": 10000.0
+}
+],
+"feature": "발근 천연 물질 + 발근용 칼슘 + 미량요소 — 죽어가는 뿌리를 살린다",
+"ingredients": "생리활성물질, 칼슘, 미량요소",
+"crops": [
+"딸기",
+"토마토",
+"오이",
+"수박",
+"호박",
+"사과",
+"배",
+"포도",
+"복숭아",
+"마늘",
+"양파",
+"당근",
+"인삼",
+"도라지"
+],
+"cropKeys": [
+"strawberry",
+"tomato",
+"cucumber",
+"melon",
+"apple",
+"garlic",
+"onion"
+],
+"uses": [
+"잔뿌리·새뿌리 발생",
+"뿌리 내병성",
+"노화 나무 뿌리 세포분열"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"garlic-rooting"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "L",
+"areaPyeong": 100,
+"method": "관주",
+"areaPyeongMax": 200,
+"note": "7~10일 간격 1~3회"
+}
+],
+"timing": "착과후/유과기 후/구 형성기/신초 성장기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 161
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-root-increaser",
+"company": "wasung",
+"name": "특상",
+"group": "구근 비대제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "마늘, 양파, 감자, 당근, 생강, 인삼 등 뿌리비대 전문제제 — 지상부 웃자람 억제, 탄질률 조절",
+"ingredients": null,
+"crops": [
+"마늘",
+"양파",
+"감자",
+"고구마",
+"무",
+"당근",
+"인삼",
+"생강",
+"마",
+"도라지",
+"더덕"
+],
+"cropKeys": [
+"garlic",
+"onion"
+],
+"uses": [
+"뿌리 비대",
+"뿌리 크기·발달",
+"지상부/지하부 균형"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "수확 30~45일 전 1~2회",
+"cautions": [
+"희석배수 준수, 고농도 사용 금지",
+"무는 일찍 사용시 지상부가 마를 수 있음 — 시기 엄수"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 162
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-mapa-big",
+"company": "wasung",
+"name": "마파빅",
+"group": "구근 비대제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "천연식물 추출물과 해조류 — 지상부 양분 이동 억제로 지하부 비대",
+"ingredients": "천연식물 추출물, 해조류",
+"crops": [
+"마늘",
+"양파",
+"감자",
+"고구마",
+"무",
+"당근",
+"인삼",
+"생강",
+"마",
+"도라지",
+"더덕"
+],
+"cropKeys": [
+"garlic",
+"onion"
+],
+"uses": [
+"구근 비대",
+"뿌리발달",
+"세포 분열 촉진"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "살포"
+}
+],
+"timing": "수확 30~45일 전",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 162
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-gugunbig",
+"company": "wasung",
+"name": "구근-빅",
+"group": "구근 비대제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "지하부 활력 증진, 비료 효과로 구근 비대 — 질소 흡수 억제·C/N율 조절",
+"ingredients": null,
+"crops": [
+"마늘",
+"양파",
+"고구마",
+"감자",
+"배추",
+"무",
+"당근",
+"인삼",
+"생강",
+"마",
+"도라지",
+"더덕",
+"기타"
+],
+"cropKeys": [
+"garlic",
+"onion",
+"cabbage"
+],
+"uses": [
+"구근 비대",
+"지상부/지하부 균형",
+"질소과잉 장애 보호"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "살포",
+"ratioMax": 1000
+}
+],
+"timing": "수확 30~45일 전 1~3회",
+"cautions": [
+"희석배수 준수, 고농도 금지",
+"질소 부족·수세 약할 때는 2,000배로"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 163
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-phos-mix",
+"company": "wasung",
+"name": "포스-믹스",
+"group": "고농도 인산 발근제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "중성의 고농도 인산 + 휴믹산 킬레이트 — 구근류·잔디 뿌리 발달, 엽면·관주 겸용",
+"ingredients": "고농도 인산(관리인산), 휴믹산",
+"crops": [
+"마늘",
+"양파",
+"고구마",
+"감자",
+"잔디",
+"기타 작물"
+],
+"cropKeys": [
+"garlic",
+"onion"
+],
+"uses": [
+"뿌리 활착·발근",
+"구근 비대",
+"잔디 뿌리 노화 회복"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"ratioMax": 1000,
+"note": "20~40㎖/20L, 7일 간격 2~3회"
+},
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "L",
+"areaPyeong": 200,
+"method": "관주"
+},
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "L",
+"areaPyeong": 300,
+"method": "관주",
+"note": "잔디 1개월 간격"
+}
+],
+"timing": "활착기·비대기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 163
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-covering",
+"company": "wasung",
+"name": "카바링",
+"group": "광택 코팅제/작물보호",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "식물성 추출물 원료 친환경 작물보호 코팅제 — 부착성, 증산조절, 내병성, 광택",
+"ingredients": "식물성 추출물 (식품첨가제용)",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"열과·일소과·시들음·냉해 예방(수분 조절)",
+"병원균 포자 침투 차단",
+"수확후 저장성(전시포 사과 7~14일)",
+"광택 향상"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"cucumber-tomato-low-temp"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "생육 기간중",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 164
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-x-ray",
+"company": "wasung",
+"name": "엑스레이",
+"group": "침투 촉진제",
+"packages": [
+{
+"label": "100㎖"
+}
+],
+"feature": "거품 발생을 줄인 식물성 오일 침투제 — 물보다 빠르게 세포 조직으로 침투",
+"ingredients": "식물성 오일",
+"crops": [
+"모든작물"
+],
+"cropKeys": [],
+"uses": [
+"농약·비료 침투·흡수 촉진",
+"염류 용탈 촉진(관주)"
+],
+"problems": [
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 5000,
+"method": "엽면"
+},
+{
+"kind": "dilution",
+"ratio": 5000,
+"method": "관주"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 165
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-pennant",
+"company": "wasung",
+"name": "페난트10 / 페난트25",
+"group": "침투·확산제",
+"packages": [
+{
+"label": "100㎖"
+}
+],
+"feature": "동급 최대 효과 침투·확산제 — 흘러내리지 않고 바로 침투, 빨리 마름",
+"ingredients": null,
+"crops": [
+"모든작물"
+],
+"cropKeys": [],
+"uses": [
+"농약·비료 살포시 침투·확산"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 2000,
+"method": "엽면",
+"note": "페난트10"
+},
+{
+"kind": "dilution",
+"ratio": 5000,
+"method": "엽면",
+"note": "페난트25"
+}
+],
+"timing": "농약·비료 살포시",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 166
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-pennant-makada",
+"company": "wasung",
+"name": "페난트-마카다",
+"group": "침투·확산제(실리콘)",
+"packages": [
+{
+"label": "100㎖"
+}
+],
+"feature": "특수 고농축 실리콘제 — 침투, 확산, 건조, 거품 한번에",
+"ingredients": "고농축 실리콘",
+"crops": [
+"과수",
+"과채류"
+],
+"cropKeys": [],
+"uses": [
+"약제 확산·약효 증진",
+"약흔 경감"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 5000,
+"method": "엽면"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 166
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-hanbeonae",
+"company": "wasung",
+"name": "한번에",
+"group": "침투·확산제(실리콘)",
+"packages": [
+{
+"label": "250㎖"
+}
+],
+"feature": "특수 고농축 실리콘제 — 침투·확산·건조·거품 한번에",
+"ingredients": "고농축 실리콘",
+"crops": [
+"과수",
+"과채류"
+],
+"cropKeys": [],
+"uses": [
+"약제 확산·약효 증진",
+"약흔 경감"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 4000,
+"method": "엽면",
+"note": "250㎖/50말"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 166
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-newclean",
+"company": "wasung",
+"name": "뉴크린",
+"group": "친환경 유해충 예방제",
+"packages": [
+{
+"label": "250㎖"
+},
+{
+"label": "500㎖"
+}
+],
+"feature": "천연 추출물 — 관행·유기농 사용 가능, 접촉·섭식 기피",
+"ingredients": "천연 추출물",
+"crops": [
+"과수류",
+"과채류",
+"수도작"
+],
+"cropKeys": [],
+"uses": [
+"응애",
+"진딧물",
+"나방",
+"멸구",
+"식물 면역력"
+],
+"problems": [
+"strawberry-mite",
+"gochu-aphid-virus",
+"tomato-cucumber-whitefly"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "발생초기 2~3회",
+"cautions": [
+"화훼류에 사용금지",
+"하우스 사용시 벌을 벌통에 넣고 사용",
+"페난트25·X-Ray와 혼용 권장"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 169
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-clean-up",
+"company": "wasung",
+"name": "크린-업",
+"group": "친환경 유해충 예방제",
+"packages": [
+{
+"label": "250㎖"
+},
+{
+"label": "500㎖"
+}
+],
+"feature": "PLS에도 안전한 식물 추출물 천연물질 — 상품성 저하 요인 억제, 관주시에도 효과",
+"ingredients": "식물 추출물",
+"crops": [
+"사과",
+"복숭아",
+"포도",
+"배",
+"토마토",
+"오이",
+"가지",
+"딸기",
+"참외",
+"수박",
+"고추",
+"대추",
+"잣",
+"생강",
+"감자",
+"오미자",
+"복분자",
+"오디",
+"도라지",
+"마",
+"깨",
+"콩"
+],
+"cropKeys": [
+"apple",
+"tomato",
+"cucumber",
+"strawberry",
+"melon",
+"gochu"
+],
+"uses": [
+"유해충 예방",
+"작물 건강"
+],
+"problems": [],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+},
+{
+"kind": "perArea",
+"amount": 500,
+"unit": "ml",
+"areaPyeong": 100,
+"method": "관주",
+"areaPyeongMax": 200
+}
+],
+"timing": "전생육기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 169
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-tanjeojabi",
+"company": "wasung",
+"name": "탄저자비",
+"group": "친환경 탄저 예방·치료제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "산소 발생 작용으로 탄저균 발원 차단 — 내성 없음, 즉효",
+"ingredients": null,
+"crops": [
+"사과",
+"포도",
+"고추",
+"기타"
+],
+"cropKeys": [
+"apple",
+"gochu"
+],
+"uses": [
+"탄저 예방·치료",
+"(메뉴얼) 포도 수피 소독 1,000배"
+],
+"problems": [
+"gochu-anthracnose"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면",
+"note": "예방·농약혼용"
+},
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "엽면",
+"note": "치료"
+}
+],
+"timing": "발생 예상시·발생초기",
+"cautions": [
+"절대 원액을 피부에 접촉하거나 가스를 흡입하지 말 것"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 171
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-dasslu-c-s",
+"company": "wasung",
+"name": "다쓰러-C / 다쓰러-S",
+"group": "나노 동·황 살균제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "나노동(C)·나노황(S) — 2~3나노 크기, 동·황 혼용 가능, 세균성·곰팡이성 동시",
+"ingredients": "나노 동 / 나노 황",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"광범위 병해 방제(세균성·곰팡이성)",
+"광합성 상승",
+"잔류 걱정 없이 방제 후 바로 수확"
+],
+"problems": [
+"cucumber-downy-mildew",
+"strawberry-powdery-gray",
+"onion-downy-mildew"
+],
+"doses": [
+{
+"kind": "text",
+"text": "사용량은 기업에 문의하세요."
+}
+],
+"timing": "이상 징후시 신속 방제",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 171
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-antirus",
+"company": "wasung",
+"name": "안티러스",
+"group": "바이러스 피해 경감제",
+"packages": [
+{
+"label": "100㎖"
+},
+{
+"label": "250㎖"
+},
+{
+"label": "500㎖"
+}
+],
+"feature": "버섯 추출 바이러스 억제 물질 — 예방부터 치료, 신초 부위 바이러스에 엽면시비",
+"ingredients": "버섯 추출물, 아미노산",
+"crops": [
+"고추",
+"오이",
+"토마토",
+"호박",
+"수박",
+"참외",
+"기타"
+],
+"cropKeys": [
+"gochu",
+"cucumber",
+"tomato",
+"melon"
+],
+"uses": [
+"바이러스 예방·경감",
+"면역시스템 강화",
+"생리회복"
+],
+"problems": [
+"gochu-aphid-virus"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "엽면"
+}
+],
+"timing": "발생 예상시·발생기",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 174
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-no-bye",
+"company": "wasung",
+"name": "노바이",
+"group": "바이러스 예방관리제",
+"packages": [
+{
+"label": "500㎖"
+}
+],
+"feature": "바이러스 예방관리제 (수박·고추·사과 바이러스 사진)",
+"ingredients": null,
+"crops": [
+"수박",
+"고추",
+"사과(사진)"
+],
+"cropKeys": [
+"melon",
+"gochu",
+"apple"
+],
+"uses": [
+"바이러스"
+],
+"problems": [
+"gochu-aphid-virus"
+],
+"doses": [
+{
+"kind": "text",
+"text": "사용량은 기업에 문의하세요."
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 174
+},
+"sellable": true,
+"confidence": "low"
+},
+{
+"id": "wasung-long-ferti",
+"company": "wasung",
+"name": "롱퍼티",
+"group": "완효성 비료(기비)",
+"packages": [
+{
+"label": "10kg",
+"g": 10000.0
+}
+],
+"feature": "토착 미생물 활성화 최첨단 완효성 비료 — 1회 시비로 90~100일 효과, 다량의 미량요소",
+"ingredients": "N5 P5 K? SO3 MgO CaO SiO2 Fe B2O3 Cu Zn MnO Mo (표 일부 깨짐)",
+"crops": [
+"복숭아",
+"시금치",
+"고구마",
+"딸기",
+"수박",
+"당근",
+"배",
+"단감",
+"포도",
+"감귤",
+"상추",
+"토마토",
+"참외",
+"고추",
+"마늘",
+"양파",
+"사과",
+"배추"
+],
+"cropKeys": [
+"strawberry",
+"melon",
+"citrus",
+"leafy",
+"tomato",
+"gochu",
+"garlic",
+"onion",
+"apple",
+"cabbage"
+],
+"uses": [
+"초기 비료 과잉 뿌리고사·가스장애 예방",
+"비절 방지",
+"갈변 현상"
+],
+"problems": [],
+"doses": [
+{
+"kind": "perArea",
+"amount": 20,
+"unit": "kg",
+"areaPyeong": 300,
+"method": "토양",
+"note": "20~30kg 기비"
+}
+],
+"timing": "기비",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 177
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-superlong",
+"company": "wasung",
+"name": "슈퍼롱",
+"group": "완효성 엽면시비용 비료",
+"packages": [
+{
+"label": "2.5kg",
+"g": 2500.0
+}
+],
+"feature": "세포 분열기에 시비 — 30일간 일정한 영양분 공급 (수용성 코팅)",
+"ingredients": "수용성 N·P·K·미량요소 코팅",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"비대 촉진",
+"잎 노화·갈반·낙과 방지",
+"당도·착색 증가",
+"저장성"
+],
+"problems": [
+"apple-coloring"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 200,
+"method": "엽면"
+}
+],
+"timing": "착과 후 2주 이내 1차, 3~4주 후 2차",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 177
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-cronos",
+"company": "wasung",
+"name": "크로노스 시리즈",
+"group": "관주 전용 수용성 비료",
+"packages": [
+{
+"label": "10kg",
+"g": 10000.0
+}
+],
+"feature": "유럽 수입 관주전용 비료 — 초기성장용 30-10-10, 균형성장용 20-20-20, 결실기용 10-20-30, 과채류용 16-9-27, 착색결실용 7-3-27+5MgO+7CaO, 올 14-7-21+2MgO+6CaO, 칼마그 13-0-1+6MgO+16CaO, 엠지 수용성 고토 16%, PK-UP 0-52-34, 크로노스 파워 20-0-20 (모두 +2MgO+미량요소)",
+"ingredients": "NPK + MgO + 킬레이트 미량요소",
+"crops": [
+"토마토",
+"오이",
+"고추",
+"딸기",
+"연속 착과 작물"
+],
+"cropKeys": [
+"tomato",
+"cucumber",
+"gochu",
+"strawberry"
+],
+"uses": [
+"생육단계별 추비",
+"수세 조절(PK로 억제)",
+"염류축적 감소"
+],
+"problems": [
+"apple-coloring",
+"greenhouse-salt-ec",
+"garlic-onion-overwinter"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1,
+"unit": "kg",
+"areaPyeong": 100,
+"method": "관주",
+"note": "5~7일 또는 3~5일 간격"
+},
+{
+"kind": "dilution",
+"ratio": 1000,
+"method": "관주",
+"note": "육묘기 균형성장용 포기관주"
+}
+],
+"timing": "생육단계별",
+"cautions": [
+"크로노스와 질산칼슘은 같은 통에 사용 금지(인산가리는 가능)"
+],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 186
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-piccasol-grow-calcium-harvest",
+"company": "wasung",
+"name": "피카솔-그로우칼슘 / 피카솔-하베스트",
+"group": "과수 전용 수용성 비료(관주)",
+"packages": [
+{
+"label": "10kg (성장용)"
+},
+{
+"label": "10kg (결실용)"
+}
+],
+"feature": "그로우칼슘(성장용) 14-7-21+6CaO+2MgO+미량요소 / 하베스트(결실용) 7-3-27+7CaO+5MgO+미량요소",
+"ingredients": "NPK, CaO, MgO, 철 등 미량요소",
+"crops": [
+"사과",
+"배",
+"포도",
+"복숭아",
+"자두",
+"단감"
+],
+"cropKeys": [
+"apple"
+],
+"uses": [
+"과수 생육단계별 영양관리",
+"만개~결실기 질소·칼슘, 결실기~수확 가리"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "dilution",
+"ratio": 500,
+"method": "관주",
+"ratioMax": 1000
+},
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "kg",
+"areaPyeong": 600,
+"method": "토양",
+"note": "재배 메뉴얼"
+}
+],
+"timing": "만개~결실기 / 결실기~수확기 / 수확후",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 188
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-anytime",
+"company": "wasung",
+"name": "애니타임",
+"group": "텃밭·근교농업용 복합비료",
+"packages": [
+{
+"label": "1.7kg",
+"g": 1700.0
+}
+],
+"feature": "15-5-10+12S+미량요소+기능성물질 100% 수용성 입상 (나가이끼와 동일 설명)",
+"ingredients": "N15 P5 K10 S12, 킬레이트 미량요소, 펄빅산, 발효물, 효소, 폴리글루타믹산, 폴리아스파라틱산, 발근촉진제, 바실러스 2종",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"염류·연작장애 토양 비효",
+"pH 개량",
+"유익균 활성화"
+],
+"problems": [
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 1.7,
+"unit": "kg",
+"areaPyeong": 10,
+"method": "토양",
+"areaPyeongMax": 30,
+"note": "기비 1봉"
+},
+{
+"kind": "perArea",
+"amount": 1.7,
+"unit": "kg",
+"areaPyeong": 20,
+"method": "토양",
+"areaPyeongMax": 40,
+"note": "추비 1봉"
+},
+{
+"kind": "perArea",
+"amount": 1.7,
+"unit": "kg",
+"areaPyeong": 0,
+"method": "엽면",
+"waterL": 600,
+"note": "1봉/30~50말"
+}
+],
+"timing": "기비·추비",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 189
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-choobiro",
+"company": "wasung",
+"name": "추비로",
+"group": "추비전용 NK+칼슘·마그네슘 비료",
+"packages": [
+{
+"label": "2kg",
+"g": 2000.0
+}
+],
+"feature": "고농도 수용성 칼슘·마그네슘 함유 최고급 NK 추비전용",
+"ingredients": "NK, 수용성 칼슘, 마그네슘",
+"crops": [
+"마늘",
+"양파",
+"파",
+"고추",
+"배추",
+"오이",
+"토마토",
+"전작물"
+],
+"cropKeys": [
+"garlic",
+"onion",
+"gochu",
+"cabbage",
+"cucumber",
+"tomato"
+],
+"uses": [
+"뿌리노화·잎끝 타기·과일 끝썩음·무름·속 빔 예방",
+"엽록소·내병성",
+"경도·저장성",
+"환경 스트레스 예방"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"apple-postharvest"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 2,
+"unit": "kg",
+"areaPyeong": 30,
+"method": "토양",
+"areaPyeongMax": 50
+}
+],
+"timing": "생육 중기 이후",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 189
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-disper-sul",
+"company": "wasung",
+"name": "디스퍼황",
+"group": "환경친화적 황제(토양)",
+"packages": [
+{
+"label": "5kg",
+"g": 5000.0
+}
+],
+"feature": "가수분해형 반달형 친환경 황 90% — 토양에서 나노미세 황으로 분해, 전 생육기간 공급",
+"ingredients": "황 90%, 벤토나이트, 점토, 습윤제",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"황 공급",
+"알칼리 토양 중성화(메뉴얼: 디스퍼황 5kg/200평)",
+"살균"
+],
+"problems": [],
+"doses": [
+{
+"kind": "perArea",
+"amount": 5,
+"unit": "kg",
+"areaPyeong": 200,
+"method": "토양",
+"note": "재배 메뉴얼 p224"
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 192
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-orgafarm",
+"company": "wasung",
+"name": "올가팜",
+"group": "유기질 비료(펠렛)",
+"packages": [
+{
+"label": "20kg",
+"g": 20000.0
+}
+],
+"feature": "가스 발생이 없는 수입 유기질 비료 — 시설재배 안전, 고온고압 살균",
+"ingredients": "유기물 65%, 질소 3.8%, 인산 2.6%, 가리 2.6%, 칼슘 9%, 미량요소; 휴믹산 5%, 풀빅산 10%",
+"crops": [
+"고추",
+"오이",
+"참외",
+"딸기",
+"토마토",
+"부추",
+"수박",
+"마늘",
+"양파",
+"시금치",
+"사과",
+"배",
+"감",
+"포도",
+"복숭아",
+"골프장"
+],
+"cropKeys": [
+"gochu",
+"cucumber",
+"melon",
+"strawberry",
+"tomato",
+"garlic",
+"onion",
+"apple"
+],
+"uses": [
+"토양 보수력·보비력",
+"토양 물리성 개선(메뉴얼: 열과 예방 밑거름)"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 160,
+"unit": "kg",
+"areaPyeong": 300,
+"method": "토양",
+"note": "시설 8~12포(20kg)"
+},
+{
+"kind": "perArea",
+"amount": 80,
+"unit": "kg",
+"areaPyeong": 300,
+"method": "토양",
+"note": "노지 4~12포"
+},
+{
+"kind": "perArea",
+"amount": 20,
+"unit": "kg",
+"areaPyeong": 50,
+"method": "토양",
+"note": "재배 메뉴얼 밑거름"
+}
+],
+"timing": "밑거름(낙엽 후~휴면기, 늦가을~초봄)",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 207
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-opg",
+"company": "wasung",
+"name": "오피지(OPG)",
+"group": "유기질 비료(입상)",
+"packages": [
+{
+"label": "20kg",
+"g": 20000.0
+}
+],
+"feature": "친환경 칼슘+마그네슘+미량요소 복합 — 축분 없는 6개월 발효 입상 유기질",
+"ingredients": "질소 2%, 인 4%, 가리 2%, 칼슘 8%, 고토 4%, 황 4%, 철 4%, 아연·망간·구리·붕소·몰리브덴, 규소 7%, 알루미늄 4%, 휴믹산, 유용미생물",
+"crops": [],
+"cropKeys": [],
+"uses": [
+"가스 피해·염류 집적 없음",
+"지력 증진·토양 물리성"
+],
+"problems": [
+"tomato-cracking",
+"citrus-cracking",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "text",
+"text": "사용량은 기업에 문의하세요."
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 208
+},
+"sellable": true,
+"confidence": "medium"
+},
+{
+"id": "wasung-hutto",
+"company": "wasung",
+"name": "휴토",
+"group": "입상 발근활력제(기비)",
+"packages": [
+{
+"label": "10kg",
+"g": 10000.0
+}
+],
+"feature": "과수 및 노지작물용 뿌리는 입상 발근활력제 — DTPA 킬레이트, 휴믹산·펄빅산",
+"ingredients": "천연 휴믹산, 펄빅산, DTPA 킬레이트",
+"crops": [
+"과수",
+"노지작물"
+],
+"cropKeys": [],
+"uses": [
+"염류장애 뿌리고사·시들음 예방",
+"잔뿌리 발생",
+"불용성 인산염·황산염 분해",
+"염류 집적 완화"
+],
+"problems": [
+"garlic-rooting",
+"melon-seedling-prep",
+"greenhouse-salt-ec"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "kg",
+"areaPyeong": 200,
+"method": "토양",
+"areaPyeongMax": 300
+}
+],
+"timing": "",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 209
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-cronos-nk",
+"company": "wasung",
+"name": "크로노스NK-퍼트 / 뉴트리먼트 NK칼마",
+"group": "추비 전용 NK+칼슘·고토 비료",
+"packages": [
+{
+"label": "10kg",
+"g": 10000.0
+},
+{
+"label": "15kg",
+"g": 15000.0
+}
+],
+"feature": "13-0-20-9(Ca)-3(고토) — 생육 중기 이후 질소·가리+칼슘·마그네슘",
+"ingredients": "N13 K20 Ca9 MgO3",
+"crops": [
+"고추",
+"배추",
+"양파",
+"마늘",
+"배",
+"포도",
+"샤인머스켓",
+"기타"
+],
+"cropKeys": [
+"gochu",
+"cabbage",
+"onion",
+"garlic"
+],
+"uses": [
+"뿌리 노화·잎끝 타기·끝썩음·무름·속 빔 예방",
+"내병성·저장성·착색·당도"
+],
+"problems": [
+"apple-coloring",
+"tomato-cracking",
+"citrus-cracking"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "kg",
+"areaPyeong": 200,
+"method": "토양",
+"areaPyeongMax": 300
+}
+],
+"timing": "생육 중기 이후",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 210
+},
+"sellable": true,
+"confidence": "high"
+},
+{
+"id": "wasung-cam-plus-nk-camgold",
+"company": "wasung",
+"name": "캠플러스 / 일등추비 / NK 캠-골드",
+"group": "기능성 NK 추비 비료(입상)",
+"packages": [
+{
+"label": "15kg (캠플러스)"
+},
+{
+"label": "10kg (NK 캠-골드)"
+}
+],
+"feature": "Granule NK Calcium Magnesium Fertilizer 14-0-14-12(Ca)-2(고토) — 100% 수용성 입상, 토양·관주 겸용",
+"ingredients": "질소 14, 인산 0, 가리 14, 칼슘 12, 고토 2 (%)",
+"crops": [
+"고추",
+"배추",
+"양파",
+"마늘",
+"배",
+"포도",
+"샤인머스켓",
+"기타"
+],
+"cropKeys": [
+"gochu",
+"cabbage",
+"onion",
+"garlic"
+],
+"uses": [
+"생육 중기 이후 생리장애 예방",
+"과·구 단단, 내병성·저장성",
+"(메뉴얼) 엔케이 캠골드 10kg/300평 추비 다수"
+],
+"problems": [
+"garlic-onion-overwinter"
+],
+"doses": [
+{
+"kind": "perArea",
+"amount": 10,
+"unit": "kg",
+"areaPyeong": 200,
+"method": "토양",
+"areaPyeongMax": 300
+}
+],
+"timing": "생육 중기 이후~착과 결실",
+"cautions": [],
+"source": {
+"label": "와성원예 교육용 매거진(2026)",
+"page": 211
+},
+"sellable": true,
+"confidence": "high"
+}
+]
