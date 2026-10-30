@@ -5,6 +5,8 @@ import { getCrop, getProblem, problemsByCrop } from "@/lib/problems/catalog";
 import { findAnswerProducts } from "@/lib/problems/products";
 import StickyAsk from "@/components/problems/StickyAsk";
 import { materialsForProblem } from "@/lib/materials/organic";
+import { pesticideQueriesFor } from "@/lib/pesticides/map";
+import { psisEnabled, searchPesticides } from "@/lib/pesticides/psis";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -52,6 +54,14 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
   const lead = products.find((p) => p.phone) ?? products[0] ?? null;
   // 국가 공시 친환경 자재 (이름에 핵심어가 든 것 + 같은 종류 전체 수)
   const organic = problem.noProducts ? { matched: [], kinds: [], total: 0 } : materialsForProblem(problem, 3);
+  // 등록 농약 (농진청) — 병해충 문제에만. 키 없으면 안내 링크만
+  const pq = pesticideQueriesFor(problem);
+  const pesticides = pq.length && psisEnabled() ? await searchPesticides({ crop: pq[0].crop, pest: pq[0].pest, limit: 30 }) : null;
+  const pestTop = (() => {
+    if (!pesticides) return [];
+    const seen = new Set<string>();
+    return pesticides.filter((i) => (seen.has(i.brand) ? false : (seen.add(i.brand), true))).slice(0, 3);
+  })();
 
   return (
     <div style={S.wrap}>
@@ -143,6 +153,31 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
         </section>
       )}
 
+      {/* 등록 농약 (농진청) */}
+      {pq.length ? (
+        <section style={S.card}>
+          <div style={S.cardTitle}>등록 농약 — {pq[0].crop} · {pq.map((q) => q.pest).join("·")}</div>
+          {pestTop.length ? (
+            <div style={S.orgList}>
+              {pestTop.map((i, idx) => (
+                <div key={idx} style={S.orgItem}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={S.orgName}>{i.brand} <span style={S.pestItem}>{i.item}</span></div>
+                    <div style={S.orgCo}>{i.company} · {i.dilution}{i.phi ? ` · 수확 ${i.phi}일 전` : ""}{i.maxTimes ? ` · ${i.maxTimes}회 이내` : ""}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={S.note}>{psisEnabled() ? "등록 농약을 불러오지 못했습니다." : "농진청 농약 자료 연결 준비 중 — 아래에서 농약안전정보시스템으로 바로 찾을 수 있습니다."}</div>
+          )}
+          <Link href={`/pesticides?from=${problem.slug}`} style={S.orgMore}>
+            등록 농약 전체 보기 · 내 밭 평수로 환산 ›
+          </Link>
+          <div style={S.note}>자료: 농촌진흥청 농약안전정보시스템. 추천이 아니라 등록 목록이며, 라벨 기준을 따르세요. 구매는 가까운 농약판매상.</div>
+        </section>
+      ) : null}
+
       {/* 국가 공시 친환경 자재 */}
       {organic.total > 0 ? (
         <section style={S.card}>
@@ -233,6 +268,7 @@ const S: Record<string, CSSProperties> = {
   orgName: { fontSize: 15, fontWeight: 900, color: "#0f172a", wordBreak: "keep-all" },
   orgCo: { fontSize: 12, color: "#64748b" },
   orgCall: { padding: "8px 10px", borderRadius: 10, background: "#0f172a", color: "#fff", fontWeight: 900, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" },
+  pestItem: { fontSize: 12, fontWeight: 700, color: "#64748b", marginLeft: 4 },
   orgMore: { display: "block", marginTop: 10, fontSize: 14, fontWeight: 900, color: "#15803d", textDecoration: "none" },
   siblings: { marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" },
   forCompany: { marginTop: 18, fontSize: 12, color: "#94a3b8", textAlign: "center" },
