@@ -48,8 +48,19 @@ export function problemForDiagnosis(input: { crop?: string; dx?: string; obs?: s
     }
   }
 
-  const m = matchText(`${cropText} ${dx} ${input.obs ?? ""}`, 1);
-  const best = m.problems[0];
-  if (best && best.score >= 5) return { slug: best.problem.slug, title: best.problem.title, crop, how: "match" };
+  // 글 매칭은 '진단명' 낱말이 문제 제목·요약·키워드에 실제로 있어야만 인정합니다.
+  // (작물 이름만 같아서 엉뚱한 처방이 붙는 일 방지 — 예: 토마토 흑반병 → 배꼽썩음 X)
+  const tokens = dx
+    .replace(/(병|증|결핍|피해|해충|장해|의심)$/g, "")
+    .split(/[\s,.·()/]+/)
+    .map((w) => w.replace(/(병|증)$/, ""))
+    .filter((w) => w.length >= 2 && !/토마토|고추|오이|딸기|사과|배추|양파|마늘|파프리카|작물|열매|잎/.test(w));
+  if (!tokens.length) return null;
+  const m = matchText(`${cropText} ${dx}`, 5);
+  for (const c of m.problems) {
+    const words = [c.problem.title, c.problem.summary, ...c.problem.productKeywords].join(" ");
+    const cropOk = !crop || c.problem.crop === crop || c.problem.alsoCrops?.includes(crop) || c.problem.crop === "common";
+    if (cropOk && tokens.some((t) => words.includes(t))) return { slug: c.problem.slug, title: c.problem.title, crop, how: "match" };
+  }
   return null;
 }
