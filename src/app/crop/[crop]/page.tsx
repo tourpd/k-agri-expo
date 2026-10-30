@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 import { CROPS, getCrop, problemsByCrop, type CropKey } from "@/lib/problems/catalog";
+import { needsByCrop } from "@/lib/problems/needs";
+import { GRADE_LABEL, cropGrade } from "@/lib/problems/season";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,8 @@ export default async function CropPage({ params }: { params: Promise<{ crop: str
   const own = problems.filter((p) => p.crop === c.key);
   const common = problems.filter((p) => p.crop === "common");
   const month = new Date().getMonth() + 1;
+  const grade = cropGrade(c.key as CropKey);
+  const needs = needsByCrop(c.key as CropKey).slice(0, 6);
 
   return (
     <div style={S.wrap}>
@@ -32,8 +36,8 @@ export default async function CropPage({ params }: { params: Promise<{ crop: str
       <h1 style={S.title}>{c.icon} {c.label}</h1>
 
       <section style={S.month}>
-        <div style={S.monthLabel}>{month}월 할 일</div>
-        <div style={S.monthText}>{c.monthNote}</div>
+        <div style={S.monthLabel}>{month}월 · {GRADE_LABEL[grade.grade]}</div>
+        <div style={S.monthText}>{grade.note || c.monthNote}</div>
       </section>
 
       <div style={S.label}>지금 도는 문제</div>
@@ -70,6 +74,17 @@ export default async function CropPage({ params }: { params: Promise<{ crop: str
         </a>
       </div>
 
+      {needs.length > 0 ? (
+        <>
+          <div style={{ ...S.label, marginTop: 24, color: "#1d4ed8" }}>이달의 준비물</div>
+          <div style={S.chips}>
+            {needs.map((n) => (
+              <Link key={n.slug} href={`/need/${n.slug}`} style={{ ...S.chip, background: "#eff6ff", color: "#1e3a8a" }}>{n.title}</Link>
+            ))}
+          </div>
+        </>
+      ) : null}
+
       <div style={S.others}>
         <div style={S.label}>다른 작물</div>
         <div style={S.chips}>
@@ -101,7 +116,7 @@ const S: Record<string, CSSProperties> = {
   hot: { fontSize: 11, fontWeight: 900, padding: "3px 8px", borderRadius: 999, background: "#fef3c7", color: "#92400e", whiteSpace: "nowrap" },
   cardSummary: { fontSize: 13, lineHeight: 1.55, color: "#64748b", wordBreak: "keep-all", flex: 1 },
   cardCta: { fontSize: 13, fontWeight: 900, color: "#15803d" },
-  others: { marginTop: 8 },
+  others: { marginTop: 20 },
   chips: { marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" },
   chip: { padding: "8px 12px", borderRadius: 999, background: "#f1f5f9", color: "#0f172a", fontWeight: 800, fontSize: 14, textDecoration: "none" },
 };

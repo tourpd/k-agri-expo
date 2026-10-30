@@ -40,6 +40,13 @@ function hit(haystack: string, keywords: string[]): number {
 
 export async function findAnswerProducts(problem: Problem, limit = 5): Promise<AnswerProduct[]> {
   if (problem.noProducts || problem.productKeywords.length === 0) return [];
+  return findProductsByKeywords(problem.productKeywords, limit);
+}
+
+/** 키워드로 제품 찾기 (문제 페이지·준비물 페이지 공용) */
+export async function findProductsByKeywords(keywords: string[], limit = 5): Promise<AnswerProduct[]> {
+  if (!keywords.length) return [];
+  const problem = { productKeywords: keywords } as Pick<Problem, "productKeywords">;
 
   const supabase = createSupabaseAdminClient();
   const out: Array<AnswerProduct & { score: number }> = [];

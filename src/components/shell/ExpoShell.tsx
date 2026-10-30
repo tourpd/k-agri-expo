@@ -7,10 +7,10 @@ import AdminNavLink from "@/components/expo/admin/AdminNavLink";
  * (예전에는 홈에 메뉴가 두 줄로 겹쳐 나오고, 홈에서 전시관·부스로 가는 메뉴가 없었음)
  */
 const NAV = [
-  { href: "/symptom", label: "증상 찾기" },
+  { href: "/ask", label: "직접 묻기" },
+  { href: "/need", label: "준비물" },
+  { href: "/expo/deals", label: "특가" },
   { href: "/expo/hall", label: "전시관" },
-  { href: "/expo/deals", label: "농민 특가" },
-  { href: "/ai-consult", label: "사진 진단" },
 ];
 
 const LAYOUT_CSS = `

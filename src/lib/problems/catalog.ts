@@ -19,22 +19,28 @@ export type CropKey =
   | "citrus"
   | "cabbage"
   | "rice"
+  | "melon"
+  | "paprika"
+  | "leafy"
   | "common";
 
-export type Crop = { key: CropKey; label: string; icon: string; monthNote: string };
+export type Crop = { key: CropKey; label: string; icon: string; monthNote: string; aliases: string[] };
 
 /** 작물 입구 (이달 할 일은 11월 기준 — 매달 갱신) */
 export const CROPS: Crop[] = [
-  { key: "gochu", label: "고추", icon: "🌶️", monthNote: "수확 마무리, 밭 정리와 잔재물 처리, 내년 밭 준비" },
-  { key: "garlic", label: "마늘", icon: "🧄", monthNote: "정식 후 뿌리 내림 확인, 비닐 피복·보온, 배수로 점검" },
-  { key: "onion", label: "양파", icon: "🧅", monthNote: "정식 후 활착, 월동 전 피복, 노균병 예방" },
-  { key: "apple", label: "사과", icon: "🍎", monthNote: "수확 후 나무 회복(엽면·토양 영양), 낙엽 정리, 동해 예방" },
-  { key: "strawberry", label: "딸기", icon: "🍓", monthNote: "시설 가동, 응애·흰가루병 초기 관리, 벌 투입" },
-  { key: "tomato", label: "토마토", icon: "🍅", monthNote: "시설 환기·습도 관리, 가루이 예찰, 칼슘 공급" },
-  { key: "cucumber", label: "오이", icon: "🥒", monthNote: "환기·보온 균형, 노균병·가루이 예찰" },
-  { key: "citrus", label: "감귤·만감류", icon: "🍊", monthNote: "수확기 열과·착색, 수분 급변 방지" },
-  { key: "cabbage", label: "배추", icon: "🥬", monthNote: "김장철 수확 전 무름병 점검, 결구 상태 확인" },
-  { key: "rice", label: "벼", icon: "🌾", monthNote: "수확 후 논 정리, 볏짚 환원, 월동 녹비 파종" },
+  { key: "strawberry", label: "딸기", icon: "🍓", monthNote: "시설 가동, 응애·흰가루병 초기 관리, 벌 투입", aliases: ["딸기", "설향", "육묘"] },
+  { key: "tomato", label: "토마토", icon: "🍅", monthNote: "시설 환기·습도 관리, 가루이 예찰, 칼슘 공급", aliases: ["토마토", "방울토마토", "완숙"] },
+  { key: "cucumber", label: "오이", icon: "🥒", monthNote: "환기·보온 균형, 노균병·가루이 예찰", aliases: ["오이", "백다다기", "취청"] },
+  { key: "paprika", label: "파프리카·시설고추", icon: "🫑", monthNote: "총채벌레·흰가루 예찰, 야간 보온", aliases: ["파프리카", "피망", "시설고추", "하우스고추", "풋고추"] },
+  { key: "melon", label: "참외·수박", icon: "🍈", monthNote: "접목묘 예약, 육묘상 준비, 정식 전 토양 관리", aliases: ["참외", "수박", "멜론", "접목묘"] },
+  { key: "leafy", label: "상추·엽채", icon: "🥗", monthNote: "저온기 생육, 노균병·균핵병 예찰", aliases: ["상추", "시금치", "쌈채", "엽채", "청경채", "부추"] },
+  { key: "citrus", label: "감귤·만감류", icon: "🍊", monthNote: "수확기 열과·착색, 수분 급변 방지", aliases: ["감귤", "귤", "레드향", "한라봉", "천혜향", "만감"] },
+  { key: "apple", label: "사과", icon: "🍎", monthNote: "수확 후 나무 회복(엽면·토양 영양), 낙엽 정리, 동해 예방", aliases: ["사과", "부사", "홍로"] },
+  { key: "cabbage", label: "배추", icon: "🥬", monthNote: "김장철 수확 전 무름병 점검, 결구 상태 확인", aliases: ["배추", "김장", "무"] },
+  { key: "gochu", label: "고추(노지)", icon: "🌶️", monthNote: "수확 마무리, 밭 정리와 잔재물 처리, 내년 밭 준비", aliases: ["고추", "홍고추", "건고추", "노지고추"] },
+  { key: "garlic", label: "마늘", icon: "🧄", monthNote: "정식 후 뿌리 내림 확인, 비닐 피복·보온, 배수로 점검", aliases: ["마늘", "홍산마늘", "종구"] },
+  { key: "onion", label: "양파", icon: "🧅", monthNote: "정식 후 활착, 월동 전 피복, 노균병 예방", aliases: ["양파"] },
+  { key: "rice", label: "벼", icon: "🌾", monthNote: "수확 후 논 정리, 볏짚 환원, 월동 녹비 파종", aliases: ["벼", "논", "볏짚", "모내기"] },
 ];
 
 export type SymptomKey =
@@ -48,25 +54,27 @@ export type SymptomKey =
   | "spots"
   | "growth";
 
-export type Symptom = { key: SymptomKey; label: string; icon: string };
+export type Symptom = { key: SymptomKey; label: string; icon: string; aliases: string[] };
 
 /** 증상 입구 */
 export const SYMPTOMS: Symptom[] = [
-  { key: "insects", label: "벌레가 보인다", icon: "🐛" },
-  { key: "spots", label: "잎·열매에 반점", icon: "🟤" },
-  { key: "mold", label: "곰팡이·흰가루", icon: "⚪" },
-  { key: "yellow-leaf", label: "잎이 노랗다", icon: "🍂" },
-  { key: "fruit-crack", label: "열매가 터진다", icon: "💥" },
-  { key: "poor-color", label: "색이 안 난다", icon: "🎨" },
-  { key: "wilting", label: "갑자기 시든다", icon: "🥀" },
-  { key: "root", label: "뿌리가 이상하다", icon: "🌱" },
-  { key: "growth", label: "생육·수확 후 관리", icon: "📈" },
+  { key: "insects", label: "벌레가 보인다", icon: "🐛", aliases: ["벌레", "총채", "진딧물", "응애", "가루이", "나방", "굴파리", "선충", "달팽이"] },
+  { key: "spots", label: "잎·열매에 반점", icon: "🟤", aliases: ["반점", "점", "얼룩", "탄저", "무름", "썩", "구멍"] },
+  { key: "mold", label: "곰팡이·흰가루", icon: "⚪", aliases: ["곰팡이", "흰가루", "노균", "잿빛", "균핵", "역병", "하얀", "회색", "물방울", "이슬", "결로", "습해", "축축"] },
+  { key: "yellow-leaf", label: "잎이 노랗다", icon: "🍂", aliases: ["노랗", "노래", "노란", "누렇", "누런", "누레", "황화", "잎이 변", "잎이 마", "잎이 탄", "잎끝", "밑잎", "아랫잎", "아래잎", "타들"] },
+  { key: "fruit-crack", label: "열매가 터진다", icon: "💥", aliases: ["터", "갈라", "열과", "쪼개"] },
+  { key: "poor-color", label: "색이 안 난다", icon: "🎨", aliases: ["색", "착색", "당도", "맛이 없", "크기가 작"] },
+  { key: "wilting", label: "갑자기 시든다", icon: "🥀", aliases: ["시들", "시듦", "축 처", "말라", "죽"] },
+  { key: "root", label: "뿌리가 이상하다", icon: "🌱", aliases: ["뿌리", "활착", "썩음", "혹", "안 자라", "안자라"] },
+  { key: "growth", label: "생육·수확 후 관리", icon: "📈", aliases: ["수확", "생육", "거름", "비료", "영양", "월동", "정식", "육묘", "보온", "난방", "환기", "습도", "결로"] },
 ];
 
 export type Problem = {
   slug: string;
   title: string;
   crop: CropKey;
+  /** 같은 문제가 해당되는 다른 작물 (작물 페이지·매칭에 같이 씀) */
+  alsoCrops?: CropKey[];
   symptoms: SymptomKey[];
   /** 지금 시기에 특히 중요한 문제 */
   seasonal?: boolean;
@@ -154,6 +162,7 @@ export const PROBLEMS: Problem[] = [
     slug: "garlic-onion-overwinter",
     title: "마늘·양파 월동 준비",
     crop: "garlic",
+    alsoCrops: ["onion"],
     symptoms: ["growth"],
     seasonal: true,
     summary: "12월 추위 전에 뿌리를 충분히 내리게 하고 피복으로 보온",
@@ -247,6 +256,7 @@ export const PROBLEMS: Problem[] = [
     slug: "strawberry-powdery-gray",
     title: "딸기 흰가루병·잿빛곰팡이",
     crop: "strawberry",
+    alsoCrops: ["tomato", "cucumber", "paprika"],
     symptoms: ["mold"],
     summary: "잎·열매에 흰 가루, 또는 열매에 회색 곰팡이가 피어 물러짐",
     cause: "흰가루병은 건조할 때, 잿빛곰팡이는 습할 때. 환기와 습도 관리가 어긋나면 번갈아 옵니다.",
@@ -277,6 +287,7 @@ export const PROBLEMS: Problem[] = [
     slug: "tomato-cracking",
     title: "토마토 열과(갈라짐)",
     crop: "tomato",
+    alsoCrops: ["paprika"],
     symptoms: ["fruit-crack"],
     summary: "익어 가는 열매 꼭지 주변이 방사형·동심원으로 갈라진다",
     cause: "건조하다가 갑자기 물이 많아질 때, 과육이 껍질보다 빨리 커지며 터집니다.",
@@ -292,6 +303,7 @@ export const PROBLEMS: Problem[] = [
     slug: "tomato-cucumber-whitefly",
     title: "토마토·오이 가루이(온실가루이)",
     crop: "tomato",
+    alsoCrops: ["cucumber", "paprika", "strawberry"],
     symptoms: ["insects"],
     summary: "잎을 건드리면 흰 작은 벌레가 날아오르고, 잎에 끈적한 분비물·그을음",
     cause: "온실가루이가 잎 뒷면에서 즙을 빨고 바이러스(TYLCV)를 옮깁니다.",
@@ -367,6 +379,138 @@ export const PROBLEMS: Problem[] = [
     productKeywords: ["볏짚", "녹비", "토양", "유기물", "로타리", "파쇄"],
   },
   {
+    slug: "paprika-thrips-powdery",
+    title: "파프리카·시설고추 총채벌레·흰가루병",
+    crop: "paprika",
+    alsoCrops: ["gochu", "tomato"],
+    symptoms: ["insects", "mold"],
+    seasonal: true,
+    summary: "꽃이 떨어지고 열매에 흰 긁힘, 잎에 흰 가루가 번진다",
+    cause: "밀폐된 하우스에서 총채벌레가 번식하고, 건조하면 흰가루병이 뒤따릅니다.",
+    actions: [
+      "청색·황색 끈끈이트랩으로 발생을 먼저 보고, 꽃 속을 털어 확인",
+      "총채는 계통을 바꿔 가며, 흰가루는 발생 초기에 예방 위주로",
+      "측창 방충망, 하우스 안 습도를 너무 낮추지 않기",
+    ],
+    principle: "시설 작물은 밀폐될수록 해충이 폭발합니다. 트랩으로 보고, 초기에 잡고, 계통을 바꿉니다.",
+    productKeywords: ["총채", "흰가루", "해충", "살충", "살균", "끈끈이", "파프리카", "고추"],
+  },
+  {
+    slug: "greenhouse-condensation",
+    title: "시설하우스 결로·습도 관리 (곰팡이병의 뿌리)",
+    crop: "common",
+    alsoCrops: ["strawberry", "tomato", "cucumber", "paprika", "leafy", "melon"],
+    symptoms: ["mold", "growth"],
+    seasonal: true,
+    summary: "아침에 비닐·잎에 물방울이 맺히고, 며칠 뒤 잿빛곰팡이·노균병이 온다",
+    cause: "밤새 식은 하우스 안 수증기가 새벽에 잎에 맺힙니다. 잎이 젖어 있는 시간이 곰팡이병을 키웁니다.",
+    actions: [
+      "해 뜨고 1시간 안에 짧게 환기해 습한 공기를 내보냅니다 (온도보다 습도 먼저)",
+      "보온커튼은 해 뜬 뒤 바로 걷고, 바닥 멀칭으로 토양 수분 증발을 줄입니다",
+      "온습도계를 작물 높이에 두고 새벽 습도를 봅니다. 90% 넘는 시간이 길면 병이 옵니다",
+    ],
+    principle: "시설 곰팡이병의 8할은 결로입니다. 자재보다 환기 시간과 보온커튼 운용이 먼저입니다.",
+    productKeywords: ["온습도", "환기", "유동팬", "제습", "결로", "보온커튼", "센서"],
+  },
+  {
+    slug: "greenhouse-heating-prep",
+    title: "시설하우스 보온·난방 준비",
+    crop: "common",
+    alsoCrops: ["strawberry", "tomato", "cucumber", "paprika", "leafy", "melon"],
+    symptoms: ["growth"],
+    seasonal: true,
+    summary: "첫 추위 전에 이중비닐·보온커튼·난방기를 점검해야 저온 피해를 막는다",
+    cause: "11월 첫 한파에 보온이 안 돼 있으면 생장점이 멈추고, 회복에 2~3주가 걸립니다.",
+    actions: [
+      "이중비닐·보온커튼 찢어진 곳 보수, 출입구 틈새 막기",
+      "난방기 시운전과 연료 점검, 온도 센서 위치 확인(작물 높이)",
+      "작물별 야간 최저온도 기준을 정하고 알람 설정",
+    ],
+    principle: "보온은 설비 문제입니다. 추위 오기 전 점검이 난방비보다 쌉니다.",
+    productKeywords: ["난방", "보온", "커튼", "이중비닐", "온풍기", "열풍기", "온도", "센서", "알람"],
+  },
+  {
+    slug: "greenhouse-salt-ec",
+    title: "연작 하우스 염류 장해 (EC 과다)",
+    crop: "common",
+    alsoCrops: ["strawberry", "tomato", "cucumber", "paprika", "melon"],
+    symptoms: ["wilting", "yellow-leaf", "root"],
+    summary: "물을 줘도 시들고 잎 가장자리가 타며, 흙 표면이 하얗게 된다",
+    cause: "해마다 준 비료가 하우스 안에 쌓여 뿌리가 물을 못 빨아들입니다. 비가 안 들어오는 시설에서 특히 심합니다.",
+    actions: [
+      "토양 EC를 재 봅니다. 작물마다 다르지만 2.0을 넘으면 의심",
+      "담수 세척이나 제염 작물(옥수수·수단그라스) 재배, 유기물 투입",
+      "정식 전 토양 검정을 받고 밑거름을 줄입니다",
+    ],
+    principle: "염류 장해는 영양제를 더 준다고 낫지 않습니다. 빼는 관리가 답입니다.",
+    productKeywords: ["EC", "염류", "토양개량", "유기물", "미생물", "토양 검정"],
+  },
+  {
+    slug: "melon-seedling-prep",
+    title: "참외·수박 접목묘 준비와 육묘",
+    crop: "melon",
+    symptoms: ["growth", "root"],
+    seasonal: true,
+    summary: "정식 40~50일 전 접목묘를 예약하고, 육묘상 온도·습도를 맞춘다",
+    cause: "늦게 주문하면 원하는 품종·대목을 못 받고, 육묘상이 추우면 활착이 늦습니다.",
+    actions: [
+      "품종·대목을 정해 육묘장에 미리 예약 (연작 밭은 덩굴쪼김병 저항성 대목)",
+      "육묘상 바닥 온도 유지, 낮밤 온도차 관리",
+      "정식 전 토양 소독·태양열 소독 여부 결정",
+    ],
+    principle: "참외·수박 농사의 절반은 묘에서 결정됩니다. 좋은 묘를 제때 받는 게 첫 자재입니다.",
+    productKeywords: ["접목묘", "육묘", "대목", "참외", "수박", "모종", "육묘상"],
+  },
+  {
+    slug: "leafy-downy-sclerotinia",
+    title: "상추·엽채 노균병·균핵병",
+    crop: "leafy",
+    symptoms: ["mold", "spots"],
+    seasonal: true,
+    summary: "잎에 누런 반점 뒤 흰 곰팡이, 밑동이 물러지며 흰 솜 같은 균사",
+    cause: "저온 다습한 겨울 하우스에서 번집니다. 밀식과 결로가 원인입니다.",
+    actions: [
+      "병든 포기는 즉시 제거, 수확 후 잔재물 치우기",
+      "아침 환기와 멀칭으로 잎·밑동이 젖는 시간 줄이기",
+      "예방 위주 균 관리, 수확 주기가 짧으니 안전사용기준 확인",
+    ],
+    principle: "엽채는 수확이 잦아 약을 많이 쓸 수 없습니다. 환기와 잔재물 관리가 자재보다 먼저입니다.",
+    productKeywords: ["노균", "균핵", "살균", "상추", "엽채", "시금치"],
+  },
+  {
+    slug: "strawberry-bee-pollination",
+    title: "딸기 벌 투입과 수정 관리",
+    crop: "strawberry",
+    symptoms: ["growth"],
+    seasonal: true,
+    summary: "개화 시작 전 벌통을 넣고, 약제·저온·흐린 날에 벌이 안 나오면 기형과가 는다",
+    cause: "수정은 벌이 합니다. 벌 활동이 떨어지면 기형과·수량 감소로 바로 이어집니다.",
+    actions: [
+      "첫 꽃 피기 전 벌통 투입, 하우스 안에 물·햇빛 자리 확보",
+      "약제 살포는 벌 활동이 없는 저녁에, 벌에 안전한 자재 위주",
+      "흐린 날·저온이 이어지면 보조 수정(바람·붓) 검토",
+    ],
+    principle: "벌은 가장 싼 일꾼입니다. 벌을 지키는 운용이 수량을 지킵니다.",
+    productKeywords: ["벌", "수정", "화분매개", "뒤영벌", "꿀벌", "딸기"],
+  },
+  {
+    slug: "cucumber-tomato-low-temp",
+    title: "오이·토마토 저온기 생육 정체",
+    crop: "cucumber",
+    alsoCrops: ["tomato", "paprika", "strawberry", "melon"],
+    symptoms: ["growth", "yellow-leaf"],
+    seasonal: true,
+    summary: "해가 짧아지며 생장이 느려지고 잎색이 옅어지며 착과가 떨어진다",
+    cause: "지온·야간 온도 부족과 광 부족이 겹칩니다. 뿌리가 식으면 양분 흡수가 멈춥니다.",
+    actions: [
+      "지온을 먼저 올립니다 (멀칭·바닥 보온). 공기 온도보다 뿌리 온도",
+      "광량 부족 시 보광 검토, 늙은 잎 정리로 빛 들이기",
+      "저온기에는 질소를 줄이고 뿌리 활력 위주로",
+    ],
+    principle: "겨울 생육 정체는 영양 부족이 아니라 온도·빛 부족입니다. 비료를 더 주면 오히려 염류만 쌓입니다.",
+    productKeywords: ["지온", "보광", "LED", "멀칭", "뿌리", "활력", "아미노", "오이", "토마토"],
+  },
+  {
     slug: "common-yellow-leaf",
     title: "잎이 노랗게 변한다 (작물 공통)",
     crop: "common",
@@ -414,7 +558,9 @@ export function getSymptom(key: string): Symptom | null {
 
 export function problemsByCrop(key: CropKey): Problem[] {
   // 작물 페이지에는 공통 문제도 끝에 붙임
-  return PROBLEMS.filter((p) => p.crop === key).concat(PROBLEMS.filter((p) => p.crop === "common"));
+  const own = PROBLEMS.filter((p) => p.crop === key || p.alsoCrops?.includes(key));
+  const common = PROBLEMS.filter((p) => p.crop === "common" && !own.includes(p));
+  return own.concat(common);
 }
 
 export function problemsBySymptom(key: SymptomKey): Problem[] {
