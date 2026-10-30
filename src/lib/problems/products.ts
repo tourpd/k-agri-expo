@@ -2,6 +2,7 @@ import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Problem } from "./catalog";
+import { companyPhoneByText } from "./company-phones";
 
 /**
  * 문제 페이지에 붙는 '해답 제품' 찾기
@@ -146,7 +147,7 @@ export async function findProductsByKeywords(keywords: string[], limit = 5, must
         shortDescription: text(r.short_description) || null,
         source: "brand",
         href: `/expo/brand-products/${text(r.id)}`,
-        phone: (brand?.vendorId && vendorPhone.get(brand.vendorId)) || null,
+        phone: (brand?.vendorId && vendorPhone.get(brand.vendorId)) || companyPhoneByText(brand?.name, text(r.product_name), text(r.short_description), text(r.detail_description)),
         score,
       });
     }
@@ -184,7 +185,7 @@ export async function findProductsByKeywords(keywords: string[], limit = 5, must
         shortDescription: text(r.short_description) || null,
         source: "booth",
         href: `/expo/product/${id}`,
-        phone: boothPhone.get(text(r.booth_id)) ?? null,
+        phone: boothPhone.get(text(r.booth_id)) ?? companyPhoneByText(text(r.vendor_name ?? r.company_name), name, text(r.short_description), text(r.description)),
         score,
       });
     }
