@@ -3,7 +3,8 @@ import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Problem } from "./catalog";
 import { companyPhoneByText } from "./company-phones";
-import { partnerCompany, partnerProductsForProblem, type PartnerProduct } from "./partner-catalog";
+import { getPartnerProduct, partnerCompany, partnerProductsForProblem, type PartnerProduct } from "./partner-catalog";
+import { quickBuyLink, type BuyLink } from "@/lib/shop/buy-links";
 import { submissionsForProblem, submissionToPartner, type SubmissionRow } from "@/lib/submissions/products";
 
 /**
@@ -267,4 +268,14 @@ export async function findProductsByKeywords(keywords: string[], limit = 5, must
 /** 쇼핑몰 검색 주소 (제품별 직접 링크가 생기기 전까지) */
 export function shopSearchUrl(name: string): string {
   return `https://kaftv24.cafe24.com/product/search.html?keyword=${encodeURIComponent(name)}`;
+}
+
+/** 목록용 '바로 사기' 버튼 (쇼핑몰 > 쿠팡 제휴). 농약·판매 불가면 null */
+export async function buyLinkForAnswer(p: AnswerProduct): Promise<BuyLink | null> {
+  const partner = p.source === "partner" && p.partnerId ? getPartnerProduct(p.partnerId) : null;
+  try {
+    return await quickBuyLink({ name: p.name, companyName: p.brandName, sellable: partner ? partner.sellable : true, coupang: partner?.coupang });
+  } catch {
+    return null;
+  }
 }

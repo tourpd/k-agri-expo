@@ -75,3 +75,33 @@ export async function buildBuyLinks(opts: {
   }
   return out;
 }
+
+/**
+ * 목록(문제 페이지·포토닥터 카드)에 붙는 '바로 사기' 버튼 하나
+ * - 우리 쇼핑몰 > 고정 쿠팡 상품(제휴) > 쿠팡 검색 결과 페이지(제휴 딥링크)
+ * - 검색 API는 시간당 호출 제한이 있어 목록에서는 쓰지 않고, 검색 '페이지'를 제휴 링크로 바꿉니다.
+ *   (1순위 상품이 엉뚱한 제품일 위험도 없음 — 농민이 쿠팡에서 직접 고름)
+ * - 농약(sellable=false)은 null
+ */
+export async function quickBuyLink(opts: {
+  name: string;
+  companyName?: string | null;
+  sellable?: boolean;
+  coupang?: { productId: number; itemId?: number; vendorItemId?: number; label?: string; priceKrw?: number };
+}): Promise<BuyLink | null> {
+  if (opts.sellable === false) return null;
+  const ours = ourShopUrl(opts.name);
+  if (ours) return { label: "쇼핑몰에서 사기", href: ours, kind: "ours", sub: "한국농수산TV" };
+  if (opts.coupang) {
+    const plain = coupangProductUrl(opts.coupang);
+    const aff = await deeplink(plain);
+    return { label: "쿠팡에서 사기", href: aff ?? plain, kind: "coupang", sub: opts.coupang.priceKrw ? `${opts.coupang.priceKrw.toLocaleString("ko-KR")}원` : undefined };
+  }
+  const kw = [opts.companyName && opts.companyName !== "참여 기업" ? opts.companyName : "", opts.name.replace(/-/g, "")].filter(Boolean).join(" ");
+  const plain = coupangSearchUrl(kw);
+  const aff = await deeplink(plain);
+  return { label: "쿠팡에서 보기", href: aff ?? plain, kind: "coupang" };
+}
+
+/** 쿠팡파트너스 필수 안내 문구 */
+export const COUPANG_NOTICE = "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.";

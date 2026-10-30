@@ -75,7 +75,9 @@ export function searchMaterials(q: string, kind?: string, limit = 50): OrganicMa
 
 /** 문제와 어울리는 공시 자재: 이름에 핵심어가 든 것 먼저, 그다음 같은 자재구분 */
 export function materialsForProblem(problem: Problem, limit = 6): { matched: OrganicMaterial[]; kinds: MaterialKind[]; total: number } {
-  const kinds = kindsForSymptoms(problem.symptoms);
+  // 생리장해(칼슘 결핍 등)는 증상이 반점이어도 병해 자재가 아니라 생육 자재
+  const physio = /칼슘|배꼽|고두|열과/.test((problem.mustKeywords ?? []).join(" "));
+  const kinds: MaterialKind[] = physio ? ["작물생육용", "토양개량 및 작물생육용"] : kindsForSymptoms(problem.symptoms);
   if (!kinds.length) return { matched: [], kinds, total: 0 };
   const pool = ALL.filter((m) => kinds.includes(m.kind as MaterialKind));
   const keys = (problem.mustKeywords ?? problem.productKeywords).map(norm).filter((k) => k.length >= 2);
