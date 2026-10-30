@@ -67,10 +67,10 @@ export default function HomeEntrySection({ dealCount }: { dealCount?: number }) 
       </div>
 
       {/* 입구 2.5: 살포량 계산기 */}
-      <Link href="/calc" style={S.calcBanner}>
+      <Link href="/yakbaksa" style={S.calcBanner}>
         <div>
-          <div style={S.calcTitle}>🧮 내 밭엔 얼마나? — 살포량 계산</div>
-          <div style={S.calcSub}>제품 고르고 평수만 넣으면 몇 병·물 몇 통·한 통에 몇 ml·언제 뿌릴지 바로</div>
+          <div style={S.calcTitle}>👨‍⚕️ 약박사 — 내 밭엔 몇 병?</div>
+          <div style={S.calcSub}>약·영양제 고르고 평수만 넣으면 몇 병·물 몇 통·한 통에 몇 ml·언제 뿌릴지 바로</div>
         </div>
         <div style={S.calcGo}>›</div>
       </Link>

@@ -31,11 +31,11 @@ export async function POST(req: Request) {
 
     const slug = s(body.problem_slug, 80);
     const problem = getProblem(slug);
-    // 문제 페이지가 아닌 곳(계산기 "calc", 제품 "product:<id>")에서 온 문의도 받습니다.
+    // 문제 페이지가 아닌 곳(약박사 "calc", 제품 "product:<id>")에서 온 문의도 받습니다.
     const partner = slug.startsWith("product:") ? getPartnerProduct(slug.slice(8)) : null;
     const generic = slug === "calc" || slug.startsWith("product:");
     if (!problem && !generic) return jsonError("문제 정보를 찾을 수 없습니다.", 404);
-    const topicTitle = problem ? problem.title : partner ? `${partner.name} 문의` : "살포량·제품 문의";
+    const topicTitle = problem ? problem.title : partner ? `${partner.name} 문의` : "약박사 문의";
     const topicCrop = problem && problem.crop !== "common" ? problem.title.split(" ")[0] : null;
 
     const farmerName = s(body.farmer_name, 40);

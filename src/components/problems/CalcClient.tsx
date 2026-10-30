@@ -9,7 +9,7 @@ type AreaUnit = "평" | "마지기" | "a" | "ha" | "㎡";
 export type BuyLink = { label: string; href: string; kind: "ours" | "coupang" | "company"; sub?: string };
 
 /**
- * 살포량 계산기 (화면 쪽)
+ * 약박사 (화면 쪽)
  * 입력 3개: 평수(+단위), 분무기 통 크기, (제품의 사용법이 여러 줄이면) 어느 줄인지
  * 결과: 사야 할 양 · 물 몇 통 · 한 통에 몇 ml · 언제 몇 번 · 주의 · 출처
  */

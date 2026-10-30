@@ -111,7 +111,7 @@ export function partnerToAnswer(p: PartnerProduct): AnswerProduct {
     source: "partner",
     sourceLabel: `${p.source.label} p.${p.source.page}`,
     partnerId: p.id,
-    href: `/calc?p=${encodeURIComponent(p.id)}`,
+    href: `/yakbaksa?p=${encodeURIComponent(p.id)}`,
     phone: c.phone.replace(/[^\d+]/g, ""),
   };
 }
@@ -130,7 +130,7 @@ export function submissionToAnswer(r: SubmissionRow): AnswerProduct {
     source: "submission",
     sourceLabel: `${p.companyName} 등록`,
     partnerId: p.id,
-    href: `/calc?p=${encodeURIComponent(p.id)}`,
+    href: `/yakbaksa?p=${encodeURIComponent(p.id)}`,
     phone: p.companyPhone.replace(/[^\d+]/g, "") || null,
   };
 }

@@ -8,7 +8,7 @@ import AdminNavLink from "@/components/expo/admin/AdminNavLink";
  */
 const NAV = [
   { href: "/ask", label: "직접 묻기" },
-  { href: "/calc", label: "계산기" },
+  { href: "/yakbaksa", label: "약박사" },
   { href: "/need", label: "준비물" },
   { href: "/expo/deals", label: "특가" },
   { href: "/expo/hall", label: "전시관" },

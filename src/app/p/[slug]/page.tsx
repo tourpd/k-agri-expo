@@ -136,7 +136,7 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
                     </div>
                   </Link>
                   <Link href={calcHref ?? p.href} style={S.productCalc}>
-                    {calcHref ? "내 밭엔 얼마나? ›" : "보기 ›"}
+                    {calcHref ? "약박사에게 물어보기 — 몇 병? ›" : "보기 ›"}
                   </Link>
                   {p.sourceLabel ? <div style={S.productSrc}>출처: {p.sourceLabel}</div> : null}
                 </div>

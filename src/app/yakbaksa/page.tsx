@@ -11,14 +11,14 @@ import { SUBMISSION_PREFIX, searchSubmissions, submissionById, submissionToPartn
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export const metadata = { title: "살포량 계산 | K-Agri Expo" };
+export const metadata = { title: "약박사 — 내 밭엔 몇 병? | K-Agri Expo" };
 
 type SP = Promise<{ p?: string; q?: string; crop?: string; area?: string; from?: string }>;
 
 /**
  * 살포량 계산기
- *  /calc            → 제품 고르기 (검색 · 작물별)
- *  /calc?p=<id>     → 그 제품으로 "내 밭 ○평이면 몇 병, 물 몇 통, 한 통에 몇 ml"
+ *  /yakbaksa        → 제품 고르기 (검색 · 작물별)
+ *  /yakbaksa?p=<id>     → 그 제품으로 "내 밭 ○평이면 몇 병, 물 몇 통, 한 통에 몇 ml"
  */
 export default async function CalcPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
@@ -44,8 +44,8 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
 
     return (
       <div style={S.wrap}>
-        <Link href={fromProblem ? `/p/${fromProblem.slug}` : "/calc"} style={S.back}>
-          ‹ {fromProblem ? fromProblem.title : "다른 제품"}
+        <Link href={fromProblem ? `/p/${fromProblem.slug}` : "/yakbaksa"} style={S.back}>
+          ‹ {fromProblem ? fromProblem.title : "약박사 — 다른 제품"}
         </Link>
         <div style={S.brand}>{company.name} · {product.group}{product.organicCertNo ? ` · ${product.organicCertNo}` : ""}</div>
         <h1 style={S.title}>{product.name}</h1>
@@ -75,18 +75,19 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
 
   return (
     <div style={S.wrap}>
-      <h1 style={S.title}>내 밭엔 얼마나?</h1>
-      <p style={S.feature}>제품을 고르고 평수만 넣으면 — 몇 병 사야 하는지, 물 몇 통에 타는지, 언제 뿌리는지 바로 나옵니다.</p>
+      <div style={S.brand}>👨‍⚕️ 약박사</div>
+      <h1 style={S.title}>내 밭엔 몇 병? 한 통엔 몇 ml?</h1>
+      <p style={S.feature}>제품을 고르고 평수만 넣으면 — 몇 병 사야 하는지, 물 몇 통에 타는지, 언제 뿌리는지 바로 나옵니다. 숫자는 자료 그대로이고, 라벨이 우선입니다.</p>
 
-      <form action="/calc" method="get" style={S.searchRow}>
+      <form action="/yakbaksa" method="get" style={S.searchRow}>
         <input name="q" defaultValue={q} placeholder="제품 이름이나 증상 (예: 응애, 아미65)" style={S.search} />
         <button type="submit" style={S.searchBtn}>찾기</button>
       </form>
 
       <div style={S.chips}>
-        <Link href="/calc" style={{ ...S.chip, ...(!crop && !q ? S.chipOn : {}) }}>전체</Link>
+        <Link href="/yakbaksa" style={{ ...S.chip, ...(!crop && !q ? S.chipOn : {}) }}>전체</Link>
         {CROPS.filter((c) => c.key !== "common").map((c) => (
-          <Link key={c.key} href={`/calc?crop=${c.key}`} style={{ ...S.chip, ...(crop?.key === c.key ? S.chipOn : {}) }}>
+          <Link key={c.key} href={`/yakbaksa?crop=${c.key}`} style={{ ...S.chip, ...(crop?.key === c.key ? S.chipOn : {}) }}>
             {c.icon} {c.label}
           </Link>
         ))}
@@ -95,13 +96,13 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
       {submitted.length ? (
         <div style={S.list}>
           {submitted.map((p) => (
-            <Link key={p.id} href={`/calc?p=${encodeURIComponent(p.id)}`} style={S.item}>
+            <Link key={p.id} href={`/yakbaksa?p=${encodeURIComponent(p.id)}`} style={S.item}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={S.itemBrand}>{p.companyName} · {p.group}</div>
                 <div style={S.itemName}>{p.name}</div>
                 <div style={S.itemUses}>{p.uses.slice(0, 4).join(" · ")}</div>
               </div>
-              <div style={S.itemGo}>계산 ›</div>
+              <div style={S.itemGo}>약박사 ›</div>
             </Link>
           ))}
         </div>
@@ -114,13 +115,13 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
           {list.map((p) => {
             const c = partnerCompany(p);
             return (
-              <Link key={p.id} href={`/calc?p=${p.id}${crop ? `&crop=${crop.key}` : ""}`} style={S.item}>
+              <Link key={p.id} href={`/yakbaksa?p=${p.id}${crop ? `&crop=${crop.key}` : ""}`} style={S.item}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={S.itemBrand}>{c.name} · {p.group}</div>
                   <div style={S.itemName}>{p.name}</div>
                   <div style={S.itemUses}>{p.uses.slice(0, 4).join(" · ")}</div>
                 </div>
-                <div style={S.itemGo}>계산 ›</div>
+                <div style={S.itemGo}>약박사 ›</div>
               </Link>
             );
           })}
@@ -150,7 +151,7 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
       </div>
 
       <div style={{ height: 84 }} />
-      <StickyAsk problemSlug="calc" problemTitle="살포량·제품 문의" needsCrop />
+      <StickyAsk problemSlug="calc" problemTitle="약박사 문의" needsCrop />
     </div>
   );
 }

@@ -79,7 +79,7 @@ export default async function SubmissionsAdminPage({ searchParams }: { searchPar
                   {status !== "approved" ? <button name="decision" value="approved" style={S.ok}>승인</button> : null}
                   {status !== "rejected" ? <button name="decision" value="rejected" style={S.no}>반려</button> : null}
                   {status !== "pending" ? <button name="decision" value="pending" style={S.back}>대기로</button> : null}
-                  {status === "approved" ? <Link href={`/calc?p=s:${r.id}`} style={S.view} target="_blank">농민 화면 보기</Link> : null}
+                  {status === "approved" ? <Link href={`/yakbaksa?p=s:${r.id}`} style={S.view} target="_blank">농민 화면 보기</Link> : null}
                 </form>
               </div>
             );

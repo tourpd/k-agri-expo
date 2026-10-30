@@ -49,7 +49,7 @@ export default function ProductRegisterForm({ problems }: { problems: ProblemOpt
         <style>{CSS}</style>
         <div className="rg-done-title">접수됐습니다</div>
         <div>{msg}</div>
-        <div className="rg-done-sub">승인되면 해당 문제 페이지와 살포량 계산기에 바로 보이고, 농민 문의·전화가 귀사로 직접 갑니다.</div>
+        <div className="rg-done-sub">승인되면 해당 문제 페이지와 약박사에 바로 보이고, 농민 문의·전화가 귀사로 직접 갑니다.</div>
         <button type="button" className="rg-btn" onClick={() => { setState("idle"); setF((p) => ({ company_name: p.company_name, company_phone: p.company_phone, company_email: p.company_email ?? "", contact_name: p.contact_name ?? "", homepage_url: p.homepage_url ?? "", dose_method: "엽면", area_unit: "ml" })); setPicked([]); }}>
           같은 회사 제품 하나 더 등록
         </button>
