@@ -49,7 +49,7 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
         </Link>
         <div style={S.rowTop}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/doctor-q.svg" alt="닥터Q" width={44} height={48} />
+          <img src="/doctor-q-face.png" alt="닥터Q" width={44} height={44} style={S.face} />
           <div style={S.brand}>{company.name} · {product.group}{product.organicCertNo ? ` · ${product.organicCertNo}` : ""}</div>
         </div>
         <h1 style={S.title}>{product.name}</h1>
@@ -81,7 +81,7 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
     <div style={S.wrap}>
       <div style={S.hero}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/doctor-q.svg" alt="닥터Q" width={96} height={104} style={S.heroImg} />
+        <img src="/doctor-q.jpg" alt="닥터Q" width={112} height={153} style={S.heroImg} />
         <div style={S.bubble}>
           <div style={S.brand}>약박사 · 닥터Q</div>
           <h1 style={S.title}>내 밭엔 몇 병? 한 통엔 몇 ml?</h1>
@@ -171,7 +171,8 @@ const S: Record<string, CSSProperties> = {
   back: { fontSize: 13, fontWeight: 800, color: "#15803d", textDecoration: "none" },
   brand: { marginTop: 8, fontSize: 12, fontWeight: 900, color: "#16a34a" },
   hero: { marginTop: 8, display: "flex", gap: 12, alignItems: "flex-end" },
-  heroImg: { flexShrink: 0 },
+  heroImg: { flexShrink: 0, borderRadius: 16, objectFit: "cover" },
+  face: { borderRadius: 999, objectFit: "cover", border: "2px solid #15803d" },
   bubble: { flex: 1, minWidth: 0, padding: "12px 14px", borderRadius: 18, borderBottomLeftRadius: 4, background: "#fff", border: "2px solid #15803d" },
   rowTop: { marginTop: 8, display: "flex", gap: 8, alignItems: "center" },
   title: { marginTop: 4, fontSize: 24, fontWeight: 950, color: "#0f172a", letterSpacing: -0.5, wordBreak: "keep-all", lineHeight: 1.2 },

@@ -85,7 +85,7 @@ export default function StickyAsk({
             <div className="sticky-ask-head">
               <div className="sticky-ask-who">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/doctor-q.svg" alt="닥터Q" width={40} height={43} />
+                <img src="/doctor-q-face.png" alt="닥터Q" width={40} height={40} style={{ borderRadius: 999, border: "2px solid #15803d", objectFit: "cover" }} />
                 <div className="sticky-ask-title">{problemTitle}</div>
               </div>
               <button type="button" className="sticky-ask-close" onClick={() => setOpen(false)} aria-label="닫기">✕</button>

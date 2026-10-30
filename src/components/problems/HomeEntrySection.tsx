@@ -69,7 +69,7 @@ export default function HomeEntrySection({ dealCount }: { dealCount?: number }) 
       {/* 입구 2.5: 살포량 계산기 */}
       <Link href="/yakbaksa" style={S.calcBanner}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/doctor-q.svg" alt="닥터Q" width={56} height={61} style={{ flexShrink: 0 }} />
+        <img src="/doctor-q-face.png" alt="닥터Q" width={56} height={56} style={{ flexShrink: 0, borderRadius: 999, border: "2px solid #86efac", objectFit: "cover" }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={S.calcTitle}>약박사 닥터Q — 내 밭엔 몇 병?</div>
           <div style={S.calcSub}>약·영양제 고르고 평수만 넣으면 몇 병·물 몇 통·한 통에 몇 ml·언제 뿌릴지 바로</div>
