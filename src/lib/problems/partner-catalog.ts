@@ -276,7 +276,7 @@ const DOF_PRODUCTS: PartnerProduct[] = [
     crops: ["사과", "배", "감귤", "포도", "복숭아", "딸기", "고추", "토마토", "오이", "수박", "배추", "무", "양파", "마늘"],
     cropKeys: ["apple", "citrus", "strawberry", "gochu", "tomato", "cucumber", "cabbage", "onion", "garlic"],
     uses: ["부패 방지·저장성", "세균·곰팡이 침입 억제", "칼슘 결핍(잎끝 타기·배꼽썩음)", "세포벽 강화"],
-    problems: ["cabbage-soft-rot", "tomato-cracking", "citrus-cracking"],
+    problems: ["tomato-blossom-end-rot", "cabbage-soft-rot", "tomato-cracking", "citrus-cracking"],
     doses: [{ kind: "dilution", ratio: 500, ratioMax: 1000, method: "엽면", note: "20~40g/1말(20L)" }],
     timing: "과수: 수확 60일 전부터 7~10일 간격 2~4회 / 과채: 수확 14일 전 5~7일 간격 2회 / 채소: 수확 20일 전부터 7~10일 간격 2~3회",
     source: SRC(110),
