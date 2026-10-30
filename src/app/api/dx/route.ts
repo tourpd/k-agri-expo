@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { problemForDiagnosis } from "@/lib/problems/diagnosis";
 import { getProblem } from "@/lib/problems/catalog";
 import { buyLinkForAnswer, findAnswerProducts } from "@/lib/problems/products";
-import { COUPANG_NOTICE } from "@/lib/shop/buy-links";
+import { COUPANG_NOTICE, certifiedBuyLink } from "@/lib/shop/buy-links";
+import { certifiedForProblem } from "@/lib/materials/trusted";
 
 export const runtime = "nodejs";
 
@@ -30,12 +31,15 @@ export async function GET(req: Request) {
   const p = getProblem(hit.slug)!;
   const products = await findAnswerProducts(p, 3);
   const buys = await Promise.all(products.map((x) => buyLinkForAnswer(x)));
+  const cert = certifiedForProblem(p, 2).picks;
+  const certBuys = await Promise.all(cert.map((m) => certifiedBuyLink(m.short, m.name).catch(() => null)));
   const origin = url.origin;
   return NextResponse.json(
     {
       ok: true,
       problem: { slug: p.slug, title: p.title, summary: p.summary, actions: p.actions, principle: p.principle, url: `${origin}/p/${p.slug}?src=photodoctor` },
-      coupang_notice: buys.some((b) => b?.kind === "coupang") ? COUPANG_NOTICE : null,
+      coupang_notice: buys.some((b) => b?.kind === "coupang") || certBuys.some(Boolean) ? COUPANG_NOTICE : null,
+      certified: cert.map((m, i) => ({ name: m.name, company: m.short, tier: m.tier, kind: m.kind, cert_no: m.no, buy_url: certBuys[i]?.href ?? null })),
       products: products.map((x, i) => ({
         name: x.name,
         company: x.brandName,

@@ -105,3 +105,11 @@ export async function quickBuyLink(opts: {
 
 /** 쿠팡파트너스 필수 안내 문구 */
 export const COUPANG_NOTICE = "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.";
+
+/** 공시 제품 → 쿠팡 검색(회사+상표명) 제휴 링크 */
+export async function certifiedBuyLink(short: string, name: string): Promise<BuyLink> {
+  const kw = `${short} ${name.replace(/[()]/g, " ").replace(/\s+/g, " ").trim()}`;
+  const plain = coupangSearchUrl(kw);
+  const aff = await deeplink(plain);
+  return { label: "쿠팡에서 보기", href: aff ?? plain, kind: "coupang" };
+}
