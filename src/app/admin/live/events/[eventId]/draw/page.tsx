@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import AdminDrawButton from "@/components/live/AdminDrawButton";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -38,6 +39,7 @@ type Participant = {
 
 async function drawWinner(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 
@@ -88,6 +90,7 @@ async function drawWinner(formData: FormData) {
 
 async function resetParticipant(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 
@@ -111,6 +114,7 @@ async function resetParticipant(formData: FormData) {
 
 async function confirmWinner(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 
@@ -131,6 +135,7 @@ async function confirmWinner(formData: FormData) {
 
 async function deleteEvent(formData: FormData) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const supabase = createSupabaseAdminClient();
 

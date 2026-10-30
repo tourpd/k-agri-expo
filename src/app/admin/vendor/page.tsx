@@ -1,13 +1,16 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminUser } from "@/lib/admin-auth";
+import { INTERNAL_HEADER, getInternalToken } from "@/lib/security/signed-session";
 
 export const dynamic = "force-dynamic";
 
 async function approveVendor(userId: string) {
   "use server";
+  await requireAdminUser(); // 관리자만 실행
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/admin/vendor/approve`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { [INTERNAL_HEADER]: await getInternalToken(), "Content-Type": "application/json" },
     body: JSON.stringify({ userId }),
     cache: "no-store",
   });

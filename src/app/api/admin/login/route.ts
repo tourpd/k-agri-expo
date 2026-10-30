@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE_NAME, getAdminEnv } from "@/lib/admin-auth";
+import {
+  ADMIN_COOKIE_NAME,
+  ADMIN_SESSION_MAX_AGE,
+  createAdminSessionToken,
+  getAdminEnv,
+} from "@/lib/admin-auth";
+import { safeEqualText } from "@/lib/security/signed-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,21 +47,12 @@ export async function POST(req: Request) {
 
     const normalizedAdminEmail = adminEmail.trim().toLowerCase();
 
-    if (email !== normalizedAdminEmail || password !== adminPassword) {
+    if (email !== normalizedAdminEmail || !safeEqualText(password, adminPassword)) {
       return jsonError("관리자 계정 정보가 올바르지 않습니다.", 401);
     }
 
-    const sessionPayload = {
-      email: normalizedAdminEmail,
-      role: "admin",
-      issuedAt: Date.now(),
-      version: "AUTH_BASECAMP_v1",
-    };
-
-    const sessionToken = Buffer.from(
-      JSON.stringify(sessionPayload),
-      "utf-8"
-    ).toString("base64url");
+    // 서명된 세션 토큰 (위조 불가, 12시간 후 만료)
+    const sessionToken = await createAdminSessionToken(normalizedAdminEmail);
 
     const res = NextResponse.json({
       success: true,
@@ -69,18 +66,14 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 12,
+      maxAge: ADMIN_SESSION_MAX_AGE,
     });
 
     return res;
   } catch (error) {
     console.error("[api/admin/login] error:", error);
 
-    return jsonError(
-      error instanceof Error
-        ? error.message
-        : "관리자 로그인 중 오류가 발생했습니다.",
-      500
-    );
+    // 내부 오류 내용은 밖으로 보내지 않습니다.
+    return jsonError("관리자 로그인 중 오류가 발생했습니다.", 500);
   }
 }

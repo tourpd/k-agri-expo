@@ -1,10 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { cookies } from "next/headers";
+import { canAccessBooth, canAccessVendorRow, getVendorScope, scopeDenied } from "@/lib/security/vendor-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const VENDOR_COOKIE = "kagri_vendor_session";
 
 function jsonError(message: string, status = 400) {
   return Response.json({ success: false, error: message }, { status });
@@ -22,27 +20,12 @@ function getLeadFeeByVendorPlan(planType: string) {
 
 export async function POST(req: Request) {
   try {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get(VENDOR_COOKIE)?.value;
-
-    if (!raw) {
-      return jsonError("로그인이 필요합니다.", 401);
+    // 서명 없는 쿠키 대신 실제 로그인으로 확인
+    const scope = await getVendorScope();
+    if (!scope || scope.isAdmin) {
+      return jsonError("입점기업 로그인이 필요합니다.", 401);
     }
-
-    let session: any = null;
-
-    try {
-      session = JSON.parse(Buffer.from(raw, "base64").toString("utf-8"));
-    } catch {
-      return jsonError("로그인 세션이 올바르지 않습니다.", 401);
-    }
-
-    const vendorId = clean(session?.vendor_id);
-    const vendorEmail = clean(session?.email);
-
-    if (!vendorId) {
-      return jsonError("벤더 정보가 없습니다.", 401);
-    }
+    const vendorEmail = scope.email || "";
 
     const body = await req.json();
     const leadId = clean(body?.lead_id);
@@ -75,7 +58,8 @@ export async function POST(req: Request) {
       return jsonError(leadError?.message || "리드를 찾지 못했습니다.", 404);
     }
 
-    if (String(lead.vendor_id || "") !== vendorId) {
+    const vendorId = String(lead.vendor_id || "");
+    if (!vendorId || !scope.vendorIds.includes(vendorId)) {
       return jsonError("본인 리드만 수락할 수 있습니다.", 403);
     }
 

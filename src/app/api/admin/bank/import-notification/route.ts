@@ -1,10 +1,20 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { safeEqualText } from "@/lib/security/signed-session";
+import { INTERNAL_HEADER, getInternalToken } from "@/lib/security/signed-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// 🔥 본인 핸드폰 인증 (간단 보안)
-const TRUSTED_PHONE = "01082161253";
+// 🔒 휴대폰 입금 알림 앱이 보내는 비밀 토큰으로 확인합니다.
+// (예전에는 요청 안에 적힌 전화번호를 믿어서 누구나 가짜 입금을 넣을 수 있었음)
+// Vercel 환경변수 BANK_WEBHOOK_SECRET 에 긴 임의 문자열을 넣고,
+// 알림 앱 요청 헤더 x-bank-token (또는 본문 token)에 같은 값을 넣어 주세요.
+function isTrustedRequest(req: Request, body: Record<string, unknown>) {
+  const secret = (process.env.BANK_WEBHOOK_SECRET || "").trim();
+  if (secret.length < 16) return false;
+  const given = String(req.headers.get("x-bank-token") || body?.token || "").trim();
+  return safeEqualText(given, secret);
+}
 
 function jsonError(message: string, status = 400) {
   return Response.json({ success: false, error: message }, { status });
@@ -54,11 +64,9 @@ export async function POST(req: Request) {
     const notificationText = String(body.notification_text || "").trim();
     const appName = String(body.app_name || "").trim();
     const receivedAt = body.received_at || new Date().toISOString();
-    const phone = String(body.phone || "").replace(/-/g, "");
-
-    // 🔥 1. 보안 체크
-    if (phone !== TRUSTED_PHONE) {
-      return jsonError("허용되지 않은 디바이스입니다.", 403);
+    // 🔒 1. 보안 체크
+    if (!isTrustedRequest(req, body)) {
+      return jsonError("허용되지 않은 요청입니다.", 403);
     }
 
     if (!notificationText) {
@@ -115,8 +123,9 @@ export async function POST(req: Request) {
 
     // 🔥 5. 자동 매칭 실행
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin/bank/match`, {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin}/api/admin/bank/match`, {
         method: "POST",
+        headers: { [INTERNAL_HEADER]: await getInternalToken() },
       });
     } catch {
       // 실패해도 무시 (매칭은 나중에도 가능)

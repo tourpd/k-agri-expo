@@ -35,6 +35,11 @@ export async function GET(req: Request) {
       return jsonError("신청번호 또는 내부 신청번호가 필요합니다.");
     }
 
+    // 신청번호만으로 남의 연락처가 보이지 않도록 연락처 확인을 필수로 합니다.
+    if (!phone) {
+      return jsonError("신청 때 적은 연락처를 함께 입력해 주세요.");
+    }
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -82,7 +87,7 @@ export async function GET(req: Request) {
 
     const savedPhoneDigits = onlyDigits(data.phone || "");
 
-    if (phone && savedPhoneDigits && phone !== savedPhoneDigits) {
+    if (!savedPhoneDigits || phone !== savedPhoneDigits) {
       return jsonError("연락처가 일치하지 않습니다.", 403);
     }
 

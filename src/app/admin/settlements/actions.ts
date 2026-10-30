@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireAdminUser } from "@/lib/admin-auth";
 
 function cleanText(v: FormDataEntryValue | null, fallback = "") {
   const s = String(v || "").trim();
@@ -42,6 +43,7 @@ function brandNameOf(row: any, fallback = "") {
 }
 
 export async function payVendorSettlement(formData: FormData) {
+  await requireAdminUser(); // 관리자만 실행
   const brandName = cleanText(formData.get("brand_name"));
   const month = cleanText(formData.get("month"));
   const memo = cleanText(formData.get("memo"));

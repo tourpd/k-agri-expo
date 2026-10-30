@@ -1,5 +1,6 @@
 // src/app/api/admin/crm-mail-ingest/route.ts
 import { NextResponse } from "next/server";
+import { INTERNAL_HEADER, getInternalToken } from "@/lib/security/signed-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -149,6 +150,7 @@ export async function POST(req: Request) {
     const res = await fetch(`${origin}/api/admin/crm-inbox`, {
       method: "POST",
       headers: {
+        [INTERNAL_HEADER]: await getInternalToken(),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
