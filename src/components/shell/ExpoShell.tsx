@@ -8,6 +8,7 @@ import AdminNavLink from "@/components/expo/admin/AdminNavLink";
  */
 const NAV = [
   { href: "/ask", label: "직접 묻기" },
+  { href: "/calc", label: "계산기" },
   { href: "/need", label: "준비물" },
   { href: "/expo/deals", label: "특가" },
   { href: "/expo/hall", label: "전시관" },
@@ -19,8 +20,8 @@ const LAYOUT_CSS = `
 .expo-shell-main { padding: 24px; }
 @media (max-width: 768px) {
   .expo-shell-header { padding: 10px 12px !important; flex-wrap: wrap; gap: 8px !important; }
-  .expo-shell-nav { width: 100%; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px !important; }
-  .expo-shell-nav a { text-align: center; padding: 9px 4px !important; font-size: 13px !important; }
+  .expo-shell-nav { width: 100%; display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px !important; }
+  .expo-shell-nav a { text-align: center; padding: 9px 2px !important; font-size: 13px !important; }
   .expo-shell-main { padding: 12px; }
 }
 `;
@@ -72,7 +73,7 @@ export default function ExpoShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               style={{
-                padding: "8px 12px",
+                padding: "8px 9px",
                 borderRadius: 10,
                 fontSize: 14,
                 fontWeight: 800,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProblem } from "@/lib/problems/catalog";
+import { getPartnerProduct } from "@/lib/problems/partner-catalog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +31,12 @@ export async function POST(req: Request) {
 
     const slug = s(body.problem_slug, 80);
     const problem = getProblem(slug);
-    if (!problem) return jsonError("문제 정보를 찾을 수 없습니다.", 404);
+    // 문제 페이지가 아닌 곳(계산기 "calc", 제품 "product:<id>")에서 온 문의도 받습니다.
+    const partner = slug.startsWith("product:") ? getPartnerProduct(slug.slice(8)) : null;
+    const generic = slug === "calc" || slug.startsWith("product:");
+    if (!problem && !generic) return jsonError("문제 정보를 찾을 수 없습니다.", 404);
+    const topicTitle = problem ? problem.title : partner ? `${partner.name} 문의` : "살포량·제품 문의";
+    const topicCrop = problem && problem.crop !== "common" ? problem.title.split(" ")[0] : null;
 
     const farmerName = s(body.farmer_name, 40);
     const phone = digits(body.phone);
@@ -44,10 +50,10 @@ export async function POST(req: Request) {
     if (phone.length < 9 || phone.length > 11) return jsonError("연락 가능한 전화번호를 입력해 주세요.");
     if (!agree) return jsonError("개인정보 수집·이용 동의가 필요합니다.");
 
-    const crop = problem.crop === "common" ? s(body.crop, 40) || "미입력" : problem.title.split(" ")[0];
+    const crop = topicCrop ?? (s(body.crop, 40) || "미입력");
     const text =
       message ||
-      `${problem.title} 관련 문의${productName ? ` (관심 제품: ${productName})` : ""}`;
+      `${topicTitle} 관련 문의${productName ? ` (관심 제품: ${productName})` : ""}`;
 
     const supabase = createSupabaseAdminClient();
     const now = new Date().toISOString();
@@ -63,9 +69,9 @@ export async function POST(req: Request) {
         inquiry_type: "consult",
         message: text,
         status: "new",
-        source: `problem:${problem.slug}`,
-        source_type: "problem",
-        memo: productName ? `관심 제품: ${productName}` : null,
+        source: problem ? `problem:${problem.slug}` : slug,
+        source_type: problem ? "problem" : "calc",
+        memo: productName ? `관심 제품: ${productName}` : partner ? `관심 제품: ${partner.name} (${slug})` : null,
         created_at: now,
         updated_at: now,
       })

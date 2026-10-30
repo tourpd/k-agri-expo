@@ -1,0 +1,133 @@
+import Link from "next/link";
+import type { CSSProperties } from "react";
+import { CROPS, getCrop, getProblem, type CropKey } from "@/lib/problems/catalog";
+import { PARTNER_PRODUCTS, getPartnerProduct, partnerCompany, partnerProductsForCrop, searchPartnerProducts } from "@/lib/problems/partner-catalog";
+import { buildBuyLinks } from "@/lib/shop/buy-links";
+import CalcClient from "@/components/problems/CalcClient";
+import StickyAsk from "@/components/problems/StickyAsk";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+export const metadata = { title: "살포량 계산 | K-Agri Expo" };
+
+type SP = Promise<{ p?: string; q?: string; crop?: string; area?: string; from?: string }>;
+
+/**
+ * 살포량 계산기
+ *  /calc            → 제품 고르기 (검색 · 작물별)
+ *  /calc?p=<id>     → 그 제품으로 "내 밭 ○평이면 몇 병, 물 몇 통, 한 통에 몇 ml"
+ */
+export default async function CalcPage({ searchParams }: { searchParams: SP }) {
+  const sp = await searchParams;
+  const product = sp.p ? getPartnerProduct(sp.p) : null;
+
+  if (product) {
+    const company = partnerCompany(product);
+    const area = Math.max(1, Math.min(100000, parseInt(sp.area ?? "300", 10) || 300));
+    const buyLinks = await buildBuyLinks({ name: product.name, companyName: company.name, phone: company.phone, sellable: product.sellable, keyword: `${company.name} ${product.name.replace(/-/g, "")}` });
+    const fromProblem = sp.from ? getProblem(sp.from) : null;
+
+    return (
+      <div style={S.wrap}>
+        <Link href={fromProblem ? `/p/${fromProblem.slug}` : "/calc"} style={S.back}>
+          ‹ {fromProblem ? fromProblem.title : "다른 제품"}
+        </Link>
+        <div style={S.brand}>{company.name} · {product.group}{product.organicCertNo ? ` · ${product.organicCertNo}` : ""}</div>
+        <h1 style={S.title}>{product.name}</h1>
+        <p style={S.feature}>{product.feature}</p>
+        <div style={S.tags}>
+          {product.uses.slice(0, 6).map((u) => (
+            <span key={u} style={S.tag}>{u}</span>
+          ))}
+        </div>
+        <div style={S.crops}>대상작물: {product.crops.join(" · ")}</div>
+
+        <CalcClient product={product} companyName={company.name} initialArea={area} buyLinks={buyLinks} />
+
+        <div style={{ height: 84 }} />
+        <StickyAsk problemSlug={fromProblem?.slug ?? `product:${product.id}`} problemTitle={`${product.name} 문의`} phone={company.phone} companyName={company.name} needsCrop />
+      </div>
+    );
+  }
+
+  // 제품 고르기
+  const q = (sp.q ?? "").trim();
+  const cropKey = (sp.crop ?? "") as CropKey;
+  const crop = cropKey ? getCrop(cropKey) : null;
+  const list = q ? searchPartnerProducts(q, 30) : crop ? partnerProductsForCrop(crop.key) : PARTNER_PRODUCTS;
+
+  return (
+    <div style={S.wrap}>
+      <h1 style={S.title}>내 밭엔 얼마나?</h1>
+      <p style={S.feature}>제품을 고르고 평수만 넣으면 — 몇 병 사야 하는지, 물 몇 통에 타는지, 언제 뿌리는지 바로 나옵니다.</p>
+
+      <form action="/calc" method="get" style={S.searchRow}>
+        <input name="q" defaultValue={q} placeholder="제품 이름이나 증상 (예: 응애, 아미65)" style={S.search} />
+        <button type="submit" style={S.searchBtn}>찾기</button>
+      </form>
+
+      <div style={S.chips}>
+        <Link href="/calc" style={{ ...S.chip, ...(!crop && !q ? S.chipOn : {}) }}>전체</Link>
+        {CROPS.filter((c) => c.key !== "common").map((c) => (
+          <Link key={c.key} href={`/calc?crop=${c.key}`} style={{ ...S.chip, ...(crop?.key === c.key ? S.chipOn : {}) }}>
+            {c.icon} {c.label}
+          </Link>
+        ))}
+      </div>
+
+      {list.length === 0 ? (
+        <div style={S.empty}>맞는 제품이 아직 없습니다. 아래 '문의 남기기'로 물어보시면 맞는 기업을 연결해 드립니다.</div>
+      ) : (
+        <div style={S.list}>
+          {list.map((p) => {
+            const c = partnerCompany(p);
+            return (
+              <Link key={p.id} href={`/calc?p=${p.id}${crop ? `&crop=${crop.key}` : ""}`} style={S.item}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={S.itemBrand}>{c.name} · {p.group}</div>
+                  <div style={S.itemName}>{p.name}</div>
+                  <div style={S.itemUses}>{p.uses.slice(0, 4).join(" · ")}</div>
+                </div>
+                <div style={S.itemGo}>계산 ›</div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={S.foot}>
+        자료: 참여 기업 카탈로그에서 확인한 제품 {PARTNER_PRODUCTS.length}개. 기업이시면 <Link href="/vendor/apply" style={S.link}>제품 등록</Link>으로 올려 주세요(무료).
+      </div>
+
+      <div style={{ height: 84 }} />
+      <StickyAsk problemSlug="calc" problemTitle="살포량·제품 문의" needsCrop />
+    </div>
+  );
+}
+
+const S: Record<string, CSSProperties> = {
+  wrap: { padding: "4px 0 20px", maxWidth: 680, margin: "0 auto" },
+  back: { fontSize: 13, fontWeight: 800, color: "#15803d", textDecoration: "none" },
+  brand: { marginTop: 8, fontSize: 12, fontWeight: 900, color: "#16a34a" },
+  title: { marginTop: 4, fontSize: 28, fontWeight: 950, color: "#0f172a", letterSpacing: -0.5, wordBreak: "keep-all", lineHeight: 1.2 },
+  feature: { marginTop: 8, fontSize: 15, lineHeight: 1.6, color: "#334155", wordBreak: "keep-all" },
+  tags: { marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" },
+  tag: { fontSize: 12, fontWeight: 800, padding: "4px 9px", borderRadius: 999, background: "#f0fdf4", color: "#14532d" },
+  crops: { marginTop: 8, fontSize: 12, color: "#64748b", lineHeight: 1.6 },
+  searchRow: { marginTop: 12, display: "grid", gridTemplateColumns: "1fr auto", gap: 8 },
+  search: { padding: "14px 12px", borderRadius: 12, border: "1px solid #cbd5e1", fontSize: 16 },
+  searchBtn: { padding: "14px 16px", borderRadius: 12, border: 0, background: "#15803d", color: "#fff", fontWeight: 900, fontSize: 15 },
+  chips: { marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" },
+  chip: { fontSize: 13, fontWeight: 800, padding: "7px 11px", borderRadius: 999, background: "#f1f5f9", color: "#0f172a", textDecoration: "none" },
+  chipOn: { background: "#0f172a", color: "#fff" },
+  list: { marginTop: 12, display: "grid", gap: 8 },
+  item: { display: "flex", gap: 12, alignItems: "center", padding: 14, borderRadius: 14, border: "1px solid #e2e8f0", background: "#fff", textDecoration: "none", color: "#0f172a" },
+  itemBrand: { fontSize: 12, fontWeight: 800, color: "#16a34a" },
+  itemName: { marginTop: 2, fontSize: 17, fontWeight: 950, wordBreak: "keep-all" },
+  itemUses: { marginTop: 2, fontSize: 12, color: "#64748b" },
+  itemGo: { fontSize: 14, fontWeight: 900, color: "#15803d", whiteSpace: "nowrap" },
+  empty: { marginTop: 12, padding: 14, borderRadius: 14, background: "#fffbeb", border: "1px solid #fde68a", color: "#78350f", fontSize: 14, lineHeight: 1.6 },
+  foot: { marginTop: 16, fontSize: 12, color: "#64748b", lineHeight: 1.6 },
+  link: { color: "#15803d", fontWeight: 800 },
+};

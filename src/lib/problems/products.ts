@@ -3,6 +3,7 @@ import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Problem } from "./catalog";
 import { companyPhoneByText } from "./company-phones";
+import { partnerCompany, partnerProductsForProblem, type PartnerProduct } from "./partner-catalog";
 
 /**
  * 문제 페이지에 붙는 '해답 제품' 찾기
@@ -19,8 +20,11 @@ export type AnswerProduct = {
   priceKrw: number | null;
   imageUrl: string | null;
   shortDescription: string | null;
-  /** 어느 표에서 왔나 */
-  source: "brand" | "booth";
+  /** 어느 표에서 왔나 (partner = 카탈로그에서 확인한 참여 기업 제품) */
+  source: "brand" | "booth" | "partner";
+  /** partner일 때 카탈로그 출처 표기 */
+  sourceLabel?: string;
+  partnerId?: string;
   /** 상세 화면 주소 */
   href: string;
   sponsored?: boolean;
@@ -92,10 +96,38 @@ async function vendorPhones(supabase: Db, vendorIds: string[]): Promise<Map<stri
   return map;
 }
 
+export function partnerToAnswer(p: PartnerProduct): AnswerProduct {
+  const c = partnerCompany(p);
+  return {
+    id: p.id,
+    name: p.name,
+    brandName: c.name,
+    brandSlug: null,
+    boothId: null,
+    priceKrw: null,
+    imageUrl: null,
+    shortDescription: p.feature,
+    source: "partner",
+    sourceLabel: `${p.source.label} p.${p.source.page}`,
+    partnerId: p.id,
+    href: `/calc?p=${encodeURIComponent(p.id)}`,
+    phone: c.phone.replace(/[^\d+]/g, ""),
+  };
+}
+
 export async function findAnswerProducts(problem: Problem, limit = 2): Promise<AnswerProduct[]> {
-  if (problem.noProducts || problem.productKeywords.length === 0) return [];
-  // 핵심 단어(mustKeywords)가 제품 설명에 있어야만 붙습니다. '해충' 같은 넓은 말로는 안 붙습니다.
-  return findProductsByKeywords(problem.productKeywords, limit, problem.mustKeywords ?? problem.productKeywords);
+  if (problem.noProducts) return [];
+  // 1) DB에 등록된 제품 — 핵심 단어(mustKeywords)가 설명에 있어야만 붙습니다.
+  const fromDb = problem.productKeywords.length
+    ? await findProductsByKeywords(problem.productKeywords, limit, problem.mustKeywords ?? problem.productKeywords)
+    : [];
+  if (fromDb.length >= limit) return fromDb;
+  // 2) 빈칸은 카탈로그에서 확인한 참여 기업 제품으로 (같은 이름이면 DB 쪽만)
+  const names = new Set(fromDb.map((x) => x.name.replace(/\s/g, "")));
+  const partners = partnerProductsForProblem(problem.slug, limit)
+    .filter((p) => !names.has(p.name.replace(/\s/g, "")))
+    .map(partnerToAnswer);
+  return [...fromDb, ...partners].slice(0, limit);
 }
 
 /** 키워드로 제품 찾기 (문제 페이지·준비물 페이지 공용). must: 이 중 하나는 반드시 포함 */

@@ -66,6 +66,15 @@ export default function HomeEntrySection({ dealCount }: { dealCount?: number }) 
         </div>
       </div>
 
+      {/* 입구 2.5: 살포량 계산기 */}
+      <Link href="/calc" style={S.calcBanner}>
+        <div>
+          <div style={S.calcTitle}>🧮 내 밭엔 얼마나? — 살포량 계산</div>
+          <div style={S.calcSub}>제품 고르고 평수만 넣으면 몇 병·물 몇 통·한 통에 몇 ml·언제 뿌릴지 바로</div>
+        </div>
+        <div style={S.calcGo}>›</div>
+      </Link>
+
       {/* 입구 3: 이달의 준비물 (자재·농기구·묘종·설비) */}
       <div style={S.block}>
         <div style={S.blockHead}>
@@ -137,6 +146,10 @@ const S: Record<string, CSSProperties> = {
   chipGrade: { fontSize: 11, fontWeight: 800, color: "#94a3b8" },
   chipIcon: { fontSize: 16, lineHeight: 1 },
   moreLink: { fontSize: 13, fontWeight: 900, color: "#1d4ed8", textDecoration: "none" },
+  calcBanner: { marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 18px", borderRadius: 18, background: "#0f172a", color: "#fff", textDecoration: "none" },
+  calcTitle: { fontSize: 17, fontWeight: 950 },
+  calcSub: { marginTop: 4, fontSize: 13, color: "#cbd5e1", lineHeight: 1.5, wordBreak: "keep-all" },
+  calcGo: { fontSize: 28, fontWeight: 900, color: "#86efac" },
   needGrid: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 },
   needCard: { padding: "12px", borderRadius: 14, background: "#eff6ff", border: "1px solid #bfdbfe", textDecoration: "none", color: "#0f172a" },
   needCat: { fontSize: 11, fontWeight: 900, color: "#1d4ed8" },

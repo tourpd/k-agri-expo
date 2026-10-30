@@ -87,22 +87,32 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
           <div style={S.cardTitle}>이럴 때 쓰는 자재</div>
           <p style={S.principle}>{problem.principle}</p>
           <div style={S.products}>
-            {products.map((p) => (
-              <Link key={p.id} href={p.href} style={S.product}>
-                {p.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.imageUrl} alt={p.name} style={S.productImg} />
-                ) : (
-                  <div style={S.productImgEmpty} />
-                )}
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={S.productBrand}>{p.brandName ?? "참여 기업"}</div>
-                  <div style={S.productName}>{p.name}</div>
-                  <div style={S.productPrice}>{p.priceKrw ? `${p.priceKrw.toLocaleString("ko-KR")}원` : "가격 문의"}</div>
+            {products.map((p) => {
+              const calcHref = p.source === "partner" ? `${p.href}&from=${problem.slug}` : null;
+              return (
+                <div key={p.id} style={S.product}>
+                  <Link href={calcHref ?? p.href} style={S.productMain}>
+                    {p.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.imageUrl} alt={p.name} style={S.productImg} />
+                    ) : (
+                      <div style={S.productImgEmpty}>{p.source === "partner" ? "📘" : ""}</div>
+                    )}
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={S.productBrand}>{p.brandName ?? "참여 기업"}</div>
+                      <div style={S.productName}>{p.name}</div>
+                      <div style={S.productPrice}>
+                        {p.priceKrw ? `${p.priceKrw.toLocaleString("ko-KR")}원` : p.shortDescription ? <span style={S.productDesc}>{p.shortDescription}</span> : "가격 문의"}
+                      </div>
+                    </div>
+                  </Link>
+                  <Link href={calcHref ?? p.href} style={S.productCalc}>
+                    {calcHref ? "내 밭엔 얼마나? ›" : "보기 ›"}
+                  </Link>
+                  {p.sourceLabel ? <div style={S.productSrc}>출처: {p.sourceLabel}</div> : null}
                 </div>
-                <div style={S.productGo}>보기 ›</div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
           <div style={S.note}>농약은 온라인 판매가 안 됩니다. 아래 버튼으로 기업에 물으면 가까운 판매점을 알려 줍니다.</div>
         </section>
@@ -156,13 +166,16 @@ const S: Record<string, CSSProperties> = {
   principle: { marginTop: 6, fontSize: 14, lineHeight: 1.6, color: "#334155", wordBreak: "keep-all" },
   bigBtn: { display: "block", marginTop: 12, padding: "14px", borderRadius: 14, background: "#0f172a", color: "#fff", fontWeight: 900, fontSize: 16, textDecoration: "none", textAlign: "center" },
   products: { marginTop: 10, display: "grid", gap: 8 },
-  product: { display: "flex", gap: 12, alignItems: "center", padding: 12, borderRadius: 14, border: "1px solid #e2e8f0", background: "#f8fafc", textDecoration: "none", color: "#0f172a" },
+  product: { padding: 12, borderRadius: 14, border: "1px solid #e2e8f0", background: "#f8fafc" },
+  productMain: { display: "flex", gap: 12, alignItems: "center", textDecoration: "none", color: "#0f172a" },
   productImg: { width: 64, height: 64, borderRadius: 12, objectFit: "cover", background: "#fff", flexShrink: 0 },
-  productImgEmpty: { width: 64, height: 64, borderRadius: 12, background: "#e2e8f0", flexShrink: 0 },
+  productImgEmpty: { width: 64, height: 64, borderRadius: 12, background: "#e2e8f0", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 },
+  productDesc: { fontSize: 13, fontWeight: 600, color: "#475569", lineHeight: 1.5, wordBreak: "keep-all" },
+  productCalc: { display: "block", marginTop: 10, padding: "12px", borderRadius: 12, background: "#15803d", color: "#fff", fontWeight: 900, fontSize: 15, textDecoration: "none", textAlign: "center" },
+  productSrc: { marginTop: 6, fontSize: 11, color: "#94a3b8" },
   productBrand: { fontSize: 12, fontWeight: 800, color: "#16a34a" },
   productName: { marginTop: 2, fontSize: 16, fontWeight: 950, wordBreak: "keep-all" },
   productPrice: { marginTop: 2, fontSize: 15, fontWeight: 900, color: "#0f172a" },
-  productGo: { fontSize: 14, fontWeight: 900, color: "#15803d", whiteSpace: "nowrap" },
   note: { marginTop: 10, fontSize: 12, color: "#64748b", lineHeight: 1.6 },
   siblings: { marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" },
   sibling: { padding: "9px 12px", borderRadius: 999, background: "#f1f5f9", color: "#0f172a", fontWeight: 800, fontSize: 13, textDecoration: "none" },
