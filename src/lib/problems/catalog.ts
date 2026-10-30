@@ -86,8 +86,12 @@ export type Problem = {
   actions: [string, string, string];
   /** 해답의 일반 원리 — 제품 소개 앞에 붙는 문장 */
   principle: string;
-  /** 제품 매칭 키워드 (제품명·설명·대상작물에서 찾음) */
+  /** 제품 매칭 키워드 (제품명·설명·대상작물에서 찾음) — 넓은 말 포함, 점수용 */
   productKeywords: string[];
+  /** 이 중 하나는 반드시 제품 설명에 있어야 붙음 (없으면 productKeywords 전부가 필수 후보) */
+  mustKeywords?: string[];
+  /** 증상 사진 (외장하드 촬영본에서 고른 것. 없으면 사진 영역을 아예 안 보여줌) */
+  imageUrls?: string[];
   /** true면 제품을 보여주지 않고 진단·문의만 */
   noProducts?: boolean;
   /** 관련 강의 영상 (유튜브 주소, 없으면 비움) */
@@ -111,6 +115,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "총채벌레는 숨는 곳이 많아 초기 발견과 계통을 바꿔 가며 관리하는 것이 핵심입니다.",
     productKeywords: ["총채", "해충", "살충", "진딧물", "응애"],
+    mustKeywords: ["총채"],
   },
   {
     slug: "gochu-anthracnose",
@@ -126,6 +131,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "탄저병은 치료보다 예방입니다. 비 전후 관리와 병든 열매 제거가 자재보다 먼저입니다.",
     productKeywords: ["탄저", "살균", "균", "병해", "곰팡이"],
+    mustKeywords: ["탄저"],
   },
   {
     slug: "gochu-aphid-virus",
@@ -141,6 +147,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "바이러스 자체는 약이 없습니다. 매개충(진딧물) 관리와 병든 포기 제거가 전부입니다.",
     productKeywords: ["진딧물", "해충", "살충", "총채"],
+    mustKeywords: ["진딧물", "바이러스", "매개충"],
   },
   {
     slug: "garlic-rooting",
@@ -157,6 +164,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "정식 후 뿌리 내림은 수분 관리가 8할입니다. 자재는 그 다음입니다.",
     productKeywords: ["뿌리", "활착", "발근", "아미노", "마늘", "양파"],
+    mustKeywords: ["뿌리", "활착", "발근"],
   },
   {
     slug: "garlic-onion-overwinter",
@@ -174,6 +182,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "월동은 '뿌리가 얼마나 내렸나'와 '물이 고이지 않나' 두 가지로 결정됩니다.",
     productKeywords: ["월동", "뿌리", "활착", "마늘", "양파", "부직포", "피복"],
+    mustKeywords: ["월동", "보온", "부직포", "피복", "뿌리"],
   },
   {
     slug: "garlic-black-mold",
@@ -189,6 +198,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "토양병은 심기 전 예방이 거의 전부입니다. 발생 후에는 확산을 늦추는 관리입니다.",
     productKeywords: ["균핵", "토양", "살균", "마늘"],
+    mustKeywords: ["균핵", "토양 소독", "토양소독"],
   },
   {
     slug: "onion-downy-mildew",
@@ -204,6 +214,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "노균병은 습도와 질소가 키웁니다. 통풍과 비 전후 관리가 기본입니다.",
     productKeywords: ["노균", "살균", "균", "양파"],
+    mustKeywords: ["노균"],
   },
   {
     slug: "apple-postharvest",
@@ -220,6 +231,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "사과 농사의 내년은 올해 11월에 결정됩니다. 잎이 있을 때 저장양분을 채우는 것이 핵심입니다.",
     productKeywords: ["아미노", "수확 후", "회복", "엽면", "사과", "영양"],
+    mustKeywords: ["수확 후", "수확후", "회복", "아미노", "엽면"],
   },
   {
     slug: "apple-coloring",
@@ -235,6 +247,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "착색은 빛·온도·질소 세 가지가 먼저이고, 자재는 마지막 보조입니다.",
     productKeywords: ["착색", "사과", "안토시아닌", "색"],
+    mustKeywords: ["착색"],
   },
   {
     slug: "strawberry-mite",
@@ -251,6 +264,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "응애는 늘어난 뒤에는 잡기 어렵습니다. 정식 직후 초기 관리가 한 해를 결정합니다.",
     productKeywords: ["응애", "해충", "살비", "딸기", "천적"],
+    mustKeywords: ["응애"],
   },
   {
     slug: "strawberry-powdery-gray",
@@ -267,6 +281,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "두 병은 습도 관리로 같이 잡습니다. 환기 시간과 늙은 잎 정리가 자재보다 먼저입니다.",
     productKeywords: ["흰가루", "잿빛", "살균", "균", "딸기"],
+    mustKeywords: ["흰가루", "잿빛"],
   },
   {
     slug: "strawberry-malformed",
@@ -282,6 +297,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "기형과는 '벌'과 '온도'가 7할입니다. 자재는 영양 균형을 돕는 보조입니다.",
     productKeywords: ["붕소", "칼슘", "개화", "수정", "딸기"],
+    mustKeywords: ["붕소", "수정", "개화"],
   },
   {
     slug: "tomato-cracking",
@@ -298,6 +314,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "열과는 물 관리의 문제입니다. 자재는 껍질 강화와 균형을 돕는 역할입니다.",
     productKeywords: ["열과", "칼슘", "터짐", "토마토", "아미노"],
+    mustKeywords: ["열과", "칼슘", "터짐"],
   },
   {
     slug: "tomato-cucumber-whitefly",
@@ -314,6 +331,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "가루이는 성충만 잡으면 다시 나옵니다. 알·약충 단계까지 잡는 반복 관리가 핵심입니다.",
     productKeywords: ["가루이", "해충", "살충", "끈끈이", "토마토", "오이"],
+    mustKeywords: ["가루이", "끈끈이"],
   },
   {
     slug: "cucumber-downy-mildew",
@@ -329,6 +347,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "노균병은 잎이 젖어 있는 시간을 줄이는 것이 전부입니다.",
     productKeywords: ["노균", "살균", "균", "오이"],
+    mustKeywords: ["노균"],
   },
   {
     slug: "citrus-cracking",
@@ -345,6 +364,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "열과는 '물의 급변'이 원인입니다. 꾸준한 관수와 껍질 강화가 답입니다.",
     productKeywords: ["열과", "아미노", "칼슘", "감귤", "레드향", "만감"],
+    mustKeywords: ["열과", "아미노", "칼슘"],
   },
   {
     slug: "cabbage-soft-rot",
@@ -361,6 +381,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "무름병은 세균이라 곰팡이약이 안 듣습니다. 상처·해충·배수 관리가 먼저입니다.",
     productKeywords: ["무름", "세균", "배추", "살균"],
+    mustKeywords: ["무름", "세균"],
   },
   {
     slug: "rice-postharvest-soil",
@@ -377,6 +398,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "지력은 한 해에 안 만들어집니다. 수확 후 유기물 환원이 내년 비료값을 줄입니다.",
     productKeywords: ["볏짚", "녹비", "토양", "유기물", "로타리", "파쇄"],
+    mustKeywords: ["볏짚", "녹비", "토양", "로타리", "파쇄"],
   },
   {
     slug: "paprika-thrips-powdery",
@@ -394,6 +416,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "시설 작물은 밀폐될수록 해충이 폭발합니다. 트랩으로 보고, 초기에 잡고, 계통을 바꿉니다.",
     productKeywords: ["총채", "흰가루", "해충", "살충", "살균", "끈끈이", "파프리카", "고추"],
+    mustKeywords: ["총채", "흰가루", "끈끈이"],
   },
   {
     slug: "greenhouse-condensation",
@@ -411,6 +434,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "시설 곰팡이병의 8할은 결로입니다. 자재보다 환기 시간과 보온커튼 운용이 먼저입니다.",
     productKeywords: ["온습도", "환기", "유동팬", "제습", "결로", "보온커튼", "센서"],
+    mustKeywords: ["온습도", "환기", "유동팬", "제습", "결로", "보온커튼", "센서"],
   },
   {
     slug: "greenhouse-heating-prep",
@@ -428,6 +452,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "보온은 설비 문제입니다. 추위 오기 전 점검이 난방비보다 쌉니다.",
     productKeywords: ["난방", "보온", "커튼", "이중비닐", "온풍기", "열풍기", "온도", "센서", "알람"],
+    mustKeywords: ["난방", "보온", "커튼", "이중비닐", "온풍기", "열풍기", "온도 센서", "알람"],
   },
   {
     slug: "greenhouse-salt-ec",
@@ -444,6 +469,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "염류 장해는 영양제를 더 준다고 낫지 않습니다. 빼는 관리가 답입니다.",
     productKeywords: ["EC", "염류", "토양개량", "유기물", "미생물", "토양 검정"],
+    mustKeywords: ["EC", "염류", "토양개량", "제염"],
   },
   {
     slug: "melon-seedling-prep",
@@ -460,6 +486,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "참외·수박 농사의 절반은 묘에서 결정됩니다. 좋은 묘를 제때 받는 게 첫 자재입니다.",
     productKeywords: ["접목묘", "육묘", "대목", "참외", "수박", "모종", "육묘상"],
+    mustKeywords: ["접목묘", "육묘", "대목", "모종"],
   },
   {
     slug: "leafy-downy-sclerotinia",
@@ -476,6 +503,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "엽채는 수확이 잦아 약을 많이 쓸 수 없습니다. 환기와 잔재물 관리가 자재보다 먼저입니다.",
     productKeywords: ["노균", "균핵", "살균", "상추", "엽채", "시금치"],
+    mustKeywords: ["노균", "균핵"],
   },
   {
     slug: "strawberry-bee-pollination",
@@ -492,6 +520,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "벌은 가장 싼 일꾼입니다. 벌을 지키는 운용이 수량을 지킵니다.",
     productKeywords: ["벌", "수정", "화분매개", "뒤영벌", "꿀벌", "딸기"],
+    mustKeywords: ["뒤영벌", "꿀벌", "수정벌", "화분매개", "벌통"],
   },
   {
     slug: "cucumber-tomato-low-temp",
@@ -509,6 +538,7 @@ export const PROBLEMS: Problem[] = [
     ],
     principle: "겨울 생육 정체는 영양 부족이 아니라 온도·빛 부족입니다. 비료를 더 주면 오히려 염류만 쌓입니다.",
     productKeywords: ["지온", "보광", "LED", "멀칭", "뿌리", "활력", "아미노", "오이", "토마토"],
+    mustKeywords: ["지온", "보광", "LED", "뿌리 활력", "활력", "저온"],
   },
   {
     slug: "common-yellow-leaf",

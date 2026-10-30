@@ -38,15 +38,18 @@ function hit(haystack: string, keywords: string[]): number {
   return score;
 }
 
-export async function findAnswerProducts(problem: Problem, limit = 5): Promise<AnswerProduct[]> {
+export async function findAnswerProducts(problem: Problem, limit = 2): Promise<AnswerProduct[]> {
   if (problem.noProducts || problem.productKeywords.length === 0) return [];
-  return findProductsByKeywords(problem.productKeywords, limit);
+  // 핵심 단어(mustKeywords)가 제품 설명에 있어야만 붙습니다. '해충' 같은 넓은 말로는 안 붙습니다.
+  return findProductsByKeywords(problem.productKeywords, limit, problem.mustKeywords ?? problem.productKeywords);
 }
 
-/** 키워드로 제품 찾기 (문제 페이지·준비물 페이지 공용) */
-export async function findProductsByKeywords(keywords: string[], limit = 5): Promise<AnswerProduct[]> {
+/** 키워드로 제품 찾기 (문제 페이지·준비물 페이지 공용). must: 이 중 하나는 반드시 포함 */
+export async function findProductsByKeywords(keywords: string[], limit = 5, must?: string[]): Promise<AnswerProduct[]> {
   if (!keywords.length) return [];
   const problem = { productKeywords: keywords } as Pick<Problem, "productKeywords">;
+  const mustList = must && must.length ? must : null;
+  const passes = (hay: string) => !mustList || hit(hay, mustList) > 0;
 
   const supabase = createSupabaseAdminClient();
   const out: Array<AnswerProduct & { score: number }> = [];
@@ -74,7 +77,8 @@ export async function findProductsByKeywords(keywords: string[], limit = 5): Pro
 
     for (const r of rows) {
       const hay = [r.product_name, r.short_description, r.detail_description, r.target_crops, r.category].map(text).join(" ");
-      const score = hit(hay, problem.productKeywords);
+      if (!passes(hay)) continue;
+      const score = hit(hay, problem.productKeywords) + hit(hay, mustList ?? []) * 3;
       if (score === 0) continue;
       const brand = brandMap.get(text(r.brand_id));
       out.push({
@@ -107,7 +111,8 @@ export async function findProductsByKeywords(keywords: string[], limit = 5): Pro
       const name = text(r.name ?? r.title ?? r.product_name);
       if (!name || /입점권|부스/.test(name)) continue;
       const hay = [name, r.short_description, r.description, r.target_crops, r.category, r.tags].map(text).join(" ");
-      const score = hit(hay, problem.productKeywords);
+      if (!passes(hay)) continue;
+      const score = hit(hay, problem.productKeywords) + hit(hay, mustList ?? []) * 3;
       if (score === 0) continue;
       const id = text(r.id ?? r.product_id);
       out.push({

@@ -15,7 +15,7 @@ export default async function NeedPage({ params }: { params: Promise<{ slug: str
   if (!need) notFound();
 
   const cat = NEED_CATEGORY_LABEL[need.category];
-  const products = await findProductsByKeywords(need.productKeywords, 6);
+  const products = await findProductsByKeywords(need.productKeywords, 4, need.productKeywords);
   const related = need.relatedProblems.map(getProblem).filter(Boolean);
   // 준비물 문의는 연결된 첫 문제 페이지 이름으로 접수 (문의 표는 하나)
   const inquirySlug = need.relatedProblems[0] ?? "greenhouse-heating-prep";
