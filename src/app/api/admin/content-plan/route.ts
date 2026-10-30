@@ -86,6 +86,16 @@ export async function GET(req: Request) {
       url: `${origin}/need/${n!.slug}`,
     }));
 
+  // 4) 영상은 있는데 시작 시각(타임스탬프)이 없는 것 — 자막에서 핵심어 첫 등장 지점을 찾아 videoStart(초)로 적어 주세요
+  const needsTimestamp = PROBLEMS.filter((p) => p.videoUrl && !p.videoStart).map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    video_url: p.videoUrl,
+    video_title: p.videoTitle ?? null,
+    keywords: p.mustKeywords ?? p.productKeywords,
+    url: `${origin}/p/${p.slug}`,
+  }));
+
   return NextResponse.json({
     ok: true,
     month: plan.month,
@@ -94,8 +104,9 @@ export async function GET(req: Request) {
     farmer_questions: questions.slice(0, 30),
     seasonal_problems_without_video: seasonalNoVideo,
     needs_without_video: needsNoVideo,
+    videos_without_timestamp: needsTimestamp,
     totals: { problems: PROBLEMS.length, needs: NEEDS.length },
     how_to_use:
-      "강의 1편 = 문제 1개. 제목을 만들면 GET /api/problems/match?q=<제목> 으로 문제 페이지 주소를 받아 더보기 맨 위 쿠팡 문구 아래에 넣으세요. 영상이 올라가면 catalog.ts의 videoUrl에 주소를 적습니다.",
+      "강의 1편 = 문제 1개. 제목을 만들면 GET /api/problems/match?q=<제목> 으로 문제 페이지 주소를 받아 더보기 맨 위 쿠팡 문구 아래에 넣으세요. 영상이 올라가면 catalog.ts의 videoUrl에 주소를, 그 문제를 말하는 지점을 videoStart(초)에 적습니다. videos_without_timestamp 목록은 자막(Whisper)에서 keywords가 처음 몰려 나오는 시각을 찾아 채우면 됩니다.",
   });
 }

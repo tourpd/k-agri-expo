@@ -15,10 +15,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: p ? `${p.title} | K-Agri Expo` : "문제 해결 | K-Agri Expo" };
 }
 
-function toEmbed(url?: string) {
+function ytId(url?: string) {
   if (!url) return null;
-  const m = url.match(/(?:v=|youtu\.be\/|shorts\/)([A-Za-z0-9_-]{6,})/);
-  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+  const m = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+function fmtTime(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /**
@@ -37,7 +42,11 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
   const crop = getCrop(problem.crop);
   const products = await findAnswerProducts(problem, 2);
   const siblings = problemsByCrop(problem.crop).filter((p) => p.slug !== problem.slug && p.crop !== "common").slice(0, 2);
-  const embed = toEmbed(problem.videoUrl);
+  const vid = ytId(problem.videoUrl);
+  const start = problem.videoStart ?? 0;
+  const embed = vid ? `https://www.youtube-nocookie.com/embed/${vid}?rel=0&modestbranding=1${start ? `&start=${start}` : ""}` : null;
+  const watchUrl = vid ? `https://youtu.be/${vid}${start ? `?t=${start}` : ""}` : null;
+  // 사진: 실제 촬영본(imageUrls)만. 영상이 바로 아래 있어 섬네일을 또 올리진 않습니다.
   const photo = problem.imageUrls?.[0] ?? null;
   // 전화·문의는 첫 번째(가장 잘 맞는) 기업으로 갑니다. 기업 번호가 없으면 전화 버튼은 안 보입니다.
   const lead = products.find((p) => p.phone) ?? products[0] ?? null;
@@ -68,12 +77,19 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
         <p style={S.cause}>{problem.cause}</p>
       </section>
 
-      {/* 3. 영상 */}
+      {/* 3. 영상 — 이 문제를 다루는 지점부터 */}
       {embed ? (
         <section style={S.card}>
-          <div style={S.cardTitle}>영상으로 보기</div>
+          <div style={S.cardTitle}>
+            영상으로 보기 {start ? <span style={S.startBadge}>{fmtTime(start)}부터</span> : null}
+          </div>
+          {problem.videoTitle ? <div style={S.videoTitle}>{problem.videoTitle}</div> : null}
           <div style={S.video}>
-            <iframe src={embed} title={problem.title} allowFullScreen style={S.iframe} />
+            <iframe src={embed} title={problem.videoTitle ?? problem.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={S.iframe} />
+          </div>
+          <div style={S.videoFoot}>
+            <span>{problem.videoSource === "dof" ? "도프 농사달인TV" : "한국농수산TV"}</span>
+            {watchUrl ? <a href={watchUrl} target="_blank" rel="noreferrer" style={S.videoLink}>유튜브에서 {start ? "이 부분부터 " : ""}보기 ›</a> : null}
           </div>
         </section>
       ) : null}
@@ -193,6 +209,10 @@ const S: Record<string, CSSProperties> = {
   action: { fontSize: 16, lineHeight: 1.6, color: "#1e293b", wordBreak: "keep-all" },
   cause: { marginTop: 12, paddingTop: 10, borderTop: "1px dashed #e2e8f0", fontSize: 13, lineHeight: 1.6, color: "#64748b", wordBreak: "keep-all" },
   video: { marginTop: 10, position: "relative", paddingTop: "56.25%", borderRadius: 14, overflow: "hidden", background: "#000" },
+  startBadge: { marginLeft: 8, fontSize: 12, fontWeight: 900, color: "#fff", background: "#15803d", padding: "3px 8px", borderRadius: 999 },
+  videoTitle: { marginTop: 4, fontSize: 13, color: "#475569", wordBreak: "keep-all" },
+  videoFoot: { marginTop: 8, display: "flex", justifyContent: "space-between", fontSize: 12, color: "#94a3b8" },
+  videoLink: { color: "#15803d", fontWeight: 800, textDecoration: "none" },
   iframe: { position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 },
   principle: { marginTop: 6, fontSize: 14, lineHeight: 1.6, color: "#334155", wordBreak: "keep-all" },
   bigBtn: { display: "block", marginTop: 12, padding: "14px", borderRadius: 14, background: "#0f172a", color: "#fff", fontWeight: 900, fontSize: 16, textDecoration: "none", textAlign: "center" },

@@ -96,6 +96,10 @@ export type Problem = {
   noProducts?: boolean;
   /** 관련 강의 영상 (유튜브 주소, 없으면 비움) */
   videoUrl?: string;
+  /** 영상에서 이 문제를 다루는 지점(초). 농민은 여기부터 봅니다 */
+  videoStart?: number;
+  videoTitle?: string;
+  videoSource?: "kaftv" | "dof";
   /** 근거 (농진청·농사로 등 공공 자료 페이지) */
   sourceLabel?: string;
 };
@@ -103,6 +107,9 @@ export type Problem = {
 export const PROBLEMS: Problem[] = [
   {
     slug: "gochu-thrips",
+    videoUrl: "https://www.youtube.com/watch?v=8KTyTB7LcVc",
+    videoTitle: "어떤 약을 쳐도 총채벌레가 잘 안 죽어요?",
+    videoSource: "kaftv",
     title: "고추 총채벌레",
     crop: "gochu",
     symptoms: ["insects", "spots"],
@@ -119,6 +126,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "gochu-anthracnose",
+    videoUrl: "https://www.youtube.com/watch?v=on6ah3HG-2Y",
+    videoTitle: "고추 탄저병 예방부터 일소 피해까지",
+    videoSource: "kaftv",
     title: "고추 탄저병",
     crop: "gochu",
     symptoms: ["spots"],
@@ -135,6 +145,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "gochu-aphid-virus",
+    videoUrl: "https://www.youtube.com/watch?v=SN21fqSxbTU",
+    videoTitle: "바이러스 걸린 고추와 안 걸린 고추가 공생한다?",
+    videoSource: "kaftv",
     title: "고추 진딧물·바이러스",
     crop: "gochu",
     symptoms: ["insects", "yellow-leaf"],
@@ -151,6 +164,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "garlic-rooting",
+    videoUrl: "https://www.youtube.com/watch?v=AInSqy8Huko",
+    videoTitle: "뿌리 발근에 제일 좋은 건?",
+    videoSource: "kaftv",
     title: "마늘 정식 후 뿌리 내림 불량",
     crop: "garlic",
     symptoms: ["root", "growth"],
@@ -168,6 +184,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "garlic-onion-overwinter",
+    videoUrl: "https://www.youtube.com/watch?v=dPO-7tZF7CI",
+    videoTitle: "월동 마늘·양파 추비는 이렇게",
+    videoSource: "dof",
     title: "마늘·양파 월동 준비",
     crop: "garlic",
     alsoCrops: ["onion"],
@@ -186,6 +205,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "garlic-black-mold",
+    videoUrl: "https://www.youtube.com/watch?v=Nce3rVd1gnc",
+    videoTitle: "뿌리썩음병·균핵병 — 싹쓰리쏘일",
+    videoSource: "dof",
     title: "마늘 흑색썩음균핵병·잎마름",
     crop: "garlic",
     symptoms: ["mold", "yellow-leaf"],
@@ -202,6 +224,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "onion-downy-mildew",
+    videoUrl: "https://www.youtube.com/watch?v=DdvnKSrdPxM",
+    videoTitle: "노균병 걸린 양파밭에 더운날 물 줘도 되나?",
+    videoSource: "kaftv",
     title: "양파 노균병",
     crop: "onion",
     symptoms: ["mold", "yellow-leaf"],
@@ -218,6 +243,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "apple-postharvest",
+    videoUrl: "https://www.youtube.com/watch?v=sBs8Si_pILY",
+    videoTitle: "사과, 수확 끝났다고 손 놓으면 내년 꽃눈이 얼어요",
+    videoSource: "kaftv",
     title: "사과 수확 후 나무 회복",
     crop: "apple",
     symptoms: ["growth"],
@@ -235,6 +263,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "apple-coloring",
+    videoUrl: "https://www.youtube.com/watch?v=Bq0UTWgALOU",
+    videoTitle: "40년 사과 장인의 착색 혁명",
+    videoSource: "kaftv",
     title: "사과 착색 불량",
     crop: "apple",
     symptoms: ["poor-color"],
@@ -251,6 +282,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "strawberry-mite",
+    videoUrl: "https://www.youtube.com/watch?v=I0L2TfrOeW0",
+    videoTitle: "골치 아픈 응애 한 방에 보내는 법",
+    videoSource: "kaftv",
     title: "딸기 응애",
     crop: "strawberry",
     symptoms: ["insects", "yellow-leaf"],
@@ -268,6 +302,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "strawberry-powdery-gray",
+    videoUrl: "https://www.youtube.com/watch?v=muRqMImFE6U",
+    videoTitle: "흰가루 걱정 끝!!",
+    videoSource: "kaftv",
     title: "딸기 흰가루병·잿빛곰팡이",
     crop: "strawberry",
     alsoCrops: ["tomato", "cucumber", "paprika"],
@@ -318,6 +355,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "tomato-cucumber-whitefly",
+    videoUrl: "https://www.youtube.com/watch?v=2kLuZght2E4",
+    videoTitle: "온실가루이·담배가루이 고민 해결",
+    videoSource: "kaftv",
     title: "토마토·오이 가루이(온실가루이)",
     crop: "tomato",
     alsoCrops: ["cucumber", "paprika", "strawberry"],
@@ -335,6 +375,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "cucumber-downy-mildew",
+    videoUrl: "https://www.youtube.com/watch?v=UMRuyL0VXFk",
+    videoTitle: "농약 안 치고 노균병 예방하는 식물 프로바이오틱스",
+    videoSource: "kaftv",
     title: "오이 노균병",
     crop: "cucumber",
     symptoms: ["mold", "yellow-leaf"],
@@ -351,6 +394,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "citrus-cracking",
+    videoUrl: "https://www.youtube.com/watch?v=SszeFfk6VdU",
+    videoTitle: "열과 피해 할퀴고 간 제주에 희망을 잡은 농부",
+    videoSource: "kaftv",
     title: "감귤·레드향 열과",
     crop: "citrus",
     symptoms: ["fruit-crack"],
@@ -368,6 +414,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "cabbage-soft-rot",
+    videoUrl: "https://www.youtube.com/watch?v=WBVW-Oj96Bk",
+    videoTitle: "무름병·냉해 극복하고 만평 배추밭 2억 매출",
+    videoSource: "kaftv",
     title: "배추 무름병",
     crop: "cabbage",
     symptoms: ["wilting", "spots"],
@@ -385,6 +434,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "rice-postharvest-soil",
+    videoUrl: "https://www.youtube.com/watch?v=inrPH1HU_VQ",
+    videoTitle: "연작장해를 피하는 토양 만들기 특강 1부",
+    videoSource: "kaftv",
     title: "벼 수확 후 논 관리",
     crop: "rice",
     symptoms: ["growth"],
@@ -402,6 +454,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "paprika-thrips-powdery",
+    videoUrl: "https://www.youtube.com/watch?v=C9Q75lGBJRQ",
+    videoTitle: "총채벌레·작은뿌리파리 — 박멸킹",
+    videoSource: "dof",
     title: "파프리카·시설고추 총채벌레·흰가루병",
     crop: "paprika",
     alsoCrops: ["gochu", "tomato"],
@@ -420,6 +475,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "greenhouse-condensation",
+    videoUrl: "https://www.youtube.com/watch?v=uQFZ71_USw4",
+    videoTitle: "딸기하우스 수분·습도 관리",
+    videoSource: "dof",
     title: "시설하우스 결로·습도 관리 (곰팡이병의 뿌리)",
     crop: "common",
     alsoCrops: ["strawberry", "tomato", "cucumber", "paprika", "leafy", "melon"],
@@ -438,6 +496,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "greenhouse-heating-prep",
+    videoUrl: "https://www.youtube.com/watch?v=wKXFlPAYMiI",
+    videoTitle: "겨울철 하우스 난방비 걱정 끝",
+    videoSource: "kaftv",
     title: "시설하우스 보온·난방 준비",
     crop: "common",
     alsoCrops: ["strawberry", "tomato", "cucumber", "paprika", "leafy", "melon"],
@@ -456,6 +517,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "greenhouse-salt-ec",
+    videoUrl: "https://www.youtube.com/watch?v=xkAhZSXWEJs",
+    videoTitle: "EC·염류 고민 없이 농사 짓는 방법",
+    videoSource: "kaftv",
     title: "연작 하우스 염류 장해 (EC 과다)",
     crop: "common",
     alsoCrops: ["strawberry", "tomato", "cucumber", "paprika", "melon"],
@@ -473,6 +537,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "melon-seedling-prep",
+    videoUrl: "https://www.youtube.com/watch?v=2mHdJxr-lV4",
+    videoTitle: "참외 달인들이 말하는 참외 잘 키우는 비법",
+    videoSource: "kaftv",
     title: "참외·수박 접목묘 준비와 육묘",
     crop: "melon",
     symptoms: ["growth", "root"],
@@ -490,6 +557,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "leafy-downy-sclerotinia",
+    videoUrl: "https://www.youtube.com/watch?v=EeH1ArY5gbU",
+    videoTitle: "유황 순도 99.5%, 균핵병을 고친다",
+    videoSource: "kaftv",
     title: "상추·엽채 노균병·균핵병",
     crop: "leafy",
     symptoms: ["mold", "spots"],
@@ -524,6 +594,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "cucumber-tomato-low-temp",
+    videoUrl: "https://www.youtube.com/watch?v=aJ-dfGVkbZQ",
+    videoTitle: "저온 건조기 비료 흡수력을 높여주는 비료",
+    videoSource: "kaftv",
     title: "오이·토마토 저온기 생육 정체",
     crop: "cucumber",
     alsoCrops: ["tomato", "paprika", "strawberry", "melon"],
@@ -542,6 +615,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "common-yellow-leaf",
+    videoUrl: "https://www.youtube.com/watch?v=4X0BQDH2t6w",
+    videoTitle: "마늘 잎이 누렇게 됐나요? 꼭 봐야 할 영상",
+    videoSource: "kaftv",
     title: "잎이 노랗게 변한다 (작물 공통)",
     crop: "common",
     symptoms: ["yellow-leaf"],
@@ -558,6 +634,9 @@ export const PROBLEMS: Problem[] = [
   },
   {
     slug: "common-sudden-wilt",
+    videoUrl: "https://www.youtube.com/watch?v=BwDCsUCozrc",
+    videoTitle: "딸기 시들음병, 엎친 데 덮친",
+    videoSource: "kaftv",
     title: "갑자기 시든다 (작물 공통)",
     crop: "common",
     symptoms: ["wilting", "root"],
