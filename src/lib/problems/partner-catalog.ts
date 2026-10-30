@@ -7,6 +7,7 @@
  * - 1차: (주)도프 2025 카탈로그(161쪽) 글자 인식 → 사용량까지 확인된 23개 제품.
  */
 import type { CropKey } from "./catalog";
+import wasungRaw from "@/data/partners/wasung.json";
 
 export type DoseRule =
   | {
@@ -63,7 +64,7 @@ export type PartnerProduct = {
   coupang?: { productId: number; itemId?: number; vendorItemId?: number; label?: string; priceKrw?: number };
 };
 
-export type PartnerCompanyKey = "dof";
+export type PartnerCompanyKey = "dof" | "wasung";
 
 export const PARTNER_COMPANIES: Record<PartnerCompanyKey, { name: string; phone: string; homepage: string; catalogLabel: string }> = {
   dof: {
@@ -72,11 +73,21 @@ export const PARTNER_COMPANIES: Record<PartnerCompanyKey, { name: string; phone:
     homepage: "https://www.dofagro.com/dof/main/main.html",
     catalogLabel: "도프 2025 카탈로그",
   },
+  // 전화번호는 매거진에 없어 비워 둠 → 번호가 비면 전화 버튼이 안 뜨고 '문의 남기기'만 보입니다. 대표님이 알려 주시면 채움.
+  wasung: {
+    name: "와성원예",
+    phone: "",
+    homepage: "",
+    catalogLabel: "와성원예 교육용 매거진(2026)",
+  },
 };
 
 const SRC = (page: number) => ({ label: PARTNER_COMPANIES.dof.catalogLabel, page });
 
-export const PARTNER_PRODUCTS: PartnerProduct[] = [
+/** 와성원예(웨스트브릿지 한국 총판) — 매거진 본문에서 추출(106개, 사용량 있는 것 99개). 자료: src/data/partners/wasung.json */
+const WASUNG_PRODUCTS = (wasungRaw as unknown as Array<PartnerProduct & { confidence?: string }>).map(({ confidence: _c, ...p }) => p as PartnerProduct);
+
+const DOF_PRODUCTS: PartnerProduct[] = [
   {
     id: "dof-ssakssuri-chung",
     company: "dof",
@@ -505,6 +516,8 @@ export const PARTNER_PRODUCTS: PartnerProduct[] = [
     sellable: true,
   },
 ];
+
+export const PARTNER_PRODUCTS: PartnerProduct[] = [...DOF_PRODUCTS, ...WASUNG_PRODUCTS];
 
 export function getPartnerProduct(id: string) {
   return PARTNER_PRODUCTS.find((p) => p.id === id) ?? null;
