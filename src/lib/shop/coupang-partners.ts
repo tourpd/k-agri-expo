@@ -70,6 +70,40 @@ export async function searchCoupang(keyword: string, limit = 3): Promise<Coupang
   }
 }
 
+const DEEPLINK_PATH = "/v2/providers/affiliate_open_api/apis/openapi/v1/deeplink";
+const linkCache = new Map<string, { at: number; url: string }>();
+
+/** 쿠팡 상품 주소 → 파트너스 제휴 링크 (딥링크 API). 실패하면 null */
+export async function deeplink(coupangUrl: string): Promise<string | null> {
+  if (!coupangEnabled()) return null;
+  const hit = linkCache.get(coupangUrl);
+  if (hit && Date.now() - hit.at < TTL) return hit.url;
+  try {
+    const res = await fetch(`${HOST}${DEEPLINK_PATH}`, {
+      method: "POST",
+      headers: { Authorization: authorization("POST", DEEPLINK_PATH, ""), "Content-Type": "application/json" },
+      body: JSON.stringify({ coupangUrls: [coupangUrl] }),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      console.error("[coupang] deeplink failed", res.status, await res.text().catch(() => ""));
+      return null;
+    }
+    const json = (await res.json()) as { data?: Array<{ originalUrl: string; shortenUrl: string; landingUrl: string }> };
+    const url = json?.data?.[0]?.shortenUrl || json?.data?.[0]?.landingUrl || null;
+    if (url) linkCache.set(coupangUrl, { at: Date.now(), url });
+    return url;
+  } catch (error) {
+    console.error("[coupang] deeplink error", error);
+    return null;
+  }
+}
+
+export function coupangProductUrl(p: { productId: number; itemId?: number; vendorItemId?: number }) {
+  const q = [p.itemId ? `itemId=${p.itemId}` : "", p.vendorItemId ? `vendorItemId=${p.vendorItemId}` : ""].filter(Boolean).join("&");
+  return `https://www.coupang.com/vp/products/${p.productId}${q ? `?${q}` : ""}`;
+}
+
 /** 키가 없을 때 쓰는 일반 검색 링크 (수수료 없음) */
 export function coupangSearchUrl(keyword: string) {
   return `https://www.coupang.com/np/search?q=${encodeURIComponent(keyword)}`;

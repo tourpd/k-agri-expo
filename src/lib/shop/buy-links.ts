@@ -1,6 +1,6 @@
 import "server-only";
 
-import { coupangEnabled, coupangSearchUrl, searchCoupang } from "./coupang-partners";
+import { coupangEnabled, coupangProductUrl, coupangSearchUrl, deeplink, searchCoupang } from "./coupang-partners";
 
 /**
  * 구매 버튼 순서: 우리 쇼핑몰 > 쿠팡(파트너스) > 기업 전화
@@ -31,6 +31,8 @@ export async function buildBuyLinks(opts: {
   sellable?: boolean;
   /** 쿠팡 검색어 (기본 제품명) */
   keyword?: string;
+  /** 고정 쿠팡 상품 (있으면 검색보다 우선) */
+  coupang?: { productId: number; itemId?: number; vendorItemId?: number; label?: string; priceKrw?: number };
 }): Promise<BuyLink[]> {
   const out: BuyLink[] = [];
   const sellable = opts.sellable !== false;
@@ -40,7 +42,16 @@ export async function buildBuyLinks(opts: {
     if (ours) out.push({ label: "한국농수산TV 쇼핑몰에서 사기", href: ours, kind: "ours", sub: "택배 발송" });
 
     const kw = opts.keyword ?? opts.name;
-    if (coupangEnabled()) {
+    if (opts.coupang) {
+      const plain = coupangProductUrl(opts.coupang);
+      const aff = await deeplink(plain);
+      out.push({
+        label: "쿠팡에서 사기",
+        href: aff ?? plain,
+        kind: "coupang",
+        sub: [opts.coupang.label, opts.coupang.priceKrw ? `${opts.coupang.priceKrw.toLocaleString("ko-KR")}원` : ""].filter(Boolean).join(" · ") || undefined,
+      });
+    } else if (coupangEnabled()) {
       const items = await searchCoupang(kw, 1);
       const best = items?.[0];
       if (best) {

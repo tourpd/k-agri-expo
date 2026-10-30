@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { getCrop, getProblem, problemsByCrop } from "@/lib/problems/catalog";
 import { findAnswerProducts } from "@/lib/problems/products";
 import StickyAsk from "@/components/problems/StickyAsk";
+import { materialsForProblem } from "@/lib/materials/organic";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,6 +41,8 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
   const photo = problem.imageUrls?.[0] ?? null;
   // 전화·문의는 첫 번째(가장 잘 맞는) 기업으로 갑니다. 기업 번호가 없으면 전화 버튼은 안 보입니다.
   const lead = products.find((p) => p.phone) ?? products[0] ?? null;
+  // 국가 공시 친환경 자재 (이름에 핵심어가 든 것 + 같은 종류 전체 수)
+  const organic = problem.noProducts ? { matched: [], kinds: [], total: 0 } : materialsForProblem(problem, 3);
 
   return (
     <div style={S.wrap}>
@@ -124,6 +127,30 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
         </section>
       )}
 
+      {/* 국가 공시 친환경 자재 */}
+      {organic.total > 0 ? (
+        <section style={S.card}>
+          <div style={S.cardTitle}>공시된 친환경 자재 {organic.total.toLocaleString()}개</div>
+          {organic.matched.length ? (
+            <div style={S.orgList}>
+              {organic.matched.map((m) => (
+                <div key={m.no + m.name} style={S.orgItem}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={S.orgName}>{m.name}</div>
+                    <div style={S.orgCo}>{m.company} · {m.kind}</div>
+                  </div>
+                  {m.phone ? <a href={`tel:${m.phone}`} style={S.orgCall}>📞 전화</a> : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <Link href={`/materials?from=${problem.slug}${organic.kinds[0] ? `&kind=${encodeURIComponent(organic.kinds[0])}` : ""}`} style={S.orgMore}>
+            {organic.kinds.map((k) => k.replace("관리용", "")).join("·")} 자재 전체 보기 ›
+          </Link>
+          <div style={S.note}>국립농산물품질관리원 공시 목록(2026.6). 사용량은 회사에 전화로 확인하세요.</div>
+        </section>
+      ) : null}
+
       {/* 같은 작물 다른 문제 — 2개만 */}
       {siblings.length > 0 ? (
         <div style={S.siblings}>
@@ -177,6 +204,12 @@ const S: Record<string, CSSProperties> = {
   productName: { marginTop: 2, fontSize: 16, fontWeight: 950, wordBreak: "keep-all" },
   productPrice: { marginTop: 2, fontSize: 15, fontWeight: 900, color: "#0f172a" },
   note: { marginTop: 10, fontSize: 12, color: "#64748b", lineHeight: 1.6 },
+  orgList: { marginTop: 8, display: "grid", gap: 6 },
+  orgItem: { display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0" },
+  orgName: { fontSize: 15, fontWeight: 900, color: "#0f172a", wordBreak: "keep-all" },
+  orgCo: { fontSize: 12, color: "#64748b" },
+  orgCall: { padding: "8px 10px", borderRadius: 10, background: "#0f172a", color: "#fff", fontWeight: 900, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" },
+  orgMore: { display: "block", marginTop: 10, fontSize: 14, fontWeight: 900, color: "#15803d", textDecoration: "none" },
   siblings: { marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" },
   sibling: { padding: "9px 12px", borderRadius: 999, background: "#f1f5f9", color: "#0f172a", fontWeight: 800, fontSize: 13, textDecoration: "none" },
 };

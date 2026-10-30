@@ -5,6 +5,7 @@ import { PARTNER_PRODUCTS, getPartnerProduct, partnerCompany, partnerProductsFor
 import { buildBuyLinks } from "@/lib/shop/buy-links";
 import CalcClient from "@/components/problems/CalcClient";
 import StickyAsk from "@/components/problems/StickyAsk";
+import { searchMaterials } from "@/lib/materials/organic";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -25,7 +26,7 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
   if (product) {
     const company = partnerCompany(product);
     const area = Math.max(1, Math.min(100000, parseInt(sp.area ?? "300", 10) || 300));
-    const buyLinks = await buildBuyLinks({ name: product.name, companyName: company.name, phone: company.phone, sellable: product.sellable, keyword: `${company.name} ${product.name.replace(/-/g, "")}` });
+    const buyLinks = await buildBuyLinks({ name: product.name, companyName: company.name, phone: company.phone, sellable: product.sellable, keyword: `${company.name} ${product.name.replace(/-/g, "")}`, coupang: product.coupang });
     const fromProblem = sp.from ? getProblem(sp.from) : null;
 
     return (
@@ -56,6 +57,7 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
   const cropKey = (sp.crop ?? "") as CropKey;
   const crop = cropKey ? getCrop(cropKey) : null;
   const list = q ? searchPartnerProducts(q, 30) : crop ? partnerProductsForCrop(crop.key) : PARTNER_PRODUCTS;
+  const organic = q ? searchMaterials(q, undefined, 12) : [];
 
   return (
     <div style={S.wrap}>
@@ -96,6 +98,24 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
         </div>
       )}
 
+      {organic.length ? (
+        <div style={{ marginTop: 18 }}>
+          <div style={S.sectionTitle}>공시 친환경 자재 중 "{q}" — 사용량은 회사에 전화로</div>
+          <div style={S.list}>
+            {organic.map((m) => (
+              <div key={m.no + m.name} style={S.item}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={S.itemBrand}>{m.company} · {m.kind}</div>
+                  <div style={S.itemName}>{m.name}</div>
+                </div>
+                {m.phone ? <a href={`tel:${m.phone}`} style={S.callBtn}>📞 전화</a> : null}
+              </div>
+            ))}
+          </div>
+          <Link href={`/materials?q=${encodeURIComponent(q)}`} style={S.link}>더 보기 ›</Link>
+        </div>
+      ) : null}
+
       <div style={S.foot}>
         자료: 참여 기업 카탈로그에서 확인한 제품 {PARTNER_PRODUCTS.length}개. 기업이시면 <Link href="/vendor/apply" style={S.link}>제품 등록</Link>으로 올려 주세요(무료).
       </div>
@@ -122,6 +142,8 @@ const S: Record<string, CSSProperties> = {
   chip: { fontSize: 13, fontWeight: 800, padding: "7px 11px", borderRadius: 999, background: "#f1f5f9", color: "#0f172a", textDecoration: "none" },
   chipOn: { background: "#0f172a", color: "#fff" },
   list: { marginTop: 12, display: "grid", gap: 8 },
+  sectionTitle: { fontSize: 14, fontWeight: 950, color: "#0f172a" },
+  callBtn: { padding: "9px 11px", borderRadius: 10, background: "#0f172a", color: "#fff", fontWeight: 900, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" },
   item: { display: "flex", gap: 12, alignItems: "center", padding: 14, borderRadius: 14, border: "1px solid #e2e8f0", background: "#fff", textDecoration: "none", color: "#0f172a" },
   itemBrand: { fontSize: 12, fontWeight: 800, color: "#16a34a" },
   itemName: { marginTop: 2, fontSize: 17, fontWeight: 950, wordBreak: "keep-all" },

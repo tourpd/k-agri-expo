@@ -59,6 +59,8 @@ export type PartnerProduct = {
   href?: string;
   /** 온라인 판매 가능 여부 (농약은 불가) */
   sellable: boolean;
+  /** 쿠팡 상품 고정 (검색 1순위가 엉뚱할 때). productId만 있으면 파트너스 딥링크로 변환 */
+  coupang?: { productId: number; itemId?: number; vendorItemId?: number; label?: string; priceKrw?: number };
 };
 
 export type PartnerCompanyKey = "dof";
@@ -274,7 +276,9 @@ export const PARTNER_PRODUCTS: PartnerProduct[] = [
     company: "dof",
     name: "아미65",
     group: "아미노산제",
-    packages: [{ label: "500ml", ml: 500 }, { label: "2L", ml: 2000 }],
+    // 카탈로그는 500ml·2L, 쿠팡(농사마트)은 1L 40,000원 → 세 규격 다 둠
+    packages: [{ label: "1L", ml: 1000 }, { label: "500ml", ml: 500 }, { label: "2L", ml: 2000 }],
+    coupang: { productId: 9711874004, itemId: 29058030935, vendorItemId: 95984566038, label: "1L", priceKrw: 40000 },
     feature: "총 아미노산 65%. 저온·고온·일조 부족으로 생육이 처질 때 빠른 회복",
     ingredients: "총 아미노산 65% (유리아미노산 40%, 펩타이드 25%)",
     crops: ["딸기", "오이", "토마토", "호박", "고추", "수박", "메론", "상추", "깻잎", "배추", "마늘", "양파", "감자", "포도", "배", "사과", "복숭아", "감귤", "벼"],
