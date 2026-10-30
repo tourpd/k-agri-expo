@@ -22,8 +22,10 @@ export function GET(req: Request) {
     if (dx) to.searchParams.set("dx", dx.slice(0, 40));
     if (prob) to.searchParams.set("prob", prob.replace(/\D/g, "").slice(0, 2));
   } else {
-    to.pathname = "/yakbaksa";
-    if (dx) to.searchParams.set("q", dx.replace(/(병|결핍|피해|해충)$/g, "").slice(0, 20));
+    // 처방 페이지가 없는 진단 → 닥터Q 문의(직접 묻기). 엉뚱한 제품을 권하지 않습니다.
+    to.pathname = "/ask";
+    to.searchParams.set("src", src);
+    if (crop || dx) to.searchParams.set("q", `${crop} ${dx}`.trim().slice(0, 60));
   }
   return NextResponse.redirect(to, 302);
 }
