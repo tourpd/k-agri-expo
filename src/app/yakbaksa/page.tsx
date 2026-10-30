@@ -47,7 +47,11 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
         <Link href={fromProblem ? `/p/${fromProblem.slug}` : "/yakbaksa"} style={S.back}>
           ‹ {fromProblem ? fromProblem.title : "약박사 — 다른 제품"}
         </Link>
-        <div style={S.brand}>{company.name} · {product.group}{product.organicCertNo ? ` · ${product.organicCertNo}` : ""}</div>
+        <div style={S.rowTop}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/doctor-q.svg" alt="닥터Q" width={44} height={48} />
+          <div style={S.brand}>{company.name} · {product.group}{product.organicCertNo ? ` · ${product.organicCertNo}` : ""}</div>
+        </div>
         <h1 style={S.title}>{product.name}</h1>
         <p style={S.feature}>{product.feature}</p>
         <div style={S.tags}>
@@ -75,9 +79,15 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
 
   return (
     <div style={S.wrap}>
-      <div style={S.brand}>👨‍⚕️ 약박사</div>
-      <h1 style={S.title}>내 밭엔 몇 병? 한 통엔 몇 ml?</h1>
-      <p style={S.feature}>제품을 고르고 평수만 넣으면 — 몇 병 사야 하는지, 물 몇 통에 타는지, 언제 뿌리는지 바로 나옵니다. 숫자는 자료 그대로이고, 라벨이 우선입니다.</p>
+      <div style={S.hero}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/doctor-q.svg" alt="닥터Q" width={96} height={104} style={S.heroImg} />
+        <div style={S.bubble}>
+          <div style={S.brand}>약박사 · 닥터Q</div>
+          <h1 style={S.title}>내 밭엔 몇 병? 한 통엔 몇 ml?</h1>
+          <p style={S.feature}>제품 고르고 평수만 넣으세요. 몇 병 사야 하는지, 물 몇 통에 타는지, 언제 뿌리는지 바로 알려 드립니다. 숫자는 자료 그대로, 라벨이 우선입니다.</p>
+        </div>
+      </div>
 
       <form action="/yakbaksa" method="get" style={S.searchRow}>
         <input name="q" defaultValue={q} placeholder="제품 이름이나 증상 (예: 응애, 아미65)" style={S.search} />
@@ -160,8 +170,12 @@ const S: Record<string, CSSProperties> = {
   wrap: { padding: "4px 0 20px", maxWidth: 680, margin: "0 auto" },
   back: { fontSize: 13, fontWeight: 800, color: "#15803d", textDecoration: "none" },
   brand: { marginTop: 8, fontSize: 12, fontWeight: 900, color: "#16a34a" },
-  title: { marginTop: 4, fontSize: 28, fontWeight: 950, color: "#0f172a", letterSpacing: -0.5, wordBreak: "keep-all", lineHeight: 1.2 },
-  feature: { marginTop: 8, fontSize: 15, lineHeight: 1.6, color: "#334155", wordBreak: "keep-all" },
+  hero: { marginTop: 8, display: "flex", gap: 12, alignItems: "flex-end" },
+  heroImg: { flexShrink: 0 },
+  bubble: { flex: 1, minWidth: 0, padding: "12px 14px", borderRadius: 18, borderBottomLeftRadius: 4, background: "#fff", border: "2px solid #15803d" },
+  rowTop: { marginTop: 8, display: "flex", gap: 8, alignItems: "center" },
+  title: { marginTop: 4, fontSize: 24, fontWeight: 950, color: "#0f172a", letterSpacing: -0.5, wordBreak: "keep-all", lineHeight: 1.2 },
+  feature: { marginTop: 6, fontSize: 14, lineHeight: 1.6, color: "#334155", wordBreak: "keep-all" },
   tags: { marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" },
   tag: { fontSize: 12, fontWeight: 800, padding: "4px 9px", borderRadius: 999, background: "#f0fdf4", color: "#14532d" },
   crops: { marginTop: 8, fontSize: 12, color: "#64748b", lineHeight: 1.6 },

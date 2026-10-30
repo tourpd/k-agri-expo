@@ -83,7 +83,11 @@ export default function StickyAsk({
         <div className="sticky-ask-backdrop" onClick={() => setOpen(false)}>
           <div className="sticky-ask-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sticky-ask-head">
-              <div className="sticky-ask-title">{problemTitle}</div>
+              <div className="sticky-ask-who">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/doctor-q.svg" alt="닥터Q" width={40} height={43} />
+                <div className="sticky-ask-title">{problemTitle}</div>
+              </div>
               <button type="button" className="sticky-ask-close" onClick={() => setOpen(false)} aria-label="닫기">✕</button>
             </div>
 
@@ -96,7 +100,7 @@ export default function StickyAsk({
             ) : (
               <form onSubmit={submit} className="sticky-ask-form">
                 <div className="sticky-ask-sub">
-                  이름과 전화번호만 적으면 됩니다. {companyName ? `${companyName}에서` : "맞는 기업이"} 직접 연락드립니다.
+                  닥터Q가 {companyName ? `${companyName}에` : "맞는 기업에"} 전달합니다. 이름과 전화번호만 적으면 {companyName ? "그 기업이" : "기업이"} 직접 연락드립니다.
                 </div>
                 <label className="sticky-ask-label">이름
                   <input className="sticky-ask-input" placeholder="홍길동" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -134,6 +138,7 @@ const CSS = `
 .sticky-ask-backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(15,23,42,.45); display: flex; align-items: flex-end; justify-content: center; }
 .sticky-ask-sheet { width: 100%; max-width: 560px; background: #fff; border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
 .sticky-ask-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sticky-ask-who { display: flex; gap: 8px; align-items: center; }
 .sticky-ask-title { font-size: 17px; font-weight: 950; color: #0f172a; }
 .sticky-ask-close { border: 0; background: #f1f5f9; border-radius: 999px; width: 32px; height: 32px; font-size: 14px; cursor: pointer; }
 .sticky-ask-form { display: grid; gap: 8px; margin-top: 10px; }
