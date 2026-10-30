@@ -6,6 +6,7 @@ import BoothInquiryForm from "@/components/expo/BoothInquiryForm";
 import BoothProductCard from "@/components/expo/booth/BoothProductCard";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isBoothPublic } from "@/lib/expo/halls";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -319,11 +320,8 @@ function boothPlanLabel(v?: string | null) {
 
 function isPublicOpen(booth: BoothRow, isAdmin: boolean) {
   if (isAdmin) return true;
-  return (
-    booth.is_public === true &&
-    booth.is_active === true &&
-    booth.is_published === true
-  );
+  // 공개 기준은 src/lib/expo/halls.ts 한 곳에서 (전시관·목록과 같게)
+  return isBoothPublic(booth as any);
 }
 
 function isConsultOpen(booth: BoothRow) {

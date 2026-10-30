@@ -1,6 +1,4 @@
 // src/app/expo/page.tsx
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getPublicDeals, getPublicBooths } from "@/lib/expoPublic";
 
@@ -21,10 +19,7 @@ function safeText(v: any, fallback: string) {
 }
 
 export default async function ExpoIndexPage() {
-  // ✅ entry 쿠키 없으면 entry로
-  const store = await cookies();
-  const has = !!store.get("kagri_expo_entry")?.value;
-  if (!has) redirect("/expo/entry");
+  // 부스 둘러보기는 누구나 (예전엔 입장 양식을 먼저 작성해야 해서 농민이 중간에 이탈)
 
   // ✅ 메인 데이터(공개용)
   let booths: any[] = [];
@@ -175,7 +170,7 @@ export default async function ExpoIndexPage() {
         </div>
 
         {(featured.length ? featured : latest.slice(0, 8)).length === 0 ? (
-          <div style={S.empty}>아직 부스가 없습니다. booths 테이블에 부스 1개만 있어도 메인이 완성됩니다.</div>
+          <div style={S.empty}>아직 공개된 부스가 없습니다. 곧 참여 기업이 공개됩니다.</div>
         ) : (
           <div style={S.gridBooths}>
             {(featured.length ? featured : latest.slice(0, 8)).map((b: any) => {

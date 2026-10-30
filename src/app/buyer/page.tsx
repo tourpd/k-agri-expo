@@ -688,7 +688,7 @@ export default function BuyerPage() {
 
                     {booth?.slug ? (
                       <Link
-                        href={`/expo/booth/${booth.slug}`}
+                        href={`/expo/booths/${booth.slug}`}
                         style={S.inlineAction}
                       >
                         부스 보러가기 →
@@ -763,7 +763,7 @@ export default function BuyerPage() {
 
                     {booth?.slug ? (
                       <Link
-                        href={`/expo/booth/${booth.slug}`}
+                        href={`/expo/booths/${booth.slug}`}
                         style={S.inlineAction}
                       >
                         해당 부스 다시 보기 →
