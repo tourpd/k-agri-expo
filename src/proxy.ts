@@ -125,7 +125,7 @@ const RATE_LIMITS: Array<{
   { name: "ai-public", prefixes: ["/api/vision", "/api/ai-consult", "/api/ocr", "/api/vendor/upload-business-license"], limit: 20, windowSec: 600 },
   {
     name: "forms",
-    prefixes: ["/api/vendor/apply", "/api/upload-image", "/api/agri/register", "/api/booth-leads", "/api/expo/inquiry", "/api/expo/lead", "/api/lead", "/api/leads", "/api/expo/consult-leads"],
+    prefixes: ["/api/vendor/apply", "/api/upload-image", "/api/agri/register", "/api/booth-leads", "/api/expo/inquiry", "/api/expo/problem-inquiry", "/api/expo/lead", "/api/lead", "/api/leads", "/api/expo/consult-leads"],
     limit: 30,
     windowSec: 600,
   },
