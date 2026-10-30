@@ -1,56 +1,9 @@
 import React from "react";
 import Link from "next/link";
+import { EXPO_HALL_LIST } from "@/lib/expo/halls";
 
-const HALLS = [
-  {
-    hallId: "crop-nutrition",
-    icon: "🌱",
-    title: "작물영양관",
-    desc: "비대 · 활력 · 뿌리 · 회복 · 칼슘 솔루션",
-    href: "/expo/halls/crop-nutrition",
-    cta: "작물영양관 입장",
-  },
-  {
-    hallId: "pest-solution",
-    icon: "🐛",
-    title: "병해충솔루션관",
-    desc: "살충 · 살균 · 친환경 병해충 관리",
-    href: "/expo/halls/pest-solution",
-    cta: "병해충관 입장",
-  },
-  {
-    hallId: "agri-machinery",
-    icon: "🚜",
-    title: "농기계·장비관",
-    desc: "농기계 · 드론 · 자동화 장비",
-    href: "/expo/halls/agri-machinery",
-    cta: "농기계관 입장",
-  },
-  {
-    hallId: "seed-nursery",
-    icon: "🌾",
-    title: "종자·육묘관",
-    desc: "종자 · 모종 · 육묘기술",
-    href: "/expo/halls/seed-nursery",
-    cta: "종자육묘관 입장",
-  },
-  {
-    hallId: "smart-ai",
-    icon: "📱",
-    title: "스마트농업·AI관",
-    desc: "AI · 센서 · 스마트팜",
-    href: "/expo/halls/smart-ai",
-    cta: "스마트농업관 입장",
-  },
-  {
-    hallId: "future-food",
-    icon: "🦗",
-    title: "미래식량·곤충관",
-    desc: "곤충 · 기능성식품 · 대체단백",
-    href: "/expo/future-food",
-    cta: "미래식량관 입장",
-  },
-];
+// 전시관 목록은 src/lib/expo/halls.ts 한 곳에서 관리 (없는 화면으로 가던 링크 4개 수정)
+const HALLS = EXPO_HALL_LIST;
 
 export default function ExpoCategoryEntrySection() {
   return (
@@ -69,7 +22,7 @@ export default function ExpoCategoryEntrySection() {
       <div style={grid} className="expo-category-grid expo-entry-grid">
         {HALLS.map((item) => (
           <Link
-            key={item.hallId}
+            key={item.key}
             href={item.href}
             style={card}
             className="expo-category-card expo-entry-card"
@@ -127,7 +80,7 @@ const desc: React.CSSProperties = {
 const grid: React.CSSProperties = {
   marginTop: 20,
   display: "grid",
-  gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
   gap: 12,
 };
 

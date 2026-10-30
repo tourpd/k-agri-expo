@@ -9,7 +9,6 @@ import { getExpoProblemSectionData } from "@/lib/expo/problem-queries";
 import { getHomeDeals } from "@/lib/expo/home-deals";
 import ExpoPromotionHero from "@/components/expo/ExpoPromotionHero";
 
-import ExpoTopBar from "@/components/expo/ExpoTopBar";
 import ExpoHeroSection from "@/components/expo/ExpoHeroSection";
 import ExpoCategoryEntrySection from "@/components/expo/ExpoCategoryEntrySection";
 import ExpoHotIssuesSection from "@/components/expo/ExpoHotIssuesSection";
@@ -18,7 +17,6 @@ import ExpoDealsSection from "@/components/expo/ExpoDealsSection";
 import ExpoFarmerConsultSection from "@/components/expo/ExpoFarmerConsultSection";
 import ExpoProblemSection from "@/components/expo/ExpoProblemSection";
 import ExpoNewProductsSection from "@/components/expo/ExpoNewProductsSection";
-import ExpoFooter from "@/components/expo/ExpoFooter";
 
 import type { CmsSettings, HomeSlot } from "@/types/expo-home";
 import { groupSlots } from "@/lib/expo/home-utils";
@@ -164,6 +162,15 @@ const RESPONSIVE_CSS = `
   .expo-entry-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
+  }
+
+  .expo-entry-card {
+    min-height: 150px !important;
+  }
+
+  .expo-section-title {
+    font-size: 26px !important;
+    letter-spacing: -0.5px !important;
   }
 
   .expo-live-main,
@@ -1010,13 +1017,17 @@ export default async function ExpoIndexPage() {
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
 
-    getAutoHeroData(),
-    getMonthlyConsultQuestions(),
-    getExpoHotIssues(),
-    getMonthlyProblemCards(4),
-    getExpoProblemSectionData(),
-    getHomeDeals(),
-    getManagedLiveShowContent(supabase),
+    // 아래 조회 중 하나가 실패해도 홈 전체가 오류(500)로 죽지 않게
+    getAutoHeroData().catch((e) => {
+      console.error("[expo/page] auto hero error:", e);
+      return null;
+    }),
+    getMonthlyConsultQuestions().catch(() => [] as any),
+    getExpoHotIssues().catch(() => [] as any),
+    getMonthlyProblemCards(4).catch(() => [] as any),
+    getExpoProblemSectionData().catch(() => null as any),
+    getHomeDeals().catch(() => [] as any),
+    getManagedLiveShowContent(supabase).catch(() => null as any),
   ]);
 
   if (slotError) console.error("[expo/page] expo_home_slots query error:", slotError);
@@ -1125,6 +1136,9 @@ export default async function ExpoIndexPage() {
     const anyP = p as ExpoPromotion & { live_datetime?: string | null };
     if (isPast(anyP.ends_at)) return false;
     if (anyP.starts_at && new Date(String(anyP.starts_at)).getTime() > nowMs) return false;
+    // 홈 라이브 포스터는 방송 일시가 정해진 행사만 (일시가 없으면 예전 행사 문구가 대신 나왔음)
+    const liveAt = new Date(String(anyP.live_datetime || "")).getTime();
+    if (Number.isNaN(liveAt)) return false;
     // 라이브 시각이 지나고 6시간이 넘으면 끝난 행사로 봄
     if (isPast(anyP.live_datetime, 6)) return false;
     return true;
@@ -1150,13 +1164,13 @@ export default async function ExpoIndexPage() {
 
   const problemContents =
     monthlyProblemCards.length > 0
-      ? monthlyProblemCards.map((item) => ({
+      ? monthlyProblemCards.map((item: any) => ({
           id: item.id,
           title: item.title,
           link_url: item.link_url,
           summary: item.summary ?? "",
         }))
-      : problemSectionData.contents;
+      : problemSectionData?.contents ?? [];
 
   const monthlyQuestionItems = (monthlyQuestions ?? []).map((item: any) => ({
     title: item.title ?? item.question ?? item.label ?? "",
@@ -1168,7 +1182,6 @@ export default async function ExpoIndexPage() {
     <main style={S.page} className="expo-home">
       <style>{RESPONSIVE_CSS}</style>
 
-      <ExpoTopBar />
 
       <ExpoHeroSection
         hero={hero}
@@ -1178,13 +1191,14 @@ export default async function ExpoIndexPage() {
         heroDescription={heroDescription}
       />
 
-      <JointGroupBuyBanner />
-
-      <AgriTradeCenterEntry />
-
+      {/* 전시관 입구를 첫 화면 바로 아래로 (농민이 기업 부스까지 가는 출발점) */}
       <section className="expo-section" style={{ padding: "16px 20px 0" }}>
         <ExpoCategoryEntrySection />
       </section>
+
+      <JointGroupBuyBanner />
+
+      <AgriTradeCenterEntry />
 
       <ExpoHotIssuesSection items={hotIssues} />
 
@@ -1193,7 +1207,9 @@ export default async function ExpoIndexPage() {
     item={promotions.find((item) => item.is_featured) || promotions[0]}
     mode="public"
   />
-) : liveShow && !isPast((liveShow as any)?.live_datetime, 6) ? (
+) : liveShow &&
+  !Number.isNaN(new Date(String((liveShow as any)?.live_datetime || "")).getTime()) &&
+  !isPast((liveShow as any)?.live_datetime, 6) ? (
   <ExpoLiveSection item={liveShow as any} />
 ) : null}
 
@@ -1205,7 +1221,6 @@ export default async function ExpoIndexPage() {
 
       <ExpoNewProductsSection items={autoNewProducts} />
 
-      <ExpoFooter />
     </main>
   );
 }

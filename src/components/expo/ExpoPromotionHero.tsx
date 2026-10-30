@@ -50,16 +50,13 @@ function getDDay(v?: string | null) {
 }
 
 export default function ExpoPromotionHero({ item, mode = "public" }: Props) {
-  const title = safe(item?.title, "2026 영진로타리 신제품 출시");
-  const subtitle = safe(item?.subtitle, "역회전 로타리 1대 무료 추첨");
+  const title = safe(item?.title, "이달의 라이브 이벤트");
+  const subtitle = safe(item?.subtitle, "방송 중 경품 추첨");
 
-  const sponsorName = safe(item?.sponsor_name, "영진로타리");
+  const sponsorName = safe(item?.sponsor_name, "참여 기업");
   const partnerName = safe(item?.partner_name, "K-Agri Expo");
 
-  const liveDateLabel = safe(
-    item?.live_date_label,
-    "5월 28일 (수) 오후 8시 LIVE"
-  );
+  const liveDateLabel = safe(item?.live_date_label, "방송 일정 공개 예정");
 
   const dday = safe(item?.dday_label) || getDDay(item?.live_datetime);
 
@@ -77,14 +74,14 @@ export default function ExpoPromotionHero({ item, mode = "public" }: Props) {
   );
 
   const prizeLabel = safe(item?.prize_label, "오늘의 대표 경품");
-  const prizeTitle = safe(item?.prize_title, "영진로타리 역회전 로타리");
+  const prizeTitle = safe(item?.prize_title, "이달의 대표 경품");
   const prizeDesc = safe(
     item?.prize_desc,
-    "돌 많은 밭에서도 강력한 작업이 가능한 영진로타리 역회전 로타리입니다."
+    "방송 중 실시간 추첨으로 당첨자를 선정합니다."
   );
 
-  const feature1 = safe(item?.feature_1, "돌 많은 밭에서도 강력한 분쇄력");
-  const feature2 = safe(item?.feature_2, "역회전 구조로 토양 깊이 파쇄");
+  const feature1 = safe(item?.feature_1, "사전 참여 신청");
+  const feature2 = safe(item?.feature_2, "라이브 방송 시청");
   const feature3 = safe(item?.feature_3, "방송 중 실시간 당첨자 공개");
   const feature4 = safe(item?.feature_4, "전화 확인 후 최종 경품 확정");
 

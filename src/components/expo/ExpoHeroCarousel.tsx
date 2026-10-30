@@ -56,7 +56,7 @@ export default function ExpoHeroCarousel({ items }: Props) {
 
               {active.secondaryButtonText ? (
                 <Link
-                  href="/expo/consult"
+                  href="/ai-consult"
                   className="rounded-2xl border border-white/40 bg-white/10 px-5 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20"
                 >
                   {active.secondaryButtonText}

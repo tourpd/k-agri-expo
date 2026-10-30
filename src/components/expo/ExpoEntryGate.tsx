@@ -4,7 +4,7 @@ const items = [
   {
     title: "나는 농민입니다",
     description: "특가 · 병해 상담 · 신제품 · 라이브 보기",
-    href: "/expo/farmer",
+    href: "/expo/hall",
   },
   {
     title: "나는 기업입니다",
@@ -14,7 +14,7 @@ const items = [
   {
     title: "나는 바이어입니다",
     description: "공급사 찾기 · 수입상담 · 해외관 연결",
-    href: "/expo/buyer",
+    href: "/buyer",
   },
 ];
 

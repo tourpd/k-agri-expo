@@ -11,7 +11,7 @@ const TABS: Tab[] = [
   { href: "/expo", label: "전시장", icon: "🗺️" },
   { href: "/expo/deals", label: "특가", icon: "🔥" },
   { href: "/expo/booths", label: "부스", icon: "🏢" },
-  { href: "/expo/me", label: "내정보", icon: "👤" },
+  { href: "/me", label: "내정보", icon: "👤" },
 ];
 
 export default function ExpoNavBar() {

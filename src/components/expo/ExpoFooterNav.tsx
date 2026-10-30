@@ -18,18 +18,18 @@ export default function ExpoFooterNav() {
             <h3 className="text-lg font-bold text-neutral-900">박람회 바로가기</h3>
             <div className="mt-4 flex flex-col gap-2 text-sm text-neutral-600">
               <Link href="/expo/deals">농민 특가</Link>
-              <Link href="/expo/consult">농사 AI 상담</Link>
-              <Link href="/expo/new">신제품 보기</Link>
-              <Link href="/expo/join">기업 참가 신청</Link>
+              <Link href="/ai-consult">농사 AI 상담</Link>
+              <Link href="/expo/new-products">신제품 보기</Link>
+              <Link href="/vendor/apply">기업 참가 신청</Link>
             </div>
           </div>
 
           <div>
             <h3 className="text-lg font-bold text-neutral-900">운영</h3>
             <div className="mt-4 flex flex-col gap-2 text-sm text-neutral-600">
-              <Link href="/admin">관리자 로그인</Link>
-              <Link href="/expo/help">이용안내</Link>
-              <Link href="/expo/support">고객센터</Link>
+              <Link href="/admin/login">관리자 로그인</Link>
+              <Link href="/expo/hall">전시관 안내</Link>
+              <Link href="tel:010-8216-1253">고객센터</Link>
             </div>
           </div>
         </div>
