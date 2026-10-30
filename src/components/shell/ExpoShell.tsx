@@ -113,6 +113,10 @@ export default function ExpoShell({ children }: { children: React.ReactNode }) {
         }}
       >
         © {new Date().getFullYear()} K-Agri Expo · 한국농수산TV ·{" "}
+        <Link href="/register" style={{ color: "#15803d", fontWeight: 800 }}>
+          기업 제품 등록
+        </Link>{" "}
+        ·{" "}
         <Link href="/admin/login" style={{ color: "#999" }}>
           운영자
         </Link>

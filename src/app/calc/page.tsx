@@ -6,6 +6,7 @@ import { buildBuyLinks } from "@/lib/shop/buy-links";
 import CalcClient from "@/components/problems/CalcClient";
 import StickyAsk from "@/components/problems/StickyAsk";
 import { searchMaterials } from "@/lib/materials/organic";
+import { SUBMISSION_PREFIX, searchSubmissions, submissionById, submissionToPartner } from "@/lib/submissions/products";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,12 +22,24 @@ type SP = Promise<{ p?: string; q?: string; crop?: string; area?: string; from?:
  */
 export default async function CalcPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
-  const product = sp.p ? getPartnerProduct(sp.p) : null;
+  // 제품: 카탈로그(dof-…) 또는 기업 등록(s:…)
+  let product = sp.p ? getPartnerProduct(sp.p) : null;
+  let company: { name: string; phone: string } | null = product ? partnerCompany(product) : null;
+  let buyUrl: string | null = null;
+  if (!product && sp.p?.startsWith(SUBMISSION_PREFIX)) {
+    const row = await submissionById(sp.p);
+    if (row) {
+      const conv = submissionToPartner(row);
+      product = conv;
+      company = { name: conv.companyName, phone: conv.companyPhone };
+      buyUrl = conv.buyUrl;
+    }
+  }
 
-  if (product) {
-    const company = partnerCompany(product);
+  if (product && company) {
     const area = Math.max(1, Math.min(100000, parseInt(sp.area ?? "300", 10) || 300));
     const buyLinks = await buildBuyLinks({ name: product.name, companyName: company.name, phone: company.phone, sellable: product.sellable, keyword: `${company.name} ${product.name.replace(/-/g, "")}`, coupang: product.coupang });
+    if (buyUrl) buyLinks.unshift({ label: `${company.name} 판매처에서 사기`, href: buyUrl, kind: "ours", sub: "기업 직영" });
     const fromProblem = sp.from ? getProblem(sp.from) : null;
 
     return (
@@ -58,6 +71,7 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
   const crop = cropKey ? getCrop(cropKey) : null;
   const list = q ? searchPartnerProducts(q, 30) : crop ? partnerProductsForCrop(crop.key) : PARTNER_PRODUCTS;
   const organic = q ? searchMaterials(q, undefined, 12) : [];
+  const submitted = q ? (await searchSubmissions(q, 10)).map(submissionToPartner) : [];
 
   return (
     <div style={S.wrap}>
@@ -78,7 +92,22 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
         ))}
       </div>
 
-      {list.length === 0 ? (
+      {submitted.length ? (
+        <div style={S.list}>
+          {submitted.map((p) => (
+            <Link key={p.id} href={`/calc?p=${encodeURIComponent(p.id)}`} style={S.item}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={S.itemBrand}>{p.companyName} · {p.group}</div>
+                <div style={S.itemName}>{p.name}</div>
+                <div style={S.itemUses}>{p.uses.slice(0, 4).join(" · ")}</div>
+              </div>
+              <div style={S.itemGo}>계산 ›</div>
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      {list.length === 0 && submitted.length === 0 ? (
         <div style={S.empty}>맞는 제품이 아직 없습니다. 아래 '문의 남기기'로 물어보시면 맞는 기업을 연결해 드립니다.</div>
       ) : (
         <div style={S.list}>
@@ -117,7 +146,7 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
       ) : null}
 
       <div style={S.foot}>
-        자료: 참여 기업 카탈로그에서 확인한 제품 {PARTNER_PRODUCTS.length}개. 기업이시면 <Link href="/vendor/apply" style={S.link}>제품 등록</Link>으로 올려 주세요(무료).
+        자료: 참여 기업 카탈로그에서 확인한 제품 {PARTNER_PRODUCTS.length}개 + 기업이 직접 등록한 제품. 기업이시면 <Link href="/register" style={S.link}>제품 등록</Link>으로 올려 주세요(무료, 승인 후 노출).
       </div>
 
       <div style={{ height: 84 }} />

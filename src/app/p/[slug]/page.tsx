@@ -162,6 +162,10 @@ export default async function ProblemPage({ params }: { params: Promise<{ slug: 
         </div>
       ) : null}
 
+      <div style={S.forCompany}>
+        이 문제에 맞는 제품을 파는 기업이신가요? <Link href="/register" style={S.forCompanyLink}>제품 등록(무료) ›</Link>
+      </div>
+
       {/* 고정 띠 자리 확보 */}
       <div style={{ height: 84 }} />
 
@@ -211,5 +215,7 @@ const S: Record<string, CSSProperties> = {
   orgCall: { padding: "8px 10px", borderRadius: 10, background: "#0f172a", color: "#fff", fontWeight: 900, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" },
   orgMore: { display: "block", marginTop: 10, fontSize: 14, fontWeight: 900, color: "#15803d", textDecoration: "none" },
   siblings: { marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" },
+  forCompany: { marginTop: 18, fontSize: 12, color: "#94a3b8", textAlign: "center" },
+  forCompanyLink: { color: "#15803d", fontWeight: 800, textDecoration: "none" },
   sibling: { padding: "9px 12px", borderRadius: 999, background: "#f1f5f9", color: "#0f172a", fontWeight: 800, fontSize: 13, textDecoration: "none" },
 };

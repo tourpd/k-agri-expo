@@ -161,7 +161,7 @@ export default function CalcClient({
           </ul>
         ) : null}
         <div className="calc-src">
-          출처: {product.source.label} {product.source.page}쪽 · 숫자는 카탈로그 그대로입니다. 1회 살포 기준이며 횟수만큼 곱하세요.
+          출처: {product.source.label}{product.source.page ? ` ${product.source.page}쪽` : ""} · 숫자는 자료 그대로입니다. 1회 살포 기준이며 횟수만큼 곱하세요.
         </div>
       </div>
 

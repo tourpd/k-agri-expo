@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Problem } from "./catalog";
 import { companyPhoneByText } from "./company-phones";
 import { partnerCompany, partnerProductsForProblem, type PartnerProduct } from "./partner-catalog";
+import { submissionsForProblem, submissionToPartner, type SubmissionRow } from "@/lib/submissions/products";
 
 /**
  * 문제 페이지에 붙는 '해답 제품' 찾기
@@ -21,7 +22,7 @@ export type AnswerProduct = {
   imageUrl: string | null;
   shortDescription: string | null;
   /** 어느 표에서 왔나 (partner = 카탈로그에서 확인한 참여 기업 제품) */
-  source: "brand" | "booth" | "partner";
+  source: "brand" | "booth" | "partner" | "submission";
   /** partner일 때 카탈로그 출처 표기 */
   sourceLabel?: string;
   partnerId?: string;
@@ -115,6 +116,25 @@ export function partnerToAnswer(p: PartnerProduct): AnswerProduct {
   };
 }
 
+export function submissionToAnswer(r: SubmissionRow): AnswerProduct {
+  const p = submissionToPartner(r);
+  return {
+    id: p.id,
+    name: p.name,
+    brandName: p.companyName,
+    brandSlug: null,
+    boothId: null,
+    priceKrw: r.price_krw ?? null,
+    imageUrl: p.imageUrl,
+    shortDescription: p.feature || null,
+    source: "submission",
+    sourceLabel: `${p.companyName} 등록`,
+    partnerId: p.id,
+    href: `/calc?p=${encodeURIComponent(p.id)}`,
+    phone: p.companyPhone.replace(/[^\d+]/g, "") || null,
+  };
+}
+
 export async function findAnswerProducts(problem: Problem, limit = 2): Promise<AnswerProduct[]> {
   if (problem.noProducts) return [];
   // 1) DB에 등록된 제품 — 핵심 단어(mustKeywords)가 설명에 있어야만 붙습니다.
@@ -122,12 +142,17 @@ export async function findAnswerProducts(problem: Problem, limit = 2): Promise<A
     ? await findProductsByKeywords(problem.productKeywords, limit, problem.mustKeywords ?? problem.productKeywords)
     : [];
   if (fromDb.length >= limit) return fromDb;
-  // 2) 빈칸은 카탈로그에서 확인한 참여 기업 제품으로 (같은 이름이면 DB 쪽만)
   const names = new Set(fromDb.map((x) => x.name.replace(/\s/g, "")));
+  // 2) 기업이 직접 올려 승인된 제품
+  const subs = (await submissionsForProblem(problem.slug, limit))
+    .map(submissionToAnswer)
+    .filter((p) => !names.has(p.name.replace(/\s/g, "")));
+  for (const p of subs) names.add(p.name.replace(/\s/g, ""));
+  // 3) 빈칸은 카탈로그에서 확인한 참여 기업 제품으로
   const partners = partnerProductsForProblem(problem.slug, limit)
     .filter((p) => !names.has(p.name.replace(/\s/g, "")))
     .map(partnerToAnswer);
-  return [...fromDb, ...partners].slice(0, limit);
+  return [...fromDb, ...subs, ...partners].slice(0, limit);
 }
 
 /** 키워드로 제품 찾기 (문제 페이지·준비물 페이지 공용). must: 이 중 하나는 반드시 포함 */
