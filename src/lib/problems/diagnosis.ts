@@ -12,6 +12,9 @@ type Rule = { re: RegExp; slug: string | ((crop: CropKey | null) => string | nul
 
 const RULES: Rule[] = [
   { re: /칼슘|배꼽\s*썩|고두/, slug: "tomato-blossom-end-rot" },
+  { re: /잎곰팡이/, slug: (c) => (c === "tomato" || !c ? "tomato-leaf-mold" : null) },
+  { re: /겹둥근무늬|겹무늬|조기\s*역병/, slug: (c) => (c === "tomato" || !c ? "tomato-early-blight" : null) },
+  { re: /잿빛\s*곰팡이/, slug: (c) => (c === "tomato" || c === "cucumber" || c === "paprika" ? "tomato-gray-mold" : null) },
   { re: /탄저/, slug: "gochu-anthracnose" },
   { re: /노균/, slug: (c) => (c === "onion" || c === "garlic" ? "onion-downy-mildew" : c === "leafy" || c === "cabbage" ? "leafy-downy-sclerotinia" : "cucumber-downy-mildew") },
   { re: /균핵/, slug: (c) => (c === "garlic" || c === "onion" ? "garlic-black-mold" : "leafy-downy-sclerotinia") },
