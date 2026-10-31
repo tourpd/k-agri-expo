@@ -8,6 +8,7 @@
  */
 import type { CropKey } from "./catalog";
 import wasungRaw from "@/data/partners/wasung.json";
+import coupangPins from "@/data/coupang-pins.json";
 
 export type DoseRule =
   | {
@@ -524,7 +525,9 @@ const DOF_PRODUCTS: PartnerProduct[] = [
   },
 ];
 
-export const PARTNER_PRODUCTS: PartnerProduct[] = [...DOF_PRODUCTS, ...WASUNG_PRODUCTS];
+/** 쿠팡 상품 고정 (src/data/coupang-pins.json) — 카탈로그에 직접 적은 고정값이 우선 */
+const PINS = coupangPins as unknown as Record<string, PartnerProduct["coupang"]>;
+export const PARTNER_PRODUCTS: PartnerProduct[] = [...DOF_PRODUCTS, ...WASUNG_PRODUCTS].map((p) => (p.coupang || !PINS[`P|${p.id}`] ? p : { ...p, coupang: PINS[`P|${p.id}`] }));
 
 export function getPartnerProduct(id: string) {
   return PARTNER_PRODUCTS.find((p) => p.id === id) ?? null;
