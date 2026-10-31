@@ -21,6 +21,9 @@ export const PSIS_CROP_NAME: Partial<Record<CropKey, string>> = {
 export const PROBLEM_PESTS: Record<string, string[]> = {
   "gochu-thrips": ["총채벌레", "꽃노랑총채벌레"],
   "gochu-anthracnose": ["탄저병"],
+  "tomato-leaf-mold": ["잎곰팡이병"],
+  "tomato-early-blight": ["겹둥근무늬병"],
+  "tomato-gray-mold": ["잿빛곰팡이병"],
   "gochu-aphid-virus": ["진딧물", "복숭아혹진딧물"],
   "garlic-black-mold": ["흑색썩음균핵병"],
   "onion-downy-mildew": ["노균병"],
