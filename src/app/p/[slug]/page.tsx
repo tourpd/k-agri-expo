@@ -3,7 +3,8 @@ import { COUPANG_NOTICE, certifiedBuyLink } from "@/lib/shop/buy-links";
 import { certifiedForProblem } from "@/lib/materials/trusted";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
-import { getCrop, getProblem, problemsByCrop } from "@/lib/problems/catalog";
+import { getCrop, problemsByCrop } from "@/lib/problems/catalog";
+import { getProblemWithOverrides } from "@/lib/problems/overrides";
 import { buyLinkForAnswer, findAnswerProducts } from "@/lib/problems/products";
 import StickyAsk from "@/components/problems/StickyAsk";
 import { materialsForProblem } from "@/lib/materials/organic";
@@ -15,7 +16,7 @@ export const runtime = "nodejs";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const p = getProblem(slug);
+  const p = await getProblemWithOverrides(slug);
   return { title: p ? `${p.title} | K-Agri Expo` : "문제 해결 | K-Agri Expo" };
 }
 
@@ -42,7 +43,7 @@ export default async function ProblemPage({ params, searchParams }: { params: Pr
   const { slug } = await params;
   const sp = await searchParams;
   const fromPhoto = sp.src === "photodoctor";
-  const problem = getProblem(slug);
+  const problem = await getProblemWithOverrides(slug);
   if (!problem) notFound();
 
   const crop = getCrop(problem.crop);
