@@ -1,0 +1,19 @@
+{
+  "_note": "쿠팡 상품 고정 (2026-10-31, 쿠팡 검색에서 제품명 일치 확인). key: P|카탈로그id 또는 C|공시상표명. 없는 제품은 검색 링크로.",
+  "P|dof-myeolgyuni": { "productId": 8635202189, "itemId": 25054577707, "vendorItemId": 96190526257, "label": "500ml", "priceKrw": 32500 },
+  "P|dof-gochu-hanbang": { "productId": 9230852948, "itemId": 27286404965, "vendorItemId": 88124336144, "label": "2kg", "priceKrw": 14800 },
+  "P|dof-root-vitality": { "productId": 9205148550, "itemId": 27183411864, "vendorItemId": 94150969494, "label": "10kg", "priceKrw": 38500 },
+  "P|dof-oxygen": { "productId": 9546458510, "itemId": 28480612381, "vendorItemId": 95430762021, "label": "500ml", "priceKrw": 22000 },
+  "P|dof-speed-kkal": { "productId": 9702363006, "itemId": 29024652317, "vendorItemId": 95893838400, "label": "500ml", "priceKrw": 29930 },
+  "P|dof-ssakssuri-all": { "productId": 8635201140, "itemId": 25054572300, "vendorItemId": 92058983967, "label": "500ml", "priceKrw": 20000 },
+  "P|dof-antibacter-ca": { "productId": 9494602622, "itemId": 28280724814, "vendorItemId": 95233734369, "label": "500g", "priceKrw": 15000 },
+  "P|dof-yeomdown-liquid": { "productId": 6462978639, "itemId": 14073576175, "vendorItemId": 81320839996, "label": "10L", "priceKrw": 99000 },
+  "P|dof-yeomdown-granule": { "productId": 6928162229, "itemId": 16755181267, "vendorItemId": 87866942709, "label": "10kg", "priceKrw": 43400 },
+  "C|총채싹": { "productId": 5617459064, "itemId": 20352225928, "vendorItemId": 92894280073, "priceKrw": 14000 },
+  "C|불타는총채": { "productId": 9531552322, "itemId": 28425264227, "vendorItemId": 95231553398, "label": "500ml", "priceKrw": 40000 },
+  "C|탄저킬": { "productId": 9039525479, "itemId": 27845684589, "vendorItemId": 94805120972, "label": "1L", "priceKrw": 29840 },
+  "C|대유아미노헐크": { "productId": 264021165, "itemId": 15737656970, "vendorItemId": 88342205030, "label": "10L", "priceKrw": 47500 },
+  "C|응애깍": { "productId": 8384112771, "itemId": 24230804671, "vendorItemId": 91248004077, "priceKrw": 40000 },
+  "C|명품유황칼슘플러스": { "productId": 8658039536, "itemId": 28018584648, "vendorItemId": 95059107006, "label": "20kg", "priceKrw": 27890 },
+  "C|케이마그칼슘플러스": { "productId": 8733352814, "itemId": 25377809068, "vendorItemId": 92371854474, "label": "15kg", "priceKrw": 27200 }
+}

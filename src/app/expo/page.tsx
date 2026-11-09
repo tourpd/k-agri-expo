@@ -11,6 +11,7 @@ import ExpoPromotionHero from "@/components/expo/ExpoPromotionHero";
 
 import ExpoHeroSection from "@/components/expo/ExpoHeroSection";
 import ExpoCategoryEntrySection from "@/components/expo/ExpoCategoryEntrySection";
+import HomeEntrySection from "@/components/problems/HomeEntrySection";
 import ExpoHotIssuesSection from "@/components/expo/ExpoHotIssuesSection";
 import ExpoLiveSection from "@/components/expo/ExpoLiveSection";
 import ExpoDealsSection from "@/components/expo/ExpoDealsSection";
@@ -1191,7 +1192,12 @@ export default async function ExpoIndexPage() {
         heroDescription={heroDescription}
       />
 
-      {/* 전시관 입구를 첫 화면 바로 아래로 (농민이 기업 부스까지 가는 출발점) */}
+      {/* 입구 3개: 내 작물 · 증상 · 특가 (농민 문제 해결 진입로) */}
+      <section className="expo-section" style={{ padding: "16px 20px 0" }}>
+        <HomeEntrySection dealCount={Array.isArray(homeDeals) ? homeDeals.length : 0} />
+      </section>
+
+      {/* 6개 전시관 입구 (농민이 기업 부스까지 가는 핵심 길목) */}
       <section className="expo-section" style={{ padding: "16px 20px 0" }}>
         <ExpoCategoryEntrySection />
       </section>
@@ -1201,7 +1207,6 @@ export default async function ExpoIndexPage() {
       <AgriTradeCenterEntry />
 
       <ExpoHotIssuesSection items={hotIssues} />
-
       {promotions.length > 0 ? (
   <ExpoPromotionHero
     item={promotions.find((item) => item.is_featured) || promotions[0]}

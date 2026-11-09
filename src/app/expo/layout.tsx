@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import React from "react";
 import Link from "next/link";
-import AdminNavLink from "@/components/expo/admin/AdminNavLink";
+import ExpoShell from "@/components/shell/ExpoShell";
 
 /**
  * 엑스포 공통 틀: 위쪽 메뉴 하나 + 본문 + 아래쪽
@@ -120,4 +120,5 @@ export default function ExpoLayout({ children }: { children: React.ReactNode }) 
       </footer>
     </div>
   );
+
 }
