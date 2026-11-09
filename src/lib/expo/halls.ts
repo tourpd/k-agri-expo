@@ -63,6 +63,16 @@ export type ExpoHall = {
 
 export const EXPO_HALL_LIST: ExpoHall[] = [
   {
+    key: "garden-farmer",
+    icon: "🪴",
+    title: "가든파머 텃밭·홈가든관",
+    desc: "베란다 화분 · 반려식물 · 텃밭 전용 솔루션",
+    href: "/expo/garden-farmer",
+    cta: "가든파머관 입장",
+    dbHallIds: ["garden-farmer", "garden_farmer"],
+  },
+
+  {
     key: "crop-nutrition",
     icon: "🌱",
     title: "작물영양관",
