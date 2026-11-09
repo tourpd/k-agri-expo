@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import React from "react";
 import Link from "next/link";
+import AdminNavLink from "@/components/expo/admin/AdminNavLink";
 import ExpoShell from "@/components/shell/ExpoShell";
 
 /**
