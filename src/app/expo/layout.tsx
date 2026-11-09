@@ -10,6 +10,7 @@ import ExpoShell from "@/components/shell/ExpoShell";
  * (예전에는 홈에 메뉴가 두 줄로 겹쳐 나오고, 홈에서 전시관·부스로 가는 메뉴가 없었음)
  */
 const NAV = [
+  { href: "/yakbaksa", label: "닥터Q 약박사" },
   { href: "/expo/hall", label: "전시관" },
   { href: "/expo/booths", label: "참여 부스" },
   { href: "/expo/deals", label: "농민 특가" },
@@ -22,7 +23,7 @@ const LAYOUT_CSS = `
 .expo-shell-main { padding: 24px; }
 @media (max-width: 768px) {
   .expo-shell-header { padding: 10px 12px !important; flex-wrap: wrap; gap: 8px !important; }
-  .expo-shell-nav { width: 100%; display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px !important; }
+  .expo-shell-nav { width: 100%; display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px !important; }
   .expo-shell-nav a { text-align: center; padding: 9px 4px !important; font-size: 13px !important; }
   .expo-shell-main { padding: 12px; }
 }
