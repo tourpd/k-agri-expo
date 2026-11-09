@@ -206,6 +206,75 @@ export default function GardenFarmerPage() {
         </div>
       </section>
 
+      
+      {/* 닥터Q 홈가든 분무기 물량 & 희석 계산기 (실제 약박사 엔진 기반) */}
+      <section style={styles.section}>
+        <div style={styles.sectionHeader}>
+          <div style={styles.sectionKicker}>EASY DILUTION CALCULATOR</div>
+          <h2 style={styles.sectionTitle}>🧪 내 분무기엔 몇 ml? 3초 희석 계산표</h2>
+          <p style={styles.sectionSubtitle}>
+            1,000배, 500배 복잡한 계산 없이 가정용 분무기 용량만 보고 바로 타세요
+          </p>
+        </div>
+
+        <div style={{ background: "#ffffff", border: "2px solid #e2e8f0", borderRadius: 20, padding: "24px", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "center", fontSize: 14 }}>
+            <thead>
+              <tr style={{ background: "#f8fafc", borderBottom: "2px solid #cbd5e1" }}>
+                <th style={{ padding: "14px 10px", color: "#334155", fontWeight: 800 }}>가정용 분무기 크기</th>
+                <th style={{ padding: "14px 10px", color: "#16a34a", fontWeight: 800 }}>1,000배 희석 (평상시 영양)</th>
+                <th style={{ padding: "14px 10px", color: "#0284c7", fontWeight: 800 }}>500배 희석 (벌레·병해 긴급)</th>
+                <th style={{ padding: "14px 10px", color: "#64748b", fontWeight: 800 }}>추천 제품</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
+                <td style={{ padding: "14px 10px", fontWeight: 700 }}>작은 분무기 (500ml)</td>
+                <td style={{ padding: "14px 10px", color: "#16a34a", fontWeight: 800 }}>0.5ml (스포이드 10방울)</td>
+                <td style={{ padding: "14px 10px", color: "#0284c7", fontWeight: 800 }}>1ml (스포이드 20방울)</td>
+                <td style={{ padding: "14px 10px", color: "#475569" }}>홈그린 활력제</td>
+              </tr>
+              <tr style={{ borderBottom: "1px solid #f1f5f9", background: "#fcfdfe" }}>
+                <td style={{ padding: "14px 10px", fontWeight: 700 }}>중형 분무기 (1L / 1,000ml)</td>
+                <td style={{ padding: "14px 10px", color: "#16a34a", fontWeight: 800 }}>1ml (생수 뚜껑 1/5)</td>
+                <td style={{ padding: "14px 10px", color: "#0284c7", fontWeight: 800 }}>2ml (생수 뚜껑 1/3)</td>
+                <td style={{ padding: "14px 10px", color: "#475569" }}>플라워나라 / 칼스타</td>
+              </tr>
+              <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
+                <td style={{ padding: "14px 10px", fontWeight: 700 }}>압축 분무기 (2L)</td>
+                <td style={{ padding: "14px 10px", color: "#16a34a", fontWeight: 800 }}>2ml (생수 뚜껑 1/3)</td>
+                <td style={{ padding: "14px 10px", color: "#0284c7", fontWeight: 800 }}>4ml (생수 뚜껑 절반)</td>
+                <td style={{ padding: "14px 10px", color: "#475569" }}>싹쓰리충 / 박멸킹</td>
+              </tr>
+              <tr style={{ background: "#fcfdfe" }}>
+                <td style={{ padding: "14px 10px", fontWeight: 700 }}>텃밭용 분무기 (10L / 반말)</td>
+                <td style={{ padding: "14px 10px", color: "#16a34a", fontWeight: 800 }}>10ml (전용 뚜껑 1컵)</td>
+                <td style={{ padding: "14px 10px", color: "#0284c7", fontWeight: 800 }}>20ml (전용 뚜껑 2컵)</td>
+                <td style={{ padding: "14px 10px", color: "#475569" }}>주말농장플러스 / 텃밭애</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style={{ marginTop: 20, textAlign: "center" }}>
+            <Link
+              href="/yakbaksa"
+              style={{
+                display: "inline-block",
+                background: "#0f172a",
+                color: "#ffffff",
+                fontWeight: 800,
+                fontSize: 14,
+                padding: "10px 22px",
+                borderRadius: 10,
+                textDecoration: "none",
+              }}
+            >
+              🔍 내 밭 평수별 정밀 계산기(약박사 전문관) 바로가기 ➔
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* 가든파머 전용 원클릭 공구 및 문의 신청 창구 */}
       <section id="order-form" style={styles.formSection}>
         <div style={styles.formCard}>
