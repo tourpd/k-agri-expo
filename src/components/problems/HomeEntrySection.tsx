@@ -77,6 +77,15 @@ export default function HomeEntrySection({ dealCount }: { dealCount?: number }) 
         <div style={S.calcGo}>›</div>
       </Link>
 
+      {/* 입구 2.6: 부직포 계산기 */}
+      <Link href="/bujikpo" style={{ ...S.calcBanner, marginTop: 8, background: "#0a8f8a" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={S.calcTitle}>부직포 계산기 — 내 밭엔 몇 롤, 핀 몇 개?</div>
+          <div style={{ ...S.calcSub, color: "#e6fffb" }}>두둑 폭·길이나 평수만 넣으면 서리방지 부직포 롤 수·고정핀 개수·꽂는 법까지 바로</div>
+        </div>
+        <div style={S.calcGo}>›</div>
+      </Link>
+
       {/* 입구 3: 이달의 준비물 (자재·농기구·묘종·설비) */}
       <div style={S.block}>
         <div style={S.blockHead}>
