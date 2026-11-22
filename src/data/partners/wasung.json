@@ -317,12 +317,10 @@
 ],
 "doses": [
 {
-"kind": "perArea",
-"amount": 1,
-"unit": "kg",
-"areaPyeong": 0,
+"kind": "dilution",
+"ratio": 500,
+"ratioMax": 1000,
 "method": "엽면",
-"waterL": 500,
 "note": "1kg을 25~50말(500~1,000L)에 희석"
 }
 ],
@@ -2039,12 +2037,10 @@
 ],
 "doses": [
 {
-"kind": "perArea",
-"amount": 1.5,
-"unit": "kg",
-"areaPyeong": 0,
+"kind": "dilution",
+"ratio": 667,
+"ratioMax": 1333,
 "method": "엽면",
-"waterL": 1000,
 "note": "1.5kg/50~100말(1,000~2,000L)"
 }
 ],
@@ -3314,12 +3310,8 @@
 "note": "양파·마늘 2회"
 },
 {
-"kind": "perArea",
-"amount": 15,
-"unit": "kg",
-"areaPyeong": 0,
-"method": "관주",
-"note": "하우스 과채류 3~7일 간격, 면적 미기재"
+"kind": "text",
+"text": "15kg 관주 — 하우스 과채류 3~7일 간격. 카탈로그에 면적이 적혀 있지 않아 계산하지 않습니다. 회사에 확인하세요."
 }
 ],
 "timing": "비대기~착색기",
@@ -5387,13 +5379,11 @@
 "note": "추비 1봉"
 },
 {
-"kind": "perArea",
-"amount": 1.7,
-"unit": "kg",
-"areaPyeong": 0,
+"kind": "dilution",
+"ratio": 353,
+"ratioMax": 588,
 "method": "엽면",
-"waterL": 600,
-"note": "1봉/30~50말"
+"note": "1봉(1.7kg)/30~50말(600~1,000L)"
 }
 ],
 "timing": "기비·추비",

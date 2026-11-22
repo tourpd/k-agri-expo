@@ -77,6 +77,21 @@ export function calcDose(product: PartnerProduct, rule: DoseRule, areaPyeong: nu
     };
   }
 
+  if (rule.kind === "perArea" && !(rule.areaPyeong > 0)) {
+    // 기준 평수가 없는 자료는 계산하지 않고 원문만 보여 줍니다 (0으로 나누면 숫자가 깨짐)
+    return {
+      rule,
+      headline: rule.note ?? "카탈로그에 기준 면적이 없어 계산하지 않습니다. 회사에 확인하세요.",
+      productAmount: null,
+      productUnit: null,
+      waterL: null,
+      tanks: null,
+      perTank: null,
+      packages: [],
+      assumptions,
+    };
+  }
+
   if (rule.kind === "perArea") {
     const k = areaPyeong / rule.areaPyeong;
     const isLiquid = rule.unit === "ml" || rule.unit === "L";
