@@ -156,6 +156,15 @@ export default async function CalcPage({ searchParams }: { searchParams: SP }) {
         </div>
       ) : null}
 
+      <Link href="/bujikpo" style={{ ...S.item, marginTop: 16, borderColor: "#0a8f8a" }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ ...S.itemBrand, color: "#0a8f8a" }}>겨울 준비</div>
+          <div style={S.itemName}>부직포 계산기 — 몇 롤, 핀 몇 개?</div>
+          <div style={S.itemUses}>두둑 폭·길이나 평수만 넣으면 바로 나옵니다</div>
+        </div>
+        <div style={{ ...S.itemGo, color: "#0a8f8a" }}>계산하기 ›</div>
+      </Link>
+
       <div style={S.foot}>
         자료: 참여 기업 카탈로그에서 확인한 제품 {PARTNER_PRODUCTS.length}개 + 기업이 직접 등록한 제품. 기업이시면 <Link href="/register" style={S.link}>제품 등록</Link>으로 올려 주세요(무료, 승인 후 노출).
       </div>
